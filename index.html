@@ -429,6 +429,22 @@
       gap: 12px;
     }
 
+    .product-media {
+      margin-top: 18px;
+      border-radius: 18px;
+      overflow: hidden;
+      background: #fff;
+      border: 1px solid rgba(216, 210, 198, 0.65);
+      aspect-ratio: 1.18 / 0.82;
+    }
+
+    .product-media img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
     .tag {
       position: absolute;
       top: 14px;
@@ -444,9 +460,30 @@
     .tag.yellow { background: #f2c24f; color: #5b4622; }
     .tag.teal { background: #2bb9b0; }
 
-    .product .placeholder {
-      height: 132px;
-      margin-top: 18px;
+    .product h3 {
+      margin: 2px 0 0;
+      font-size: 1.12rem;
+      line-height: 1.2;
+    }
+
+    .product-category,
+    .product-description {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    .product-category {
+      font-weight: 700;
+      color: #4f6a81;
+    }
+
+    .product-description {
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      min-height: 3.1em;
     }
 
     .product-actions {
@@ -494,6 +531,10 @@
       color: #ef6f8f;
       border: none;
       flex: 0 0 auto;
+    }
+
+    .products .product:last-child {
+      display: flex;
     }
 
     .steps {
@@ -712,79 +753,7 @@
         <p>Os recursos favoritos de educadores e famílias.</p>
       </div>
 
-      <div class="products">
-        <article class="product">
-          <span class="tag pink">Mais amado</span>
-          <div class="placeholder">Produto 1<br>Imagem placeholder</div>
-          <h3>Kit Alfabetização Divertida</h3>
-          <div class="price">R$ 29,90</div>
-          <div class="stars">★★★★★ <span style="color:var(--muted); font-size:.9rem;">(128)</span></div>
-          <div class="product-actions">
-            <span class="product-details">Detalhes</span>
-            <span class="product-add">+</span>
-          </div>
-        </article>
-
-        <article class="product">
-          <span class="tag yellow">Mais procurado</span>
-          <div class="placeholder">Produto 2<br>Imagem placeholder</div>
-          <h3>Cards de Operações</h3>
-          <div class="price">R$ 24,90</div>
-          <div class="stars">★★★★★ <span style="color:var(--muted); font-size:.9rem;">(96)</span></div>
-          <div class="product-actions">
-            <span class="product-details">Detalhes</span>
-            <span class="product-add">+</span>
-          </div>
-        </article>
-
-        <article class="product">
-          <span class="tag teal">Novo</span>
-          <div class="placeholder">Produto 3<br>Imagem placeholder</div>
-          <h3>Emoções em Foco</h3>
-          <div class="price">R$ 19,90</div>
-          <div class="stars">★★★★★ <span style="color:var(--muted); font-size:.9rem;">(74)</span></div>
-          <div class="product-actions">
-            <span class="product-details">Detalhes</span>
-            <span class="product-add">+</span>
-          </div>
-        </article>
-
-        <article class="product">
-          <span class="tag pink">Destaque</span>
-          <div class="placeholder">Produto 4<br>Imagem placeholder</div>
-          <h3>Alfabeto Ilustrado</h3>
-          <div class="price">R$ 27,90</div>
-          <div class="stars">★★★★★ <span style="color:var(--muted); font-size:.9rem;">(84)</span></div>
-          <div class="product-actions">
-            <span class="product-details">Detalhes</span>
-            <span class="product-add">+</span>
-          </div>
-        </article>
-
-        <article class="product">
-          <span class="tag yellow">Popular</span>
-          <div class="placeholder">Produto 5<br>Imagem placeholder</div>
-          <h3>Jogos de Sílabas</h3>
-          <div class="price">R$ 22,90</div>
-          <div class="stars">★★★★★ <span style="color:var(--muted); font-size:.9rem;">(67)</span></div>
-          <div class="product-actions">
-            <span class="product-details">Detalhes</span>
-            <span class="product-add">+</span>
-          </div>
-        </article>
-
-        <article class="product">
-          <span class="tag teal">Novo</span>
-          <div class="placeholder">Produto 6<br>Imagem placeholder</div>
-          <h3>Raciocínio Lógico</h3>
-          <div class="price">R$ 31,90</div>
-          <div class="stars">★★★★★ <span style="color:var(--muted); font-size:.9rem;">(52)</span></div>
-          <div class="product-actions">
-            <span class="product-details">Detalhes</span>
-            <span class="product-add">+</span>
-          </div>
-        </article>
-      </div>
+      <div id="products-grid" class="products" aria-live="polite"></div>
 
       <div class="products-footer">
         <a class="btn see-more" href="#categorias">
@@ -829,5 +798,6 @@
       <p style="margin-top:14px;">© 2026 Papelê Educa. Todos os direitos reservados.</p>
     </footer>
   </main>
+  <script type="module" src="./js/public-products.js"></script>
 </body>
 </html>
