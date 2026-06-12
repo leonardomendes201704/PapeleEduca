@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Papelê Educa - Acesso Admin</title>
+  <link rel="stylesheet" href="./css/admin.css" />
+</head>
+<body>
+  <main class="auth-shell">
+    <section class="auth-card">
+      <div class="auth-brand">
+        <img src="../images/logo-header.png" alt="Papelê Educa" />
+      </div>
+
+      <h1>Área protegida</h1>
+      <p class="muted">Entre com seu e-mail e senha do Supabase para gerenciar os materiais.</p>
+
+      <form id="login-form" class="auth-form">
+        <label>
+          E-mail
+          <input id="email" type="email" placeholder="voce@seudominio.com" autocomplete="username" required />
+        </label>
+        <label>
+          Senha
+          <input id="password" type="password" placeholder="Sua senha" autocomplete="current-password" required />
+        </label>
+        <button class="btn-primary" type="submit">Entrar</button>
+        <p class="form-status" id="status"></p>
+      </form>
+
+      <a class="auth-link" href="../index.html">Voltar para o site</a>
+    </section>
+  </main>
+
+  <script type="module">
+    import { supabase } from './js/supabase-client.js';
+
+    const form = document.getElementById('login-form');
+    const statusEl = document.getElementById('status');
+
+    const { data } = await supabase.auth.getSession();
+    if (data.session) {
+      window.location.href = './dashboard.html';
+    }
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      statusEl.textContent = 'Entrando...';
+      statusEl.className = 'form-status';
+
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) {
+        statusEl.textContent = error.message;
+        statusEl.classList.add('error');
+        return;
+      }
+
+      window.location.href = './dashboard.html';
+    });
+  </script>
+</body>
+</html>
+

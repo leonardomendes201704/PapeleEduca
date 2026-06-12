@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Papelê Educa - Painel Admin</title>
+  <link rel="stylesheet" href="./css/admin.css" />
+</head>
+<body>
+  <main class="admin-shell">
+    <header class="admin-topbar">
+      <div>
+        <div class="eyebrow">Painel Admin</div>
+        <h1>Materiais e Produtos</h1>
+      </div>
+      <button id="logout-btn" class="btn-ghost" type="button">Sair</button>
+    </header>
+
+    <section class="summary-grid">
+      <article class="summary-card">
+        <span class="summary-label">Total de produtos</span>
+        <strong id="count-total">0</strong>
+      </article>
+      <article class="summary-card">
+        <span class="summary-label">Publicados</span>
+        <strong id="count-published">0</strong>
+      </article>
+      <article class="summary-card">
+        <span class="summary-label">Rascunhos</span>
+        <strong id="count-draft">0</strong>
+      </article>
+    </section>
+
+    <section class="admin-grid">
+      <article class="panel form-panel">
+        <div class="panel-head">
+          <h2 id="form-title">Novo produto</h2>
+          <p class="muted">Cadastre titulo, imagens, preços e datas de oferta.</p>
+        </div>
+
+        <form id="product-form" class="product-form">
+          <input type="hidden" id="product-id" />
+          <input type="hidden" id="existing-images" />
+
+          <label>
+            Título
+            <input id="title" type="text" required placeholder="Ex.: Kit Alfabetização Divertida" />
+          </label>
+
+          <label>
+            Slug
+            <input id="slug" type="text" placeholder="gerado-automaticamente-se-vazio" />
+          </label>
+
+          <label>
+            Categoria
+            <input id="category" type="text" placeholder="Ex.: Leitura e Escrita" />
+          </label>
+
+          <label>
+            Descrição
+            <textarea id="description" rows="5" placeholder="Descreva o material..."></textarea>
+          </label>
+
+          <div class="two-cols">
+            <label>
+              Preço
+              <input id="price" type="number" min="0" step="0.01" placeholder="29.90" />
+            </label>
+            <label>
+              Preço em oferta
+              <input id="promo-price" type="number" min="0" step="0.01" placeholder="19.90" />
+            </label>
+          </div>
+
+          <div class="two-cols">
+            <label>
+              Início da oferta
+              <input id="promo-start" type="date" />
+            </label>
+            <label>
+              Fim da oferta
+              <input id="promo-end" type="date" />
+            </label>
+          </div>
+
+          <label>
+            Data de publicação
+            <input id="published-at" type="date" />
+          </label>
+
+          <div class="two-cols">
+            <label>
+              Status
+              <select id="status">
+                <option value="draft">Rascunho</option>
+                <option value="published">Publicado</option>
+                <option value="archived">Arquivado</option>
+              </select>
+            </label>
+
+            <label class="checkbox-label">
+              <input id="featured" type="checkbox" />
+              Produto em destaque
+            </label>
+          </div>
+
+          <label>
+            Imagens do produto
+            <input id="images" type="file" accept="image/*" multiple />
+          </label>
+
+          <div id="image-preview" class="image-preview"></div>
+
+          <div class="form-actions">
+            <button class="btn-primary" type="submit">Salvar produto</button>
+            <button id="clear-btn" class="btn-ghost" type="button">Novo cadastro</button>
+          </div>
+
+          <p id="form-status" class="form-status"></p>
+        </form>
+      </article>
+
+      <article class="panel list-panel">
+        <div class="panel-head">
+          <h2>Produtos cadastrados</h2>
+          <p class="muted">Clique em editar para atualizar os dados.</p>
+        </div>
+
+        <div id="products-list" class="products-list"></div>
+      </article>
+    </section>
+  </main>
+
+  <script type="module" src="./js/dashboard.js"></script>
+</body>
+</html>
+
