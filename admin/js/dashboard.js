@@ -16,7 +16,6 @@ const fields = {
   id: document.getElementById('product-id'),
   existingImages: document.getElementById('existing-images'),
   title: document.getElementById('title'),
-  slug: document.getElementById('slug'),
   category: document.getElementById('category'),
   hotmartUrl: document.getElementById('hotmart-url'),
   description: document.getElementById('description'),
@@ -43,6 +42,12 @@ function slugify(text) {
     .replace(/[\u0300-\u036f]/g, '')
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
+}
+
+function buildInternalSlug(title) {
+  const base = slugify(title) || 'produto';
+  const suffix = Date.now().toString(36);
+  return `${base}-${suffix}`;
 }
 
 async function requireAdmin() {
@@ -220,7 +225,6 @@ function editProduct(product) {
   formTitle.textContent = 'Editar produto';
   fields.id.value = product.id;
   fields.title.value = product.title || '';
-  fields.slug.value = product.slug || '';
   fields.category.value = product.category || '';
   fields.hotmartUrl.value = product.hotmart_url || '';
   fields.description.value = product.description || '';
@@ -267,7 +271,7 @@ form.addEventListener('submit', async (event) => {
     const images = [...existing, ...uploaded];
 
     const title = fields.title.value.trim();
-    const slug = fields.slug.value.trim() || slugify(title);
+    const slug = buildInternalSlug(title);
 
     const payload = {
       title,
@@ -303,12 +307,6 @@ form.addEventListener('submit', async (event) => {
   } catch (error) {
     statusEl.textContent = error.message;
     statusEl.classList.add('error');
-  }
-});
-
-fields.title.addEventListener('input', () => {
-  if (!fields.slug.value.trim()) {
-    fields.slug.value = slugify(fields.title.value);
   }
 });
 

@@ -59,10 +59,7 @@ function renderProduct(product, index) {
   const title = safeText(product.title);
   const category = safeText(product.category || 'Sem categoria');
   const description = safeText(product.description || 'Material disponível para uso pedagógico.');
-  const hotmartUrl = typeof product.hotmart_url === 'string' ? product.hotmart_url.trim() : '';
-  const detailsButton = hotmartUrl
-    ? `<a class="product-details" href="${hotmartUrl}" target="_blank" rel="noopener noreferrer">Detalhes</a>`
-    : `<span class="product-details">Detalhes</span>`;
+  const detailsButton = `<a class="product-details" href="./product.html?id=${encodeURIComponent(product.id)}">Detalhes</a>`;
 
   return `
     <article class="product">
@@ -86,7 +83,7 @@ function renderProduct(product, index) {
 async function loadProducts() {
   const { data, error } = await supabase
     .from('products')
-    .select('id,title,slug,description,category,hotmart_url,price,promo_price,promo_start,promo_end,published_at,status,featured,images')
+    .select('id,title,description,category,hotmart_url,price,promo_price,promo_start,promo_end,published_at,status,featured,images')
     .eq('status', 'published')
     .order('featured', { ascending: false })
     .order('published_at', { ascending: false })
