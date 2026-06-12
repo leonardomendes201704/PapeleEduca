@@ -59,6 +59,10 @@ function renderProduct(product, index) {
   const title = safeText(product.title);
   const category = safeText(product.category || 'Sem categoria');
   const description = safeText(product.description || 'Material disponível para uso pedagógico.');
+  const hotmartUrl = typeof product.hotmart_url === 'string' ? product.hotmart_url.trim() : '';
+  const detailsButton = hotmartUrl
+    ? `<a class="product-details" href="${hotmartUrl}" target="_blank" rel="noopener noreferrer">Detalhes</a>`
+    : `<span class="product-details">Detalhes</span>`;
 
   return `
     <article class="product">
@@ -72,7 +76,7 @@ function renderProduct(product, index) {
       <div class="price">${formattedPrice}</div>
       <div class="stars">${renderStars()} <span style="color:var(--muted); font-size:.9rem;">(${ratingCount})</span></div>
       <div class="product-actions">
-        <span class="product-details">Detalhes</span>
+        ${detailsButton}
         <span class="product-add">+</span>
       </div>
     </article>
@@ -82,7 +86,7 @@ function renderProduct(product, index) {
 async function loadProducts() {
   const { data, error } = await supabase
     .from('products')
-    .select('id,title,slug,description,category,price,promo_price,promo_start,promo_end,published_at,status,featured,images')
+    .select('id,title,slug,description,category,hotmart_url,price,promo_price,promo_start,promo_end,published_at,status,featured,images')
     .eq('status', 'published')
     .order('featured', { ascending: false })
     .order('published_at', { ascending: false })

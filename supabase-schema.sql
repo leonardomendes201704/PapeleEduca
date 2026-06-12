@@ -56,6 +56,7 @@ create table if not exists public.products (
   slug text not null unique,
   description text not null default '',
   category text not null default '',
+  hotmart_url text not null default '',
   price numeric(10,2) not null default 0,
   promo_price numeric(10,2),
   promo_start date,
@@ -68,6 +69,9 @@ create table if not exists public.products (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+alter table public.products
+add column if not exists hotmart_url text not null default '';
 
 alter table public.products enable row level security;
 

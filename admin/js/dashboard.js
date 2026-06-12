@@ -18,6 +18,7 @@ const fields = {
   title: document.getElementById('title'),
   slug: document.getElementById('slug'),
   category: document.getElementById('category'),
+  hotmartUrl: document.getElementById('hotmart-url'),
   description: document.getElementById('description'),
   price: document.getElementById('price'),
   promoPrice: document.getElementById('promo-price'),
@@ -93,6 +94,7 @@ function resetForm() {
   fields.status.value = 'draft';
   fields.featured.checked = false;
   fields.publishedAt.valueAsDate = new Date();
+  fields.hotmartUrl.value = '';
 }
 
 function renderPreview(existingImages, pendingUploads = []) {
@@ -220,6 +222,7 @@ function editProduct(product) {
   fields.title.value = product.title || '';
   fields.slug.value = product.slug || '';
   fields.category.value = product.category || '';
+  fields.hotmartUrl.value = product.hotmart_url || '';
   fields.description.value = product.description || '';
   fields.price.value = product.price ?? '';
   fields.promoPrice.value = product.promo_price ?? '';
@@ -270,6 +273,7 @@ form.addEventListener('submit', async (event) => {
       title,
       slug,
       category: fields.category.value.trim(),
+      hotmart_url: fields.hotmartUrl.value.trim(),
       description: fields.description.value.trim(),
       price: Number(fields.price.value || 0),
       promo_price: fields.promoPrice.value ? Number(fields.promoPrice.value) : null,
