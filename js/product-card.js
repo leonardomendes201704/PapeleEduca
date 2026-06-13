@@ -59,7 +59,7 @@ export function renderProductCard(product, index = 0, options = {}) {
   const detailsHref = options.detailsHref || '#';
 
   return `
-    <article class="product">
+    <a class="product" href="${detailsHref}" aria-label="Abrir detalhes de ${title}">
       ${tag ? `<span class="tag ${tag.className}">${tag.label}</span>` : ''}
       <div class="product-media">
         <img src="${firstImage}" alt="${title}" loading="lazy" />
@@ -70,9 +70,9 @@ export function renderProductCard(product, index = 0, options = {}) {
       <div class="price">${formattedPrice}</div>
       <div class="stars">${renderStars()} <span style="color:var(--muted); font-size:.9rem;">(${ratingCount})</span></div>
       <div class="product-actions">
-        <a class="product-details" href="${detailsHref}">Detalhes</a>
+        <span class="product-details">Detalhes</span>
         <span class="product-add">+</span>
       </div>
-    </article>
+    </a>
   `;
 }
