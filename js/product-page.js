@@ -1,6 +1,10 @@
 import { supabase } from './supabase-client.js';
+import { renderProductCard } from './product-card.js';
 
 const root = document.getElementById('product-root');
+const relatedRoot = document.getElementById('related-products');
+const relatedPrevButton = document.getElementById('related-prev');
+const relatedNextButton = document.getElementById('related-next');
 const currency = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
 let galleryImages = [];
 let activeImageIndex = 0;
@@ -245,6 +249,42 @@ function renderProduct(product) {
   }
 }
 
+async function loadRelatedProducts(currentProductId) {
+  if (!relatedRoot) return;
+
+  const { data, error } = await supabase
+    .from('products')
+    .select('id,title,description,category,hotmart_url,price,promo_price,promo_start,promo_end,published_at,status,featured,images')
+    .eq('status', 'published')
+    .neq('id', currentProductId)
+    .order('featured', { ascending: false })
+    .order('published_at', { ascending: false })
+    .limit(8);
+
+  if (error) {
+    relatedRoot.innerHTML = `<div class="empty-state">Erro ao carregar materiais relacionados: ${safeText(error.message)}</div>`;
+    return;
+  }
+
+  if (!data || !data.length) {
+    relatedRoot.innerHTML = '<div class="empty-state">Ainda não há outros materiais publicados.</div>';
+    return;
+  }
+
+  relatedRoot.innerHTML = data
+    .map((product, index) => renderProductCard(product, index, { detailsHref: `./product.html?id=${encodeURIComponent(product.id)}` }))
+    .join('');
+}
+
+function scrollRelated(direction) {
+  if (!relatedRoot) return;
+  const amount = Math.max(relatedRoot.clientWidth * 0.88, 280);
+  relatedRoot.scrollBy({ left: direction * amount, behavior: 'smooth' });
+}
+
+relatedPrevButton?.addEventListener('click', () => scrollRelated(-1));
+relatedNextButton?.addEventListener('click', () => scrollRelated(1));
+
 function formatPublished(dateValue) {
   if (!dateValue) return 'Sem data';
   const date = new Date(`${dateValue}T00:00:00`);
@@ -278,6 +318,7 @@ async function loadProduct() {
 
   document.title = `Papelê Educa - ${data.title}`;
   renderProduct(data);
+  await loadRelatedProducts(data.id);
 }
 
 loadProduct();

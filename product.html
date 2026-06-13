@@ -355,6 +355,173 @@
       margin-bottom: 8px;
     }
 
+    .related-section {
+      display: grid;
+      gap: 18px;
+    }
+
+    .related-carousel {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .related-track {
+      display: grid;
+      grid-auto-flow: column;
+      grid-auto-columns: minmax(260px, 1fr);
+      gap: 18px;
+      overflow-x: auto;
+      padding: 4px 2px 14px;
+      scroll-snap-type: x mandatory;
+      scroll-behavior: smooth;
+      scrollbar-width: thin;
+    }
+
+    .related-track .product {
+      scroll-snap-align: start;
+      min-height: 100%;
+    }
+
+    .related-nav {
+      width: 46px;
+      height: 46px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--text);
+      box-shadow: 0 10px 24px rgba(35, 41, 50, 0.12);
+      font-size: 1.8rem;
+      line-height: 1;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+    }
+
+    .products {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .product {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-height: 100%;
+      padding: 18px;
+      border-radius: 28px;
+      background: rgba(255,255,255,0.92);
+      border: 1px solid rgba(216, 210, 198, 0.72);
+      box-shadow: var(--shadow);
+    }
+
+    .product-media {
+      margin-top: 18px;
+      border-radius: 18px;
+      overflow: hidden;
+      background: #fff;
+      border: 1px solid rgba(216, 210, 198, 0.65);
+      aspect-ratio: 1.18 / 0.82;
+    }
+
+    .product-media img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .tag {
+      position: absolute;
+      top: 14px;
+      left: 14px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 800;
+      color: #fff;
+    }
+
+    .tag.pink { background: #ef6f8f; }
+    .tag.yellow { background: #f2c24f; color: #5b4622; }
+    .tag.teal { background: #2bb9b0; }
+
+    .product h3 {
+      margin: 2px 0 0;
+      font-size: 1.12rem;
+      line-height: 1.2;
+    }
+
+    .product-category,
+    .product-description {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    .product-category {
+      font-weight: 700;
+      color: #4f6a81;
+    }
+
+    .product-description {
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      min-height: 3.1em;
+    }
+
+    .product-actions {
+      margin-top: auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .price {
+      font-weight: 800;
+      font-size: 1.05rem;
+    }
+
+    .stars {
+      color: #f3b81f;
+      letter-spacing: 1px;
+      font-size: 0.95rem;
+    }
+
+    .product-details {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 16px;
+      border-radius: 999px;
+      background: #fff4f7;
+      color: #ef6f8f;
+      border: 1px solid rgba(239, 111, 143, 0.22);
+      font-weight: 800;
+      font-size: 0.92rem;
+      line-height: 1;
+    }
+
+    .product-add {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      padding: 0;
+      font-size: 1.3rem;
+      display: grid;
+      place-items: center;
+      background: #ffe7ef;
+      color: #ef6f8f;
+      border: none;
+      flex: 0 0 auto;
+    }
+
     .footer {
       margin-top: 30px;
       padding: 24px 10px 10px;
@@ -467,8 +634,17 @@
 
     @media (max-width: 980px) {
       .detail-grid,
-      .detail-cards {
+      .detail-cards,
+      .products {
         grid-template-columns: 1fr;
+      }
+
+      .related-carousel {
+        grid-template-columns: 1fr;
+      }
+
+      .related-nav {
+        display: none;
       }
 
       .topbar {
@@ -492,6 +668,8 @@
       .carousel-arrow { width: 38px; height: 38px; font-size: 1.5rem; }
       .lightbox-dialog { padding: 10px; }
       .lightbox-nav { width: 40px; height: 40px; }
+      .related-track { grid-auto-columns: minmax(240px, 82vw); }
+      .product { padding: 16px; }
     }
   </style>
 </head>
@@ -516,6 +694,19 @@
 
     <section id="product-root" class="hero-card">
       <div class="empty-state">Carregando produto...</div>
+    </section>
+
+    <section class="section related-section">
+      <div class="section-head">
+        <h2>Mais materiais para explorar</h2>
+        <p>Outros produtos publicados com o mesmo padrão visual da vitrine principal.</p>
+      </div>
+
+      <div class="related-carousel">
+        <button type="button" class="related-nav" id="related-prev" aria-label="Material anterior">‹</button>
+        <div id="related-products" class="related-track" aria-live="polite"></div>
+        <button type="button" class="related-nav" id="related-next" aria-label="Próximo material">›</button>
+      </div>
     </section>
 
     <footer class="footer" id="sobre">
