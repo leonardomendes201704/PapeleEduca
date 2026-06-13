@@ -2,6 +2,9 @@ import { supabase } from './supabase-client.js';
 
 const root = document.getElementById('product-root');
 const currency = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+let galleryImages = [];
+let activeImageIndex = 0;
+let lightboxEl = null;
 
 function safeText(value) {
   return String(value ?? '').replace(/[&<>"']/g, (char) => ({
@@ -45,9 +48,95 @@ function getQueryId() {
   return params.get('id');
 }
 
+function getFallbackImages() {
+  return [{ url: './images/hero.png', path: '', name: 'Imagem do produto' }];
+}
+
+function setActiveImage(index) {
+  if (!galleryImages.length) return;
+  activeImageIndex = (index + galleryImages.length) % galleryImages.length;
+
+  const mainImageEl = document.getElementById('main-image');
+  const lightboxImageEl = document.getElementById('lightbox-image');
+  const currentImage = galleryImages[activeImageIndex];
+
+  if (mainImageEl && currentImage) {
+    mainImageEl.src = currentImage.url;
+    mainImageEl.alt = `${safeText(currentImage.name || 'Imagem do produto')} - imagem ${activeImageIndex + 1}`;
+  }
+
+  if (lightboxImageEl && currentImage) {
+    lightboxImageEl.src = currentImage.url;
+    lightboxImageEl.alt = `${safeText(currentImage.name || 'Imagem do produto')} - imagem ${activeImageIndex + 1}`;
+  }
+
+  root.querySelectorAll('.thumbs button').forEach((button, buttonIndex) => {
+    button.classList.toggle('active', buttonIndex === activeImageIndex);
+  });
+}
+
+function openLightbox(index = activeImageIndex) {
+  if (!galleryImages.length) return;
+  activeImageIndex = index;
+  setActiveImage(activeImageIndex);
+
+  if (lightboxEl) {
+    lightboxEl.classList.add('is-open');
+    lightboxEl.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('lightbox-open');
+  }
+}
+
+function closeLightbox() {
+  if (lightboxEl) {
+    lightboxEl.classList.remove('is-open');
+    lightboxEl.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('lightbox-open');
+  }
+}
+
+function ensureLightbox() {
+  if (lightboxEl) return lightboxEl;
+
+  lightboxEl = document.createElement('div');
+  lightboxEl.className = 'lightbox';
+  lightboxEl.setAttribute('aria-hidden', 'true');
+  lightboxEl.innerHTML = `
+    <div class="lightbox-backdrop" data-lightbox-close></div>
+    <div class="lightbox-dialog" role="dialog" aria-modal="true" aria-label="Visualização ampliada da imagem">
+      <button type="button" class="lightbox-close" aria-label="Fechar imagem ampliada" data-lightbox-close>×</button>
+      <button type="button" class="lightbox-nav lightbox-prev" aria-label="Imagem anterior" data-lightbox-prev>‹</button>
+      <img id="lightbox-image" src="" alt="" />
+      <button type="button" class="lightbox-nav lightbox-next" aria-label="Próxima imagem" data-lightbox-next>›</button>
+    </div>
+  `;
+
+  document.body.appendChild(lightboxEl);
+
+  lightboxEl.addEventListener('click', (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLElement)) return;
+    if (target.matches('[data-lightbox-close]')) closeLightbox();
+    if (target.matches('[data-lightbox-prev]')) setActiveImage(activeImageIndex - 1);
+    if (target.matches('[data-lightbox-next]')) setActiveImage(activeImageIndex + 1);
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (!lightboxEl?.classList.contains('is-open')) return;
+    if (event.key === 'Escape') closeLightbox();
+    if (event.key === 'ArrowLeft') setActiveImage(activeImageIndex - 1);
+    if (event.key === 'ArrowRight') setActiveImage(activeImageIndex + 1);
+  });
+
+  return lightboxEl;
+}
+
 function renderProduct(product) {
-  const images = normalizeImages(product.images);
-  const mainImage = images[0]?.url || './images/hero.png';
+  galleryImages = normalizeImages(product.images);
+  if (!galleryImages.length) {
+    galleryImages = getFallbackImages();
+  }
+  activeImageIndex = 0;
   const title = safeText(product.title);
   const category = safeText(product.category || 'Sem categoria');
   const description = safeText(product.description || 'Material disponível para uso pedagógico.');
@@ -55,10 +144,10 @@ function renderProduct(product) {
   const promoPrice = product.promo_price ? currency.format(Number(product.promo_price)) : '';
   const price = currency.format(Number(currentPrice || 0));
   const buyUrl = typeof product.hotmart_url === 'string' ? product.hotmart_url.trim() : '';
-  const thumbs = images.length
-    ? images.map((image, index) => `
-      <button type="button" class="${index === 0 ? 'active' : ''}" data-image="${image.url}">
-        <img src="${image.url}" alt="${title} - imagem ${index + 1}" />
+  const thumbs = galleryImages.length > 1
+    ? galleryImages.map((image, index) => `
+      <button type="button" class="thumb ${index === 0 ? 'active' : ''}" data-index="${index}" aria-label="Ver imagem ${index + 1}">
+        <img src="${image.url}" alt="${safeText(image.name || `${title} - imagem ${index + 1}`)}" />
       </button>
     `).join('')
     : '';
@@ -66,12 +155,19 @@ function renderProduct(product) {
   root.innerHTML = `
     <div class="detail-grid">
       <div class="gallery">
-        <div class="main-image">
-          <img id="main-image" src="${mainImage}" alt="${title}" />
-        </div>
-        <div class="thumbs">
-          ${thumbs}
-        </div>
+        <button type="button" class="main-image" id="main-image-trigger" aria-label="Abrir imagem em tamanho ampliado">
+          <img id="main-image" src="${galleryImages[0].url}" alt="${title}" />
+          <span class="main-image-hint">Clique para ampliar</span>
+        </button>
+        ${galleryImages.length > 1 ? `
+          <div class="carousel-controls">
+            <button type="button" class="carousel-arrow" id="carousel-prev" aria-label="Imagem anterior">‹</button>
+            <button type="button" class="carousel-arrow" id="carousel-next" aria-label="Próxima imagem">›</button>
+          </div>
+          <div class="thumbs">
+            ${thumbs}
+          </div>
+        ` : ''}
       </div>
 
       <article class="product-panel">
@@ -125,17 +221,28 @@ function renderProduct(product) {
   `;
 
   const mainImageEl = document.getElementById('main-image');
+  const mainTrigger = document.getElementById('main-image-trigger');
   const thumbButtons = Array.from(root.querySelectorAll('.thumbs button'));
+  const prevButton = document.getElementById('carousel-prev');
+  const nextButton = document.getElementById('carousel-next');
+
+  ensureLightbox();
+  setActiveImage(0);
+
   thumbButtons.forEach((button) => {
     button.addEventListener('click', () => {
-      const url = button.dataset.image;
-      if (url && mainImageEl) {
-        mainImageEl.src = url;
-        thumbButtons.forEach((item) => item.classList.remove('active'));
-        button.classList.add('active');
-      }
+      const index = Number(button.dataset.index || 0);
+      setActiveImage(index);
     });
   });
+
+  prevButton?.addEventListener('click', () => setActiveImage(activeImageIndex - 1));
+  nextButton?.addEventListener('click', () => setActiveImage(activeImageIndex + 1));
+  mainTrigger?.addEventListener('click', () => openLightbox(activeImageIndex));
+
+  if (mainImageEl) {
+    mainImageEl.addEventListener('click', () => openLightbox(activeImageIndex));
+  }
 }
 
 function formatPublished(dateValue) {

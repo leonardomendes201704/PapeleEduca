@@ -32,6 +32,8 @@
 
     img { max-width: 100%; display: block; }
     a { color: inherit; text-decoration: none; }
+    button { font: inherit; }
+    body.lightbox-open { overflow: hidden; }
 
     .page {
       width: min(var(--max), calc(100% - 32px));
@@ -117,25 +119,72 @@
     .gallery {
       display: grid;
       gap: 14px;
+      position: relative;
     }
 
     .main-image {
+      position: relative;
+      width: 100%;
       aspect-ratio: 1.18 / 0.82;
       border-radius: 26px;
       overflow: hidden;
       border: 1px solid rgba(216, 210, 198, 0.75);
       background: #fff;
+      padding: 0;
+      cursor: zoom-in;
     }
 
     .main-image img {
       width: 100%;
       height: 100%;
       object-fit: cover;
+      border-radius: inherit;
+    }
+
+    .main-image-hint {
+      position: absolute;
+      right: 14px;
+      bottom: 14px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.88);
+      color: #3c4954;
+      font-size: 0.82rem;
+      font-weight: 700;
+      box-shadow: 0 8px 22px rgba(35, 41, 50, 0.12);
+      pointer-events: none;
+    }
+
+    .carousel-controls {
+      position: absolute;
+      top: calc(50% - 24px);
+      left: 12px;
+      right: 12px;
+      display: flex;
+      justify-content: space-between;
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    .carousel-arrow {
+      pointer-events: auto;
+      width: 44px;
+      height: 44px;
+      border: 0;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.92);
+      color: #263238;
+      font-size: 1.8rem;
+      line-height: 1;
+      display: grid;
+      place-items: center;
+      box-shadow: 0 10px 24px rgba(35, 41, 50, 0.16);
+      cursor: pointer;
     }
 
     .thumbs {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(84px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(72px, 1fr));
       gap: 10px;
     }
 
@@ -147,15 +196,26 @@
       border-radius: 16px;
       overflow: hidden;
       border: 2px solid transparent;
+      aspect-ratio: 1 / 1;
+      opacity: 0.78;
+      transition: transform 0.2s ease, opacity 0.2s ease, border-color 0.2s ease;
     }
 
     .thumbs button.active {
       border-color: var(--accent);
+      opacity: 1;
+      transform: translateY(-1px);
+      box-shadow: 0 8px 18px rgba(39, 180, 174, 0.16);
+    }
+
+    .thumbs button:hover {
+      opacity: 1;
+      transform: translateY(-1px);
     }
 
     .thumbs img {
       width: 100%;
-      aspect-ratio: 1 / 1;
+      height: 100%;
       object-fit: cover;
     }
 
@@ -328,6 +388,83 @@
       color: var(--muted);
     }
 
+    .lightbox {
+      position: fixed;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+      z-index: 999;
+    }
+
+    .lightbox.is-open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .lightbox-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(16, 20, 24, 0.82);
+      backdrop-filter: blur(6px);
+    }
+
+    .lightbox-dialog {
+      position: relative;
+      width: min(92vw, 1100px);
+      max-height: 88vh;
+      z-index: 1;
+      display: grid;
+      place-items: center;
+      padding: 18px;
+    }
+
+    .lightbox-dialog img {
+      max-width: 100%;
+      max-height: 82vh;
+      width: auto;
+      height: auto;
+      border-radius: 24px;
+      box-shadow: 0 22px 60px rgba(0, 0, 0, 0.35);
+      background: #fff;
+    }
+
+    .lightbox-close,
+    .lightbox-nav {
+      position: absolute;
+      border: 0;
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+      color: #fff;
+      background: rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(8px);
+    }
+
+    .lightbox-close {
+      top: 0;
+      right: 0;
+      width: 44px;
+      height: 44px;
+      border-radius: 999px;
+      font-size: 1.4rem;
+    }
+
+    .lightbox-nav {
+      top: 50%;
+      transform: translateY(-50%);
+      width: 48px;
+      height: 48px;
+      border-radius: 999px;
+      font-size: 2rem;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+    }
+
+    .lightbox-prev { left: 8px; }
+    .lightbox-next { right: 8px; }
+
     @media (max-width: 980px) {
       .detail-grid,
       .detail-cards {
@@ -351,6 +488,10 @@
       .hero-card, .section { border-radius: 28px; padding: 18px; }
       .buy-now { width: 100%; }
       .price { font-size: 1.7rem; }
+      .main-image-hint { font-size: 0.76rem; padding: 7px 10px; }
+      .carousel-arrow { width: 38px; height: 38px; font-size: 1.5rem; }
+      .lightbox-dialog { padding: 10px; }
+      .lightbox-nav { width: 40px; height: 40px; }
     }
   </style>
 </head>
