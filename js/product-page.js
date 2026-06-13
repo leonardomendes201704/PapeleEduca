@@ -191,9 +191,9 @@ function renderProduct(product) {
         <div class="description">${description}</div>
 
         <ul class="bullets">
-          <li>Download e acesso conforme configurado no produto da Hotmart.</li>
-          <li>Produto cadastrado e publicado diretamente pelo painel admin.</li>
-          <li>Sem carrinho, sem checkout próprio e sem fluxo de compra interno.</li>
+          <li>Material digital pronto para usar em casa ou na sala de aula.</li>
+          <li>Acesso r?pido pela Hotmart ap?s a confirma??o da compra.</li>
+          <li>Conte?do pensado para facilitar o dia a dia de educadores e fam?lias.</li>
         </ul>
 
         <div class="actions">
@@ -204,24 +204,6 @@ function renderProduct(product) {
         </div>
       </article>
     </div>
-
-    <section class="section">
-      <h2>Detalhes do material</h2>
-      <div class="detail-cards">
-        <article class="info-card">
-          <strong>Categoria</strong>
-          <div>${category}</div>
-        </article>
-        <article class="info-card">
-          <strong>Preço</strong>
-          <div>${price}</div>
-        </article>
-        <article class="info-card">
-          <strong>Entrega</strong>
-          <div>Compra finalizada no Hotmart.</div>
-        </article>
-      </div>
-    </section>
   `;
 
   const mainImageEl = document.getElementById('main-image');
