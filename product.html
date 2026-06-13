@@ -368,9 +368,7 @@
     }
 
     .related-track {
-      display: grid;
-      grid-auto-flow: column;
-      grid-auto-columns: minmax(260px, 1fr);
+      display: flex;
       gap: 18px;
       overflow-x: auto;
       padding: 4px 2px 14px;
@@ -382,6 +380,8 @@
     .related-track .product {
       scroll-snap-align: start;
       min-height: 100%;
+      flex: 0 0 calc((100% - 72px) / 5);
+      max-width: calc((100% - 72px) / 5);
     }
 
     .related-nav {
@@ -647,6 +647,11 @@
         display: none;
       }
 
+      .related-track .product {
+        flex-basis: calc((100% - 36px) / 3);
+        max-width: calc((100% - 36px) / 3);
+      }
+
       .topbar {
         flex-direction: column;
         align-items: stretch;
@@ -668,7 +673,11 @@
       .carousel-arrow { width: 38px; height: 38px; font-size: 1.5rem; }
       .lightbox-dialog { padding: 10px; }
       .lightbox-nav { width: 40px; height: 40px; }
-      .related-track { grid-auto-columns: minmax(240px, 82vw); }
+      .related-track { gap: 14px; }
+      .related-track .product {
+        flex-basis: 82vw;
+        max-width: 82vw;
+      }
       .product { padding: 16px; }
     }
   </style>

@@ -278,7 +278,7 @@ async function loadRelatedProducts(currentProductId) {
 
 function scrollRelated(direction) {
   if (!relatedRoot) return;
-  const amount = Math.max(relatedRoot.clientWidth * 0.88, 280);
+  const amount = Math.max(relatedRoot.clientWidth, 280);
   relatedRoot.scrollBy({ left: direction * amount, behavior: 'smooth' });
 }
 
