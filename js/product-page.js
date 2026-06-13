@@ -192,8 +192,8 @@ function renderProduct(product) {
 
         <ul class="bullets">
           <li>Material digital pronto para usar em casa ou na sala de aula.</li>
-          <li>Acesso r?pido pela Hotmart ap?s a confirma??o da compra.</li>
-          <li>Conte?do pensado para facilitar o dia a dia de educadores e fam?lias.</li>
+          <li>Acesso r&aacute;pido pela Hotmart ap&oacute;s a confirma&ccedil;&atilde;o da compra.</li>
+          <li>Conte&uacute;do pensado para facilitar o dia a dia de educadores e fam&iacute;lias.</li>
         </ul>
 
         <div class="actions">
