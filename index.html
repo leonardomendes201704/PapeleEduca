@@ -569,7 +569,7 @@
       border: 1px solid rgba(216, 210, 198, 0.72);
       box-shadow: var(--shadow);
       background: #fff;
-      min-height: 320px;
+      min-height: 170px;
     }
 
     .contact-card > img {
@@ -581,26 +581,14 @@
 
     .contact-overlay {
       position: absolute;
-      top: 8%;
-      right: 4%;
-      bottom: 8%;
-      width: min(48%, 560px);
-      border-radius: 36px;
+      top: 10%;
+      left: calc(34% - 10px);
+      right: calc(2.5% + 42px);
+      bottom: 14%;
+      border-radius: 30px;
       background: rgba(255, 247, 229, 0.98);
       box-shadow: 0 24px 60px rgba(84, 61, 36, 0.18);
-      padding: 18px 16px 16px;
-    }
-
-    .contact-ribbon {
-      position: absolute;
-      top: -8px;
-      right: 16px;
-      width: 88px;
-      height: 22px;
-      border-radius: 999px;
-      background: linear-gradient(135deg, #f59ab3, #ef5f89);
-      transform: rotate(36deg);
-      box-shadow: 0 10px 18px rgba(239, 95, 137, 0.24);
+      padding: 12px 12px 10px;
     }
 
     .contact-form {
@@ -608,45 +596,43 @@
       display: flex;
       flex-direction: column;
       justify-content: center;
-      gap: 9px;
+      gap: 6px;
     }
 
     .contact-form-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 9px;
+      gap: 7px;
     }
 
     .contact-form textarea {
-      min-height: 88px;
+      min-height: 100px;
     }
 
     .contact-submit {
       align-self: center;
-      min-width: 200px;
+      min-width: 170px;
       justify-content: center;
+      min-height: 42px;
+      font-size: 0.92rem;
     }
 
-    label {
+    .contact-form label {
       display: block;
       font-weight: 700;
-      font-size: 0.92rem;
-      margin-bottom: 8px;
+      font-size: 0.78rem;
+      margin-bottom: 5px;
     }
 
-    input, textarea {
+    .contact-form input,
+    .contact-form textarea {
       width: 100%;
       border: 1px solid #dcd6ca;
       background: #fbfaf7;
-      border-radius: 14px;
-      padding: 11px 13px;
+      border-radius: 12px;
+      padding: 8px 10px;
       font: inherit;
       color: var(--text);
-    }
-
-    textarea {
-      min-height: 150px;
-      resize: vertical;
     }
 
     .footer {
@@ -704,13 +690,13 @@
       }
 
       .contact-card {
-        min-height: 420px;
+        min-height: 150px;
       }
 
       .contact-overlay {
         top: auto;
-        right: 12px;
         left: 12px;
+        right: 12px;
         bottom: 12px;
         width: auto;
         min-height: auto;
@@ -735,7 +721,7 @@
         background-image: none;
       }
       .contact-card {
-        min-height: 450px;
+        min-height: 160px;
       }
       .contact-form-grid {
         grid-template-columns: 1fr;
@@ -820,7 +806,7 @@
 
       <div id="categories-grid" class="products categories-products" aria-live="polite"></div>
       <div class="products-footer">
-        <a class="btn see-more" href="#produtos">
+        <a class="btn see-more" href="./atividades.html">
           <span class="btn-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
               <path d="M20.7 3.3a1 1 0 0 0-1.06-.24L4.6 8.81a1 1 0 0 0-.06 1.82l5.74 2.62 2.62 5.74a1 1 0 0 0 1.82-.06l5.75-15.04a1 1 0 0 0-.24-1.06Zm-7.26 13.5-1.8-3.93 3.93-3.93-2.13-2.13 5.1-2.02-2.02 5.1-2.13-2.13-3.93 3.93-3.93-1.8 10.91-4.19-4.1 10.17Z"/>
@@ -845,7 +831,7 @@
       <div id="products-grid" class="products" aria-live="polite"></div>
 
       <div class="products-footer">
-        <a class="btn see-more" href="#categorias">
+        <a class="btn see-more" href="./atividades.html">
           <span class="btn-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
               <path d="M20.7 3.3a1 1 0 0 0-1.06-.24L4.6 8.81a1 1 0 0 0-.06 1.82l5.74 2.62 2.62 5.74a1 1 0 0 0 1.82-.06l5.75-15.04a1 1 0 0 0-.24-1.06Zm-7.26 13.5-1.8-3.93 3.93-3.93-2.13-2.13 5.1-2.02-2.02 5.1-2.13-2.13-3.93 3.93-3.93-1.8 10.91-4.19-4.1 10.17Z"/>
@@ -875,7 +861,6 @@
       <div class="contact-card">
         <img src="images/fale-com-a-gente.png" alt="Fale com a gente" />
         <div class="contact-overlay">
-          <div class="contact-ribbon" aria-hidden="true"></div>
           <form class="contact-form">
             <div class="contact-form-grid">
               <div>
