@@ -198,6 +198,25 @@
       overflow: hidden;
     }
 
+    .hero--hidden {
+      display: none;
+    }
+
+    .hero-top-banner {
+      margin-top: 18px;
+      border: 1px solid rgba(216, 210, 198, 0.75);
+      border-radius: 36px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      background: rgba(255, 255, 255, 0.72);
+    }
+
+    .hero-top-banner img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
     .hero::before {
       content: "";
       position: absolute;
@@ -681,6 +700,10 @@
         background-image: none;
       }
 
+      .hero-top-banner {
+        margin-top: 18px;
+      }
+
       .hero-grid > div:first-child {
         max-width: none;
       }
@@ -720,6 +743,9 @@
       .hero {
         background-image: none;
       }
+      .hero-top-banner {
+        border-radius: 28px;
+      }
       .contact-card {
         min-height: 160px;
       }
@@ -749,8 +775,7 @@
 
       <nav class="nav" aria-label="Navegação principal">
         <a class="active" href="#inicio">Início</a>
-        <a href="#categorias">Categorias</a>
-        <a href="#sobre">Sobre</a>
+        <a href="#categorias">Materiais</a>
         <a href="#contato">Contato</a>
       </nav>
 
@@ -769,7 +794,11 @@
       </a>
     </header>
 
-    <section class="hero" id="inicio">
+    <section class="hero-top-banner" aria-label="Imagem de destaque">
+      <img src="images/hero-2.jpeg" alt="Imagem de destaque da Papelê Educa" />
+    </section>
+
+    <section class="hero hero--hidden" id="inicio">
       <div class="hero-grid">
         <div>
           <h1>

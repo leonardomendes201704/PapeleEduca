@@ -30,8 +30,8 @@ async function loadProducts() {
     return;
   }
 
-  const categoriesData = data.slice(0, 3);
-  const featuredData = data.slice(0, 6);
+  const categoriesData = data.slice(0, 6);
+  const featuredData = data.slice(0, 3);
 
   if (categoriesGrid) {
     categoriesGrid.innerHTML = categoriesData
