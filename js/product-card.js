@@ -59,7 +59,7 @@ export function renderProductCard(product, index = 0, options = {}) {
   const detailsHref = options.detailsHref || '#';
 
   return `
-    <a class="product" href="${detailsHref}" aria-label="Abrir detalhes de ${title}">
+    <a class="product" href="${detailsHref}" data-product-id="${safeText(product.id)}" aria-label="Abrir detalhes de ${title}">
       ${tag ? `<span class="tag ${tag.className}">${tag.label}</span>` : ''}
       <div class="product-media">
         <img src="${firstImage}" alt="${title}" loading="lazy" />

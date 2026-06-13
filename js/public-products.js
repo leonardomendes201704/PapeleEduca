@@ -1,5 +1,6 @@
 import { supabase } from './supabase-client.js';
 import { renderProductCard, safeText } from './product-card.js';
+import { bindProductCardTracking } from './metrics.js';
 
 const grid = document.getElementById('products-grid');
 const categoriesGrid = document.getElementById('categories-grid');
@@ -36,11 +37,13 @@ async function loadProducts() {
     categoriesGrid.innerHTML = categoriesData
       .map((product, index) => renderProductCard(product, index, { detailsHref: `./product.html?id=${encodeURIComponent(product.id)}` }))
       .join('');
+    bindProductCardTracking(categoriesGrid, 'categories');
   }
 
   grid.innerHTML = featuredData
     .map((product, index) => renderProductCard(product, index, { detailsHref: `./product.html?id=${encodeURIComponent(product.id)}` }))
     .join('');
+  bindProductCardTracking(grid, 'featured');
 }
 
 loadProducts();

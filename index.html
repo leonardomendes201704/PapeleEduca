@@ -561,19 +561,70 @@
       box-shadow: none;
     }
 
-    .contact-visual {
+    .contact-card {
+      position: relative;
       width: 100%;
       border-radius: 34px;
       overflow: hidden;
       border: 1px solid rgba(216, 210, 198, 0.72);
       box-shadow: var(--shadow);
       background: #fff;
+      min-height: 420px;
     }
 
-    .contact-visual img {
+    .contact-card > img {
       width: 100%;
-      height: auto;
+      height: 100%;
+      object-fit: cover;
       display: block;
+    }
+
+    .contact-overlay {
+      position: absolute;
+      top: 8%;
+      right: 4%;
+      width: min(58%, 680px);
+      min-height: 78%;
+      border-radius: 44px;
+      background: rgba(255, 247, 229, 0.98);
+      box-shadow: 0 24px 60px rgba(84, 61, 36, 0.18);
+      padding: 28px;
+    }
+
+    .contact-ribbon {
+      position: absolute;
+      top: -10px;
+      right: 24px;
+      width: 112px;
+      height: 28px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, #f59ab3, #ef5f89);
+      transform: rotate(36deg);
+      box-shadow: 0 10px 18px rgba(239, 95, 137, 0.24);
+    }
+
+    .contact-form {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 18px;
+    }
+
+    .contact-form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .contact-form textarea {
+      min-height: 118px;
+    }
+
+    .contact-submit {
+      align-self: center;
+      min-width: 280px;
+      justify-content: center;
     }
 
     label {
@@ -652,6 +703,21 @@
         padding: 14px;
       }
 
+      .contact-card {
+        min-height: 560px;
+      }
+
+      .contact-overlay {
+        top: auto;
+        right: 16px;
+        left: 16px;
+        bottom: 16px;
+        width: auto;
+        min-height: auto;
+        padding: 22px;
+        border-radius: 30px;
+      }
+
       #categorias::before,
       #categorias::after {
         width: 14%;
@@ -667,6 +733,16 @@
       }
       .hero {
         background-image: none;
+      }
+      .contact-card {
+        min-height: 600px;
+      }
+      .contact-form-grid {
+        grid-template-columns: 1fr;
+      }
+      .contact-submit {
+        width: 100%;
+        min-width: 0;
       }
       #categorias::before,
       #categorias::after {
@@ -796,8 +872,28 @@
     </section>
 
     <section class="section contact" id="contato">
-      <div class="contact-visual">
+      <div class="contact-card">
         <img src="images/fale-com-a-gente.png" alt="Fale com a gente" />
+        <div class="contact-overlay">
+          <div class="contact-ribbon" aria-hidden="true"></div>
+          <form class="contact-form">
+            <div class="contact-form-grid">
+              <div>
+                <label for="contact-name">Nome</label>
+                <input id="contact-name" name="name" type="text" placeholder="Seu nome" autocomplete="name" />
+              </div>
+              <div>
+                <label for="contact-email">E-mail</label>
+                <input id="contact-email" name="email" type="email" placeholder="seu@email.com" autocomplete="email" />
+              </div>
+            </div>
+            <div>
+              <label for="contact-message">Mensagem</label>
+              <textarea id="contact-message" name="message" placeholder="Escreva sua mensagem..."></textarea>
+            </div>
+            <button class="btn contact-submit" type="submit">Enviar mensagem</button>
+          </form>
+        </div>
       </div>
     </section>
 
@@ -812,5 +908,10 @@
     </footer>
   </main>
   <script type="module" src="./js/public-products.js"></script>
+  <script>
+    document.querySelector('.contact-form')?.addEventListener('submit', (event) => {
+      event.preventDefault();
+    });
+  </script>
 </body>
 </html>

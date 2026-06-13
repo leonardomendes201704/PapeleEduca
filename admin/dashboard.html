@@ -31,6 +31,36 @@
       </article>
     </section>
 
+    <section class="metrics-section">
+      <div class="panel-head">
+        <h2>Métricas do site</h2>
+        <p class="muted">Visualizações, aberturas e cliques de compra coletados em tempo real.</p>
+      </div>
+
+      <div class="metrics-grid">
+        <article class="summary-card">
+          <span class="summary-label">Visualizações</span>
+          <strong id="metric-views">0</strong>
+        </article>
+        <article class="summary-card">
+          <span class="summary-label">Visitas únicas</span>
+          <strong id="metric-unique-views">0</strong>
+        </article>
+        <article class="summary-card">
+          <span class="summary-label">Aberturas de produto</span>
+          <strong id="metric-opens">0</strong>
+        </article>
+        <article class="summary-card">
+          <span class="summary-label">Cliques em comprar</span>
+          <strong id="metric-buy-clicks">0</strong>
+        </article>
+        <article class="summary-card">
+          <span class="summary-label">Taxa de conversão</span>
+          <strong id="metric-conversion">0%</strong>
+        </article>
+      </div>
+    </section>
+
     <section class="admin-grid">
       <article class="panel form-panel">
         <div class="panel-head">
@@ -129,6 +159,15 @@
 
         <div id="products-list" class="products-list"></div>
       </article>
+    </section>
+
+    <section class="panel metrics-panel">
+      <div class="panel-head">
+        <h2>Ranking de produtos</h2>
+        <p class="muted">Top produtos por visualizações e cliques em compra.</p>
+      </div>
+
+      <div id="metrics-list" class="metrics-list"></div>
     </section>
   </main>
 

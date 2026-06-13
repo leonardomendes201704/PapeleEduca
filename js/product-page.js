@@ -1,5 +1,6 @@
 import { supabase } from './supabase-client.js';
 import { renderProductCard } from './product-card.js';
+import { bindProductCardTracking, trackProductBuyClick, trackProductViewOnce } from './metrics.js';
 
 const root = document.getElementById('product-root');
 const relatedRoot = document.getElementById('related-products');
@@ -54,6 +55,20 @@ function getQueryId() {
 
 function getFallbackImages() {
   return [{ url: './images/hero.png', path: '', name: 'Imagem do produto' }];
+}
+
+function sanitizeExternalUrl(value) {
+  if (typeof value !== 'string') return '';
+  const trimmed = value.trim();
+  if (!trimmed || !/^https?:\/\//i.test(trimmed)) return '';
+
+  try {
+    const parsed = new URL(trimmed);
+    if (!['http:', 'https:'].includes(parsed.protocol)) return '';
+    return parsed.toString();
+  } catch {
+    return '';
+  }
 }
 
 function setActiveImage(index) {
@@ -147,7 +162,7 @@ function renderProduct(product) {
   const currentPrice = isPromoActive(product) && product.promo_price ? product.promo_price : product.price;
   const promoPrice = product.promo_price ? currency.format(Number(product.promo_price)) : '';
   const price = currency.format(Number(currentPrice || 0));
-  const buyUrl = typeof product.hotmart_url === 'string' ? product.hotmart_url.trim() : '';
+  const buyUrl = sanitizeExternalUrl(product.hotmart_url);
   const thumbs = galleryImages.length > 1
     ? galleryImages.map((image, index) => `
       <button type="button" class="thumb ${index === 0 ? 'active' : ''}" data-index="${index}" aria-label="Ver imagem ${index + 1}">
@@ -198,7 +213,7 @@ function renderProduct(product) {
 
         <div class="actions">
           ${buyUrl
-            ? `<a class="btn buy-now" href="${buyUrl}" target="_blank" rel="noopener noreferrer">Comprar agora</a>`
+            ? `<a class="btn buy-now" href="${buyUrl}" data-product-id="${safeText(product.id)}" target="_blank" rel="noopener noreferrer">Comprar agora</a>`
             : `<span class="btn buy-now" style="opacity:.7; pointer-events:none;">Comprar agora</span>`}
           <a class="btn secondary" href="./index.html#categorias">Voltar</a>
         </div>
@@ -206,7 +221,6 @@ function renderProduct(product) {
     </div>
   `;
 
-  const mainImageEl = document.getElementById('main-image');
   const mainTrigger = document.getElementById('main-image-trigger');
   const thumbButtons = Array.from(root.querySelectorAll('.thumbs button'));
   const prevButton = document.getElementById('carousel-prev');
@@ -226,8 +240,14 @@ function renderProduct(product) {
   nextButton?.addEventListener('click', () => setActiveImage(activeImageIndex + 1));
   mainTrigger?.addEventListener('click', () => openLightbox(activeImageIndex));
 
-  if (mainImageEl) {
-    mainImageEl.addEventListener('click', () => openLightbox(activeImageIndex));
+  const buyNowButton = root.querySelector('.buy-now[data-product-id]');
+  if (buyNowButton) {
+    buyNowButton.addEventListener('click', () => {
+      void trackProductBuyClick(product.id, {
+        source: 'product_page',
+        pathname: window.location.pathname,
+      });
+    });
   }
 }
 
@@ -256,6 +276,7 @@ async function loadRelatedProducts(currentProductId) {
   relatedRoot.innerHTML = data
     .map((product, index) => renderProductCard(product, index, { detailsHref: `./product.html?id=${encodeURIComponent(product.id)}` }))
     .join('');
+  bindProductCardTracking(relatedRoot, 'related');
 }
 
 function scrollRelated(direction) {
@@ -300,6 +321,10 @@ async function loadProduct() {
 
   document.title = `Papelê Educa - ${data.title}`;
   renderProduct(data);
+  void trackProductViewOnce(data.id, {
+    source: 'product_page',
+    pathname: window.location.pathname,
+  });
   await loadRelatedProducts(data.id);
 }
 

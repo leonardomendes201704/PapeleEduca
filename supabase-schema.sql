@@ -164,3 +164,61 @@ using (
 -- Helpful index for admin listing
 create index if not exists products_created_at_idx on public.products (created_at desc);
 create index if not exists products_status_idx on public.products (status);
+
+create table if not exists public.product_events (
+  id uuid primary key default gen_random_uuid(),
+  product_id uuid not null references public.products (id) on delete cascade,
+  event_type text not null check (event_type in ('view', 'open', 'buy_click')),
+  visitor_id text not null,
+  session_id text not null,
+  source text not null default 'site',
+  pathname text,
+  referrer text,
+  metadata jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now()
+);
+
+alter table public.product_events enable row level security;
+
+drop policy if exists "Anyone can insert product events" on public.product_events;
+create policy "Anyone can insert product events"
+on public.product_events
+for insert
+with check (
+  event_type in ('view', 'open', 'buy_click')
+  and visitor_id <> ''
+  and session_id <> ''
+);
+
+drop policy if exists "Admins can read product events" on public.product_events;
+create policy "Admins can read product events"
+on public.product_events
+for select
+using (public.is_admin(auth.uid()));
+
+create index if not exists product_events_product_created_idx on public.product_events (product_id, created_at desc);
+create index if not exists product_events_type_created_idx on public.product_events (event_type, created_at desc);
+create index if not exists product_events_visitor_idx on public.product_events (visitor_id);
+
+create or replace view public.product_metrics_report as
+select
+  p.id,
+  p.title,
+  p.slug,
+  p.category,
+  p.price,
+  p.promo_price,
+  p.status,
+  p.featured,
+  p.images,
+  coalesce(count(*) filter (where e.event_type = 'view'), 0)::int as views,
+  coalesce(count(distinct e.session_id) filter (where e.event_type = 'view'), 0)::int as unique_views,
+  coalesce(count(*) filter (where e.event_type = 'open'), 0)::int as opens,
+  coalesce(count(*) filter (where e.event_type = 'buy_click'), 0)::int as buy_clicks,
+  max(e.created_at) as last_event_at
+from public.products p
+left join public.product_events e
+  on e.product_id = p.id
+group by p.id;
+
+grant select on public.product_metrics_report to authenticated;

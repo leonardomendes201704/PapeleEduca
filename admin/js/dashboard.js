@@ -11,6 +11,12 @@ const previewEl = document.getElementById('image-preview');
 const totalEl = document.getElementById('count-total');
 const publishedEl = document.getElementById('count-published');
 const draftEl = document.getElementById('count-draft');
+const metricViewsEl = document.getElementById('metric-views');
+const metricUniqueViewsEl = document.getElementById('metric-unique-views');
+const metricOpensEl = document.getElementById('metric-opens');
+const metricBuyClicksEl = document.getElementById('metric-buy-clicks');
+const metricConversionEl = document.getElementById('metric-conversion');
+const metricsListEl = document.getElementById('metrics-list');
 
 const fields = {
   id: document.getElementById('product-id'),
@@ -221,6 +227,77 @@ async function loadProducts() {
   });
 }
 
+function formatPercent(value) {
+  return `${Math.round(value * 100)}%`;
+}
+
+async function loadMetrics() {
+  if (!metricsListEl) return;
+
+  const { data, error } = await supabase
+    .from('product_metrics_report')
+    .select('id,title,category,status,views,unique_views,opens,buy_clicks,last_event_at')
+    .order('views', { ascending: false })
+    .order('buy_clicks', { ascending: false });
+
+  if (error) {
+    metricsListEl.innerHTML = `<p class="metric-empty">Erro ao carregar métricas: ${error.message}</p>`;
+    return;
+  }
+
+  const rows = data || [];
+  const totals = rows.reduce((acc, item) => {
+    acc.views += Number(item.views || 0);
+    acc.uniqueViews += Number(item.unique_views || 0);
+    acc.opens += Number(item.opens || 0);
+    acc.buyClicks += Number(item.buy_clicks || 0);
+    return acc;
+  }, { views: 0, uniqueViews: 0, opens: 0, buyClicks: 0 });
+
+  if (metricViewsEl) metricViewsEl.textContent = totals.views;
+  if (metricUniqueViewsEl) metricUniqueViewsEl.textContent = totals.uniqueViews;
+  if (metricOpensEl) metricOpensEl.textContent = totals.opens;
+  if (metricBuyClicksEl) metricBuyClicksEl.textContent = totals.buyClicks;
+  if (metricConversionEl) {
+    const rate = totals.views > 0 ? totals.buyClicks / totals.views : 0;
+    metricConversionEl.textContent = formatPercent(rate);
+  }
+
+  if (!rows.length) {
+    metricsListEl.innerHTML = '<p class="metric-empty">Ainda não há eventos registrados.</p>';
+    return;
+  }
+
+  const topRows = rows.slice(0, 5);
+  metricsListEl.innerHTML = `
+    <div class="metric-row head">
+      <div>Produto</div>
+      <div class="metric-value">Vis.</div>
+      <div class="metric-value">Abert.</div>
+      <div class="metric-value">Compras</div>
+      <div class="metric-value">Conv.</div>
+      <div>Último evento</div>
+    </div>
+    ${topRows.map((item) => {
+      const conversion = item.views > 0 ? Number(item.buy_clicks || 0) / Number(item.views || 1) : 0;
+      const lastEvent = item.last_event_at ? new Date(item.last_event_at).toLocaleString('pt-BR') : 'Sem dados';
+      return `
+        <div class="metric-row">
+          <div>
+            <div class="metric-product">${item.title}</div>
+            <div class="muted">${item.category || 'Sem categoria'}</div>
+          </div>
+          <div class="metric-value">${item.views || 0}</div>
+          <div class="metric-value">${item.opens || 0}</div>
+          <div class="metric-value">${item.buy_clicks || 0}</div>
+          <div class="metric-value metric-rate">${formatPercent(conversion)}</div>
+          <div class="muted">${lastEvent}</div>
+        </div>
+      `;
+    }).join('')}
+  `;
+}
+
 function editProduct(product) {
   formTitle.textContent = 'Editar produto';
   fields.id.value = product.id;
@@ -325,5 +402,5 @@ await requireAdmin();
 const isAdmin = await ensureAdminRole();
 if (isAdmin) {
   resetForm();
-  await loadProducts();
+  await Promise.all([loadProducts(), loadMetrics()]);
 }
