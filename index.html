@@ -654,6 +654,33 @@
       color: var(--text);
     }
 
+    .contact-form input[aria-hidden="true"] {
+      position: absolute;
+      left: -9999px;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .contact-status {
+      min-height: 1.2em;
+      margin: 0;
+      font-size: 0.84rem;
+      font-weight: 600;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .contact-status.is-success {
+      color: #1f8d57;
+    }
+
+    .contact-status.is-error {
+      color: #c33a3a;
+    }
+
     .footer {
       margin-top: 30px;
       padding: 24px 10px 10px;
@@ -891,21 +918,23 @@
         <img src="images/fale-com-a-gente.png" alt="Fale com a gente" />
         <div class="contact-overlay">
           <form class="contact-form">
+            <input type="text" name="company" tabindex="-1" autocomplete="off" aria-hidden="true" />
             <div class="contact-form-grid">
               <div>
                 <label for="contact-name">Nome</label>
-                <input id="contact-name" name="name" type="text" placeholder="Seu nome" autocomplete="name" />
+                <input id="contact-name" name="name" type="text" placeholder="Seu nome" autocomplete="name" required maxlength="80" />
               </div>
               <div>
                 <label for="contact-email">E-mail</label>
-                <input id="contact-email" name="email" type="email" placeholder="seu@email.com" autocomplete="email" />
+                <input id="contact-email" name="email" type="email" placeholder="seu@email.com" autocomplete="email" required maxlength="120" />
               </div>
             </div>
             <div>
               <label for="contact-message">Mensagem</label>
-              <textarea id="contact-message" name="message" placeholder="Escreva sua mensagem..."></textarea>
+              <textarea id="contact-message" name="message" placeholder="Escreva sua mensagem..." required maxlength="3000"></textarea>
             </div>
             <button class="btn contact-submit" type="submit">Enviar mensagem</button>
+            <p class="contact-status" aria-live="polite"></p>
           </form>
         </div>
       </div>
@@ -922,9 +951,99 @@
     </footer>
   </main>
   <script type="module" src="./js/public-products.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script>
-    document.querySelector('.contact-form')?.addEventListener('submit', (event) => {
+    const fireSwal = (options) => {
+      if (window.Swal?.fire) {
+        return window.Swal.fire(options);
+      }
+
+      const text = typeof options === 'string' ? options : options?.text || options?.title || '';
+      window.alert(text);
+      return Promise.resolve();
+    };
+
+    const contactForm = document.querySelector('.contact-form');
+    const contactButton = document.querySelector('.contact-submit');
+    const contactStatus = document.querySelector('.contact-status');
+
+    contactForm?.addEventListener('submit', async (event) => {
       event.preventDefault();
+
+      const form = event.currentTarget;
+      const buttonLabel = contactButton?.dataset.label || contactButton?.textContent || 'Enviar mensagem';
+      const formData = new FormData(form);
+      const payload = Object.fromEntries(formData.entries());
+
+      if (payload.company) {
+        form.reset();
+        return;
+      }
+
+      const name = String(payload.name || '').trim();
+      const email = String(payload.email || '').trim();
+      const message = String(payload.message || '').trim();
+
+      if (!name || !email || !message) {
+        await fireSwal({
+          icon: 'warning',
+          title: 'Campos obrigatórios',
+          text: 'Preencha nome, e-mail e mensagem antes de enviar.',
+          confirmButtonText: 'Entendi',
+        });
+        return;
+      }
+
+      contactButton.disabled = true;
+      contactButton.textContent = 'Enviando...';
+
+      if (window.Swal?.fire) {
+        window.Swal.fire({
+          title: 'Enviando mensagem...',
+          text: 'Aguarde enquanto processamos seu contato.',
+          allowOutsideClick: false,
+          allowEscapeKey: false,
+          didOpen: () => {
+            window.Swal?.showLoading?.();
+          },
+        });
+      }
+
+      try {
+        const response = await fetch('/api/contact', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ name, email, message }),
+        });
+
+        const result = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+          throw new Error(result.error || 'Não foi possível enviar sua mensagem.');
+        }
+
+        form.reset();
+        window.Swal?.close?.();
+        await fireSwal({
+          icon: 'success',
+          title: 'Mensagem enviada',
+          text: 'Recebemos seu contato com sucesso. Em breve retornaremos.',
+          confirmButtonText: 'Fechar',
+        });
+      } catch (error) {
+        window.Swal?.close?.();
+        await fireSwal({
+          icon: 'error',
+          title: 'Falha no envio',
+          text: error?.message || 'Não foi possível enviar sua mensagem. Tente novamente em instantes.',
+          confirmButtonText: 'Ok',
+        });
+      } finally {
+        contactButton.disabled = false;
+        contactButton.textContent = buttonLabel;
+      }
     });
   </script>
 </body>

@@ -1,0 +1,9 @@
+{
+  "name": "papele-educa-site",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Site institucional e area administrativa da Papele Educa.",
+  "dependencies": {
+    "nodemailer": "^6.10.1"
+  }
+}
