@@ -148,10 +148,9 @@ textarea { resize: vertical; }
   filter: brightness(1.02);
 }
 
-.whatsapp-float svg {
-  width: 28px;
-  height: 28px;
-  fill: currentColor;
+.whatsapp-float img {
+  width: auto;
+  height: 30px;
   display: block;
 }
 
