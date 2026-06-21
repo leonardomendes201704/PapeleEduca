@@ -327,6 +327,10 @@ textarea { resize: vertical; }
   margin-top: 18px;
 }
 
+.social-panel {
+  margin-top: 18px;
+}
+
 .metrics-list {
   display: grid;
   gap: 12px;
@@ -423,6 +427,12 @@ textarea { resize: vertical; }
 .chip.published { color: #1f8c89; }
 .chip.draft { color: #9a6b17; }
 .chip.archived { color: #8f5a69; }
+
+.social-links-form {
+  display: grid;
+  gap: 14px;
+  margin-top: 20px;
+}
 
 @media (max-width: 980px) {
   .admin-grid,

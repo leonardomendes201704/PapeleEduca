@@ -17,6 +17,8 @@ const metricOpensEl = document.getElementById('metric-opens');
 const metricBuyClicksEl = document.getElementById('metric-buy-clicks');
 const metricConversionEl = document.getElementById('metric-conversion');
 const metricsListEl = document.getElementById('metrics-list');
+const socialForm = document.getElementById('social-links-form');
+const socialStatusEl = document.getElementById('social-status');
 
 const fields = {
   id: document.getElementById('product-id'),
@@ -33,6 +35,8 @@ const fields = {
   status: document.getElementById('status'),
   featured: document.getElementById('featured'),
   images: document.getElementById('images'),
+  instagramUrl: document.getElementById('instagram-url'),
+  facebookUrl: document.getElementById('facebook-url'),
 };
 
 let currentProducts = [];
@@ -298,6 +302,27 @@ async function loadMetrics() {
   `;
 }
 
+async function loadSocialLinks() {
+  if (!socialForm) return;
+
+  const { data, error } = await supabase
+    .from('site_settings')
+    .select('instagram_url,facebook_url')
+    .eq('id', 1)
+    .maybeSingle();
+
+  if (error) {
+    socialStatusEl.textContent = `Erro ao carregar links sociais: ${error.message}`;
+    socialStatusEl.classList.add('error');
+    return;
+  }
+
+  fields.instagramUrl.value = data?.instagram_url || '';
+  fields.facebookUrl.value = data?.facebook_url || '';
+  socialStatusEl.textContent = '';
+  socialStatusEl.className = 'form-status';
+}
+
 function editProduct(product) {
   formTitle.textContent = 'Editar produto';
   fields.id.value = product.id;
@@ -336,6 +361,30 @@ async function deleteProduct(product) {
   await loadProducts();
   if (fields.id.value === product.id) resetForm();
 }
+
+socialForm?.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  socialStatusEl.textContent = 'Salvando links...';
+  socialStatusEl.className = 'form-status';
+
+  try {
+    const payload = {
+      id: 1,
+      instagram_url: fields.instagramUrl.value.trim(),
+      facebook_url: fields.facebookUrl.value.trim(),
+      updated_at: new Date().toISOString(),
+    };
+
+    const { error } = await supabase.from('site_settings').upsert(payload, { onConflict: 'id' });
+    if (error) throw error;
+
+    socialStatusEl.textContent = 'Links salvos com sucesso.';
+    socialStatusEl.className = 'form-status';
+  } catch (error) {
+    socialStatusEl.textContent = error.message;
+    socialStatusEl.classList.add('error');
+  }
+});
 
 form.addEventListener('submit', async (event) => {
   event.preventDefault();
@@ -402,5 +451,5 @@ await requireAdmin();
 const isAdmin = await ensureAdminRole();
 if (isAdmin) {
   resetForm();
-  await Promise.all([loadProducts(), loadMetrics()]);
+  await Promise.all([loadProducts(), loadMetrics(), loadSocialLinks()]);
 }

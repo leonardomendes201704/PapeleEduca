@@ -169,6 +169,30 @@
 
       <div id="metrics-list" class="metrics-list"></div>
     </section>
+    <section class="panel social-panel">
+      <div class="panel-head">
+        <h2>Links de redes sociais</h2>
+        <p class="muted">Cadastre os links oficiais do Instagram e do Facebook usados nos Ã­cones do site.</p>
+      </div>
+
+      <form id="social-links-form" class="social-links-form">
+        <label>
+          Instagram
+          <input id="instagram-url" type="url" placeholder="https://instagram.com/sua-pagina" />
+        </label>
+
+        <label>
+          Facebook
+          <input id="facebook-url" type="url" placeholder="https://facebook.com/sua-pagina" />
+        </label>
+
+        <div class="form-actions">
+          <button class="btn-primary" type="submit">Salvar links</button>
+        </div>
+
+        <p id="social-status" class="form-status"></p>
+      </form>
+    </section>
   </main>
 
   <script type="module" src="./js/dashboard.js"></script>

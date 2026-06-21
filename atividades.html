@@ -424,12 +424,39 @@
     }
 
     .socials {
-      width: min(100%, 300px);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 12px;
+      width: min(100%, 220px);
     }
 
-    .socials img {
-      width: 100%;
-      height: auto;
+    .social-link {
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      border: 1px solid rgba(216, 210, 198, 0.9);
+      background: #fff;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #2f3a44;
+      box-shadow: 0 8px 18px rgba(35, 41, 50, 0.08);
+      transition: transform 180ms ease, box-shadow 180ms ease, color 180ms ease, border-color 180ms ease;
+    }
+
+    .social-link:hover,
+    .social-link:focus-visible {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 22px rgba(35, 41, 50, 0.12);
+      border-color: rgba(47, 183, 176, 0.55);
+      color: #1f9f9b;
+    }
+
+    .social-link svg {
+      width: 22px;
+      height: 22px;
+      fill: currentColor;
       display: block;
     }
 
@@ -515,6 +542,7 @@
     </footer>
   </main>
   <script type="module" src="./js/atividades.js"></script>
+  <script type="module" src="./js/social-links.js"></script>
   <a
     class="whatsapp-float"
     href="https://wa.me/5513997291237?text=Ol%C3%A1%21%20Vim%20pelo%20site%20Papel%C3%AA%20Educa%20e%20gostaria%20de%20mais%20informa%C3%A7%C3%B5es."
