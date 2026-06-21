@@ -610,6 +610,10 @@
       box-shadow: none;
     }
 
+    .contact-mobile {
+      display: none;
+    }
+
     .contact-card {
       position: relative;
       width: 100%;
@@ -709,6 +713,46 @@
 
     .contact-status.is-error {
       color: #c33a3a;
+    }
+
+    .contact-mobile-card {
+      display: grid;
+      gap: 18px;
+      padding: 22px;
+      border-radius: 28px;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(255, 250, 241, 0.96)),
+        radial-gradient(circle at top right, rgba(244, 165, 59, 0.08), transparent 28%),
+        radial-gradient(circle at bottom left, rgba(47, 183, 176, 0.08), transparent 26%);
+      border: 1px solid rgba(216, 210, 198, 0.78);
+      box-shadow: var(--shadow);
+    }
+
+    .contact-mobile-copy {
+      display: grid;
+      gap: 10px;
+      text-align: left;
+    }
+
+    .contact-mobile-copy h2 {
+      font-size: clamp(1.5rem, 5vw, 2rem);
+      line-height: 1.05;
+      letter-spacing: -0.03em;
+    }
+
+    .contact-mobile-copy p {
+      color: var(--muted);
+      line-height: 1.6;
+      max-width: 36ch;
+    }
+
+    .contact-mobile-form {
+      display: grid;
+      gap: 14px;
+      padding: 16px;
+      border-radius: 22px;
+      background: rgba(255, 247, 229, 0.96);
+      border: 1px solid rgba(216, 210, 198, 0.7);
     }
 
     .footer {
@@ -830,16 +874,12 @@
       .hero-top-banner {
         border-radius: 28px;
       }
-      .contact-card {
-        min-height: 160px;
-      }
-      .contact-form-grid {
-        grid-template-columns: 1fr;
-      }
-      .contact-submit {
-        width: 100%;
-        min-width: 0;
-      }
+      .contact-desktop { display: none; }
+      .contact-mobile { display: block; }
+      .contact-mobile-card { padding: 18px; gap: 14px; }
+      .contact-mobile-form { padding: 14px; gap: 12px; }
+      .contact-form-grid { grid-template-columns: 1fr; }
+      .contact-submit { width: 100%; min-width: 0; }
       #categorias::before,
       #categorias::after {
         display: none;
@@ -971,25 +1011,54 @@
     </section>
 
     <section class="section contact" id="contato">
-      <div class="contact-card">
-        <img src="images/fale-com-a-gente.png" alt="Fale com a gente" />
-        <div class="contact-overlay">
-          <form class="contact-form">
+      <div class="contact-desktop">
+        <div class="contact-card">
+          <img src="images/fale-com-a-gente.png" alt="Fale com a gente" />
+          <div class="contact-overlay">
+            <form class="contact-form">
+              <input type="text" name="company" tabindex="-1" autocomplete="off" aria-hidden="true" />
+              <div class="contact-form-grid">
+                <div>
+                  <label for="contact-name">Nome</label>
+                  <input id="contact-name" name="name" type="text" placeholder="Seu nome" autocomplete="name" required maxlength="80" />
+                </div>
+                <div>
+                  <label for="contact-email">E-mail</label>
+                  <input id="contact-email" name="email" type="email" placeholder="seu@email.com" autocomplete="email" required maxlength="120" />
+                </div>
+              </div>
+              <div>
+                <label for="contact-message">Mensagem</label>
+                <textarea id="contact-message" name="message" placeholder="Escreva sua mensagem..." required maxlength="3000"></textarea>
+              </div>
+              <button class="btn contact-submit" type="submit">Enviar mensagem</button>
+              <p class="contact-status" aria-live="polite"></p>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <div class="contact-mobile">
+        <div class="contact-mobile-card">
+          <div class="contact-mobile-copy">
+            <h2>Fale com a gente!</h2>
+            <p>Tem dúvidas, sugestões ou precisa de ajuda? Envie sua mensagem de forma rápida pelo formulário abaixo.</p>
+          </div>
+
+          <form class="contact-form contact-mobile-form">
             <input type="text" name="company" tabindex="-1" autocomplete="off" aria-hidden="true" />
-            <div class="contact-form-grid">
-              <div>
-                <label for="contact-name">Nome</label>
-                <input id="contact-name" name="name" type="text" placeholder="Seu nome" autocomplete="name" required maxlength="80" />
-              </div>
-              <div>
-                <label for="contact-email">E-mail</label>
-                <input id="contact-email" name="email" type="email" placeholder="seu@email.com" autocomplete="email" required maxlength="120" />
-              </div>
-            </div>
-            <div>
-              <label for="contact-message">Mensagem</label>
-              <textarea id="contact-message" name="message" placeholder="Escreva sua mensagem..." required maxlength="3000"></textarea>
-            </div>
+            <label>
+              Nome
+              <input name="name" type="text" placeholder="Seu nome" autocomplete="name" required maxlength="80" />
+            </label>
+            <label>
+              E-mail
+              <input name="email" type="email" placeholder="seu@email.com" autocomplete="email" required maxlength="120" />
+            </label>
+            <label>
+              Mensagem
+              <textarea name="message" placeholder="Escreva sua mensagem..." required maxlength="3000"></textarea>
+            </label>
             <button class="btn contact-submit" type="submit">Enviar mensagem</button>
             <p class="contact-status" aria-live="polite"></p>
           </form>
@@ -1039,87 +1108,90 @@
       return Promise.resolve();
     };
 
-    const contactForm = document.querySelector('.contact-form');
-    const contactButton = document.querySelector('.contact-submit');
-    const contactStatus = document.querySelector('.contact-status');
+    document.querySelectorAll('.contact-form').forEach((contactForm) => {
+      contactForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
 
-    contactForm?.addEventListener('submit', async (event) => {
-      event.preventDefault();
+        const form = event.currentTarget;
+        const contactButton = form.querySelector('.contact-submit');
+        const buttonLabel = contactButton?.dataset.label || contactButton?.textContent || 'Enviar mensagem';
+        const formData = new FormData(form);
+        const payload = Object.fromEntries(formData.entries());
 
-      const form = event.currentTarget;
-      const buttonLabel = contactButton?.dataset.label || contactButton?.textContent || 'Enviar mensagem';
-      const formData = new FormData(form);
-      const payload = Object.fromEntries(formData.entries());
-
-      if (payload.company) {
-        form.reset();
-        return;
-      }
-
-      const name = String(payload.name || '').trim();
-      const email = String(payload.email || '').trim();
-      const message = String(payload.message || '').trim();
-
-      if (!name || !email || !message) {
-        await fireSwal({
-          icon: 'warning',
-          title: 'Campos obrigatórios',
-          text: 'Preencha nome, e-mail e mensagem antes de enviar.',
-          confirmButtonText: 'Entendi',
-        });
-        return;
-      }
-
-      contactButton.disabled = true;
-      contactButton.textContent = 'Enviando...';
-
-      if (window.Swal?.fire) {
-        window.Swal.fire({
-          title: 'Enviando mensagem...',
-          text: 'Aguarde enquanto processamos seu contato.',
-          allowOutsideClick: false,
-          allowEscapeKey: false,
-          didOpen: () => {
-            window.Swal?.showLoading?.();
-          },
-        });
-      }
-
-      try {
-        const response = await fetch('/api/contact', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ name, email, message }),
-        });
-
-        const result = await response.json().catch(() => ({}));
-
-        if (!response.ok) {
-          throw new Error(result.error || 'Não foi possível enviar sua mensagem.');
+        if (payload.company) {
+          form.reset();
+          return;
         }
 
-        form.reset();
-        window.Swal?.close?.();
-        await fireSwal({
-          icon: 'success',
-          title: 'Mensagem enviada',
-          text: 'Recebemos seu contato com sucesso. Em breve retornaremos.',
-          confirmButtonText: 'Fechar',
-        });
-      } catch (error) {
-        window.Swal?.close?.();
-        await fireSwal({
-          icon: 'error',
-          title: 'Falha no envio',
-          text: error?.message || 'Não foi possível enviar sua mensagem. Tente novamente em instantes.',
-          confirmButtonText: 'Ok',
-        });
-      } finally {
-        contactButton.disabled = false;
-        contactButton.textContent = buttonLabel;
-      }
+        const name = String(payload.name || '').trim();
+        const email = String(payload.email || '').trim();
+        const message = String(payload.message || '').trim();
+
+        if (!name || !email || !message) {
+          await fireSwal({
+            icon: 'warning',
+            title: 'Campos obrigatórios',
+            text: 'Preencha nome, e-mail e mensagem antes de enviar.',
+            confirmButtonText: 'Entendi',
+          });
+          return;
+        }
+
+        if (contactButton) {
+          contactButton.disabled = true;
+          contactButton.textContent = 'Enviando...';
+        }
+
+        if (window.Swal?.fire) {
+          window.Swal.fire({
+            title: 'Enviando mensagem...',
+            text: 'Aguarde enquanto processamos seu contato.',
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            didOpen: () => {
+              window.Swal?.showLoading?.();
+            },
+          });
+        }
+
+        try {
+          const response = await fetch('/api/contact', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ name, email, message }),
+          });
+
+          const result = await response.json().catch(() => ({}));
+
+          if (!response.ok) {
+            throw new Error(result.error || 'Não foi possível enviar sua mensagem.');
+          }
+
+          form.reset();
+          window.Swal?.close?.();
+          await fireSwal({
+            icon: 'success',
+            title: 'Mensagem enviada',
+            text: 'Recebemos seu contato com sucesso. Em breve retornaremos.',
+            confirmButtonText: 'Fechar',
+          });
+        } catch (error) {
+          window.Swal?.close?.();
+          await fireSwal({
+            icon: 'error',
+            title: 'Falha no envio',
+            text: error?.message || 'Não foi possível enviar sua mensagem. Tente novamente em instantes.',
+            confirmButtonText: 'Ok',
+          });
+        } finally {
+          if (contactButton) {
+            contactButton.disabled = false;
+            contactButton.textContent = buttonLabel;
+          }
+        }
+      });
     });
   </script>
   <script type="module" src="./js/social-links.js"></script>

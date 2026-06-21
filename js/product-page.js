@@ -194,7 +194,6 @@ function renderProduct(product) {
         <h1>${title}</h1>
         <div class="meta">
           <span class="pill">${category}</span>
-          <span class="pill">${formatPublished(product.published_at)}</span>
         </div>
 
         <div class="price-box">
@@ -287,13 +286,6 @@ function scrollRelated(direction) {
 
 relatedPrevButton?.addEventListener('click', () => scrollRelated(-1));
 relatedNextButton?.addEventListener('click', () => scrollRelated(1));
-
-function formatPublished(dateValue) {
-  if (!dateValue) return 'Sem data';
-  const date = new Date(`${dateValue}T00:00:00`);
-  if (Number.isNaN(date.getTime())) return 'Sem data';
-  return date.toLocaleDateString('pt-BR');
-}
 
 async function loadProduct() {
   const id = getQueryId();

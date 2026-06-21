@@ -31,7 +31,6 @@ const fields = {
   promoPrice: document.getElementById('promo-price'),
   promoStart: document.getElementById('promo-start'),
   promoEnd: document.getElementById('promo-end'),
-  publishedAt: document.getElementById('published-at'),
   status: document.getElementById('status'),
   featured: document.getElementById('featured'),
   images: document.getElementById('images'),
@@ -108,7 +107,6 @@ function resetForm() {
   statusEl.className = 'form-status';
   fields.status.value = 'draft';
   fields.featured.checked = false;
-  fields.publishedAt.valueAsDate = new Date();
   fields.hotmartUrl.value = '';
 }
 
@@ -334,7 +332,6 @@ function editProduct(product) {
   fields.promoPrice.value = product.promo_price ?? '';
   fields.promoStart.value = product.promo_start || '';
   fields.promoEnd.value = product.promo_end || '';
-  fields.publishedAt.value = product.published_at || '';
   fields.status.value = product.status || 'draft';
   fields.featured.checked = Boolean(product.featured);
   currentImages = formatImages(product.images);
@@ -409,7 +406,6 @@ form.addEventListener('submit', async (event) => {
       promo_price: fields.promoPrice.value ? Number(fields.promoPrice.value) : null,
       promo_start: fields.promoStart.value || null,
       promo_end: fields.promoEnd.value || null,
-      published_at: fields.publishedAt.value || new Date().toISOString().slice(0, 10),
       status: fields.status.value,
       featured: fields.featured.checked,
       images,
