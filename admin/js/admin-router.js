@@ -1,5 +1,11 @@
 import { supabase } from './supabase-client.js';
 
+const ASSET_VERSION = 'a50ab0b';
+
+function loadModule(path) {
+  return import(`${path}?v=${ASSET_VERSION}`);
+}
+
 const ROUTES = {
   overview: {
     hash: '#/overview',
@@ -64,31 +70,31 @@ function closeSidebar() {
 async function initView(routeKey) {
   switch (routeKey) {
     case 'overview':
-      await import('./overview-admin.js').then((m) => m.initOverview());
+      await loadModule('./overview-admin.js').then((m) => m.initOverview());
       break;
     case 'produtos':
       if (initialized.has(routeKey)) {
-        await import('./dashboard.js').then((m) => m.loadProducts());
+        await loadModule('./dashboard.js').then((m) => m.loadProducts());
         return;
       }
       initialized.add(routeKey);
-      await import('./dashboard.js').then((m) => m.initProducts());
+      await loadModule('./dashboard.js').then((m) => m.initProducts());
       break;
     case 'gratuitos':
       if (initialized.has(routeKey)) {
-        await import('./free-materials-admin.js').then((m) => m.loadFreeMaterials());
+        await loadModule('./free-materials-admin.js').then((m) => m.loadFreeMaterials());
         return;
       }
       initialized.add(routeKey);
-      await import('./free-materials-admin.js').then((m) => m.initFreeMaterials());
+      await loadModule('./free-materials-admin.js').then((m) => m.initFreeMaterials());
       break;
     case 'metricas':
-      await import('./metrics-admin.js').then((m) => m.initMetrics());
+      await loadModule('./metrics-admin.js').then((m) => m.initMetrics());
       break;
     case 'configuracoes':
       if (initialized.has(routeKey)) return;
       initialized.add(routeKey);
-      await import('./dashboard.js').then((m) => m.initSettings());
+      await loadModule('./dashboard.js').then((m) => m.initSettings());
       break;
     default:
       break;
