@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="./css/admin.css?v=a47670f" />
+  <link rel="stylesheet" href="./css/admin.css?v=59a6bf7" />
 </head>
 <body>
   <div class="admin-app">
@@ -122,17 +122,33 @@
             </article>
           </div>
 
-          <div class="admin-grid">
-            <article class="panel form-panel">
-              <div class="panel-head">
-                <h2 id="form-title">Novo produto</h2>
-                <p class="muted">Cadastre título, imagens, preços e link da Hotmart.</p>
+          <article class="panel metrics-panel-card">
+            <div class="metrics-panel-head">
+              <div class="metrics-panel-title">
+                <span class="metrics-panel-icon metrics-panel-icon--teal" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M7 4h10l1 3h3v2H3V7h3l1-3Zm-2 7h14v9H5v-9Z"/></svg>
+                </span>
+                <h2>Produtos pagos</h2>
+              </div>
+              <button id="product-new-btn" class="btn-primary" type="button">Novo produto</button>
+            </div>
+            <div id="products-list" class="ranking-table"></div>
+          </article>
+
+          <dialog id="product-modal" class="admin-modal admin-modal--wide">
+            <form id="product-form" class="admin-modal-panel product-form">
+              <input type="hidden" id="product-id" />
+              <input type="hidden" id="existing-images" />
+
+              <div class="admin-modal-header">
+                <div>
+                  <h2 id="form-title">Novo produto</h2>
+                  <p class="muted">Cadastre título, imagens, preços e link da Hotmart.</p>
+                </div>
+                <button id="product-modal-close" class="admin-modal-close" type="button" aria-label="Fechar">×</button>
               </div>
 
-              <form id="product-form" class="product-form">
-                <input type="hidden" id="product-id" />
-                <input type="hidden" id="existing-images" />
-
+              <div class="admin-modal-body">
                 <label>
                   Título
                   <input id="title" type="text" required placeholder="Ex.: Kit Alfabetização Divertida" />
@@ -198,23 +214,15 @@
 
                 <div id="image-preview" class="image-preview"></div>
 
-                <div class="form-actions">
-                  <button class="btn-primary" type="submit">Salvar produto</button>
-                  <button id="clear-btn" class="btn-ghost" type="button">Novo cadastro</button>
-                </div>
-
                 <p id="form-status" class="form-status"></p>
-              </form>
-            </article>
-
-            <article class="panel list-panel">
-              <div class="panel-head">
-                <h2>Produtos cadastrados</h2>
-                <p class="muted">Clique em editar para atualizar os dados.</p>
               </div>
-              <div id="products-list" class="products-list"></div>
-            </article>
-          </div>
+
+              <div class="admin-modal-footer">
+                <button id="product-cancel-btn" class="btn-ghost" type="button">Cancelar</button>
+                <button class="btn-primary" type="submit">Salvar produto</button>
+              </div>
+            </form>
+          </dialog>
         </section>
 
         <!-- Materiais gratuitos -->
@@ -431,6 +439,6 @@
     </div>
   </div>
 
-  <script type="module" src="./js/admin-router.js?v=a47670f"></script>
+  <script type="module" src="./js/admin-router.js?v=59a6bf7"></script>
 </body>
 </html>

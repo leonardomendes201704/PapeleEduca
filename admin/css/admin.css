@@ -921,6 +921,26 @@ textarea { resize: vertical; }
   white-space: nowrap;
 }
 
+.corp-table--catalog .col-price {
+  width: 11%;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--accent-dark);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.table-status-group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.price-promo {
+  color: var(--accent-dark);
+}
+
 .corp-table--catalog .col-actions {
   width: 16%;
 }
@@ -972,6 +992,10 @@ textarea { resize: vertical; }
   border-radius: 22px;
   background: transparent;
   overflow: visible;
+}
+
+.admin-modal--wide {
+  width: min(720px, calc(100vw - 32px));
 }
 
 .admin-modal::backdrop {
