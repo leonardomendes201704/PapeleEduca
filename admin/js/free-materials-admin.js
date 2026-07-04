@@ -2,9 +2,12 @@ import { supabase } from './supabase-client.js';
 import { FREE_MATERIALS_BUCKET } from './config.js';
 
 const form = document.getElementById('free-material-form');
+const modal = document.getElementById('free-material-modal');
 const statusEl = document.getElementById('free-form-status');
 const listEl = document.getElementById('free-materials-list');
-const clearBtn = document.getElementById('free-clear-btn');
+const newBtn = document.getElementById('free-new-btn');
+const cancelBtn = document.getElementById('free-cancel-btn');
+const closeBtn = document.getElementById('free-modal-close');
 const formTitle = document.getElementById('free-form-title');
 const coverPreviewEl = document.getElementById('free-cover-preview');
 const fileInfoEl = document.getElementById('free-file-info');
@@ -29,11 +32,27 @@ const fields = {
   existingCoverUrl: document.getElementById('free-existing-cover-url'),
 };
 
+const STATUS_LABELS = {
+  published: 'Publicado',
+  draft: 'Rascunho',
+  archived: 'Arquivado',
+};
+
 let currentMaterials = [];
 let pendingFile = null;
 let pendingCover = null;
 let coverPathToRemove = '';
 let freeMaterialsBound = false;
+
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, (char) => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;',
+  })[char]);
+}
 
 function safeName(name) {
   return String(name || 'arquivo').replace(/[^a-zA-Z0-9._-]+/g, '_');
@@ -43,6 +62,21 @@ function detectFileType(fileName = '', fallback = 'PDF') {
   const extension = String(fileName).split('.').pop()?.toUpperCase();
   if (!extension || extension === fileName.toUpperCase()) return fallback;
   return extension;
+}
+
+function openFreeMaterialModal(material = null) {
+  if (!modal) return;
+  if (material) {
+    editMaterial(material);
+  } else {
+    resetForm();
+  }
+  modal.showModal();
+}
+
+function closeFreeMaterialModal() {
+  if (!modal) return;
+  modal.close();
 }
 
 function resetForm() {
@@ -82,10 +116,10 @@ function renderFileInfo() {
   fileInfoEl.innerHTML = `
     <div class="file-info-card">
       <div>
-        <strong>${name}</strong>
+        <strong>${escapeHtml(name)}</strong>
         <p class="muted">${pendingFile ? 'Novo arquivo pronto para envio' : 'Arquivo atual'}</p>
       </div>
-      ${url && !pendingFile ? `<a class="btn-ghost" href="${url}" target="_blank" rel="noopener noreferrer">Abrir</a>` : ''}
+      ${url && !pendingFile ? `<a class="btn-ghost btn-sm" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">Abrir</a>` : ''}
     </div>
   `;
 }
@@ -107,7 +141,7 @@ function renderCoverPreview() {
   const thumb = document.createElement('div');
   thumb.className = 'thumb';
   thumb.innerHTML = `
-    <img src="${coverUrl}" alt="Capa do material" />
+    <img src="${escapeHtml(coverUrl)}" alt="Capa do material" />
     <button type="button" class="remove-image" aria-label="Remover capa">×</button>
   `;
   thumb.querySelector('.remove-image').addEventListener('click', () => {
@@ -121,6 +155,90 @@ function renderCoverPreview() {
     renderCoverPreview();
   });
   coverPreviewEl.appendChild(thumb);
+}
+
+function renderStatusChip(status) {
+  const label = STATUS_LABELS[status] || status;
+  return `<span class="chip chip-sm ${escapeHtml(status)}">${escapeHtml(label)}</span>`;
+}
+
+function renderFreeMaterialsTable(rows) {
+  if (!rows.length) {
+    return '<p class="metric-empty">Nenhum material gratuito cadastrado ainda.</p>';
+  }
+
+  return `
+    <div class="corp-table-wrap">
+      <table class="corp-table corp-table--catalog">
+        <thead>
+          <tr>
+            <th scope="col" class="col-rank">Ordem</th>
+            <th scope="col" class="col-product">Material</th>
+            <th scope="col" class="col-type">Tipo</th>
+            <th scope="col" class="col-status">Status</th>
+            <th scope="col" class="col-file">Arquivo</th>
+            <th scope="col" class="col-actions">Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows.map((material) => {
+            const cover = material.cover_url || '../images/hero.png';
+            return `
+              <tr data-id="${escapeHtml(material.id)}">
+                <td class="col-rank"><span class="rank-badge">${material.sort_order ?? 0}</span></td>
+                <td class="col-product">
+                  <div class="corp-product">
+                    <img src="${escapeHtml(cover)}" alt="" loading="lazy" />
+                    <div class="corp-product-copy">
+                      <span class="corp-product-name" title="${escapeHtml(material.title)}">${escapeHtml(material.title)}</span>
+                      <span class="corp-product-meta">${escapeHtml(material.category || 'Sem categoria')}</span>
+                    </div>
+                  </div>
+                </td>
+                <td class="col-type">${escapeHtml(material.file_type || '—')}</td>
+                <td class="col-status">${renderStatusChip(material.status)}</td>
+                <td class="col-file">
+                  ${material.file_url
+                    ? `<a class="table-link" href="${escapeHtml(material.file_url)}" target="_blank" rel="noopener noreferrer">Abrir</a>`
+                    : '<span class="muted">—</span>'}
+                </td>
+                <td class="col-actions">
+                  <div class="table-actions">
+                    <button type="button" class="btn-ghost btn-sm" data-action="edit">Editar</button>
+                    <button type="button" class="btn-ghost btn-sm btn-danger" data-action="delete">Excluir</button>
+                  </div>
+                </td>
+              </tr>
+            `;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+function bindTableActions() {
+  if (!listEl) return;
+
+  listEl.querySelectorAll('[data-action="edit"]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const row = button.closest('tr');
+      const id = row?.dataset.id;
+      const material = currentMaterials.find((item) => item.id === id);
+      if (material) openFreeMaterialModal(material);
+    });
+  });
+
+  listEl.querySelectorAll('[data-action="delete"]').forEach((button) => {
+    button.addEventListener('click', async () => {
+      const row = button.closest('tr');
+      const id = row?.dataset.id;
+      const material = currentMaterials.find((item) => item.id === id);
+      if (!material) return;
+      if (!confirm(`Excluir "${material.title}"?`)) return;
+      await deleteMaterial(material);
+    });
+  });
 }
 
 async function uploadAsset(file, folder) {
@@ -151,7 +269,7 @@ export async function loadFreeMaterials() {
     .order('created_at', { ascending: false });
 
   if (error) {
-    listEl.innerHTML = `<p class="muted">Erro ao carregar materiais: ${error.message}</p>`;
+    listEl.innerHTML = `<p class="metric-empty">Erro ao carregar materiais: ${escapeHtml(error.message)}</p>`;
     return;
   }
 
@@ -160,48 +278,8 @@ export async function loadFreeMaterials() {
   if (publishedEl) publishedEl.textContent = currentMaterials.filter((item) => item.status === 'published').length;
   if (draftEl) draftEl.textContent = currentMaterials.filter((item) => item.status === 'draft').length;
 
-  if (!currentMaterials.length) {
-    listEl.innerHTML = '<p class="muted">Nenhum material gratuito cadastrado ainda.</p>';
-    return;
-  }
-
-  listEl.innerHTML = '';
-  currentMaterials.forEach((material) => {
-    const wrapper = document.createElement('div');
-    wrapper.className = 'product-row free-material-row';
-
-    const cover = material.cover_url || '../images/hero.png';
-
-    wrapper.innerHTML = `
-      <img src="${cover}" alt="${material.title}" />
-      <div class="product-meta">
-        <h3>${material.title}</h3>
-        <p>${material.category || 'Sem categoria'} • ${material.file_type || 'Arquivo'}</p>
-        <div class="product-actions-row">
-          <span class="chip ${material.status}">${material.status}</span>
-          <span class="chip">Ordem ${material.sort_order ?? 0}</span>
-          ${material.file_name ? `<span class="chip">${material.file_name}</span>` : ''}
-        </div>
-      </div>
-      <div class="product-actions-row">
-        ${material.file_url ? `<a class="btn-ghost" href="${material.file_url}" target="_blank" rel="noopener noreferrer">Arquivo</a>` : ''}
-        <button type="button" class="btn-ghost" data-action="edit">Editar</button>
-        <button type="button" class="btn-ghost" data-action="delete">Excluir</button>
-      </div>
-    `;
-
-    wrapper.querySelector('[data-action="edit"]').addEventListener('click', () => {
-      editMaterial(material);
-      form?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    });
-
-    wrapper.querySelector('[data-action="delete"]').addEventListener('click', async () => {
-      if (!confirm(`Excluir "${material.title}"?`)) return;
-      await deleteMaterial(material);
-    });
-
-    listEl.appendChild(wrapper);
-  });
+  listEl.innerHTML = renderFreeMaterialsTable(currentMaterials);
+  bindTableActions();
 }
 
 function editMaterial(material) {
@@ -239,12 +317,38 @@ async function deleteMaterial(material) {
   }
 
   await loadFreeMaterials();
-  if (fields.id.value === material.id) resetForm();
+  if (fields.id.value === material.id) {
+    resetForm();
+    closeFreeMaterialModal();
+  }
 }
 
 function bindFreeMaterialsForm() {
   if (freeMaterialsBound || !form) return;
   freeMaterialsBound = true;
+
+  newBtn?.addEventListener('click', () => openFreeMaterialModal());
+  cancelBtn?.addEventListener('click', () => {
+    resetForm();
+    closeFreeMaterialModal();
+  });
+  closeBtn?.addEventListener('click', () => {
+    resetForm();
+    closeFreeMaterialModal();
+  });
+
+  modal?.addEventListener('cancel', (event) => {
+    event.preventDefault();
+    resetForm();
+    closeFreeMaterialModal();
+  });
+
+  modal?.addEventListener('click', (event) => {
+    if (event.target === modal) {
+      resetForm();
+      closeFreeMaterialModal();
+    }
+  });
 
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
@@ -315,6 +419,7 @@ function bindFreeMaterialsForm() {
 
       statusEl.textContent = 'Material gratuito salvo com sucesso.';
       resetForm();
+      closeFreeMaterialModal();
       await loadFreeMaterials();
     } catch (error) {
       statusEl.textContent = error.message;
@@ -335,13 +440,10 @@ function bindFreeMaterialsForm() {
     coverPathToRemove = '';
     renderCoverPreview();
   });
-
-  clearBtn?.addEventListener('click', resetForm);
 }
 
 export async function initFreeMaterials() {
   if (!form || !listEl) return;
   bindFreeMaterialsForm();
-  resetForm();
   await loadFreeMaterials();
 }

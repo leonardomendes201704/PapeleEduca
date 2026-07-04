@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="./css/admin.css?v=7163ee2" />
+  <link rel="stylesheet" href="./css/admin.css?v=a47670f" />
 </head>
 <body>
   <div class="admin-app">
@@ -234,21 +234,37 @@
             </article>
           </div>
 
-          <div class="admin-grid">
-            <article class="panel form-panel">
-              <div class="panel-head">
-                <h2 id="free-form-title">Novo material gratuito</h2>
-                <p class="muted">Envie o arquivo (PDF, ZIP, etc.) e publique para aparecer na home.</p>
+          <article class="panel metrics-panel-card">
+            <div class="metrics-panel-head">
+              <div class="metrics-panel-title">
+                <span class="metrics-panel-icon metrics-panel-icon--orange" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M12 3a1 1 0 0 1 1 1v9.59l2.3-2.3a1 1 0 1 1 1.4 1.42l-4 4a1 1 0 0 1-1.4 0l-4-4a1 1 0 1 1 1.4-1.42L11 13.59V4a1 1 0 0 1 1-1Z"/></svg>
+                </span>
+                <h2>Materiais gratuitos</h2>
+              </div>
+              <button id="free-new-btn" class="btn-primary" type="button">Novo material</button>
+            </div>
+            <div id="free-materials-list" class="ranking-table"></div>
+          </article>
+
+          <dialog id="free-material-modal" class="admin-modal">
+            <form id="free-material-form" class="admin-modal-panel product-form">
+              <input type="hidden" id="free-material-id" />
+              <input type="hidden" id="free-existing-file-path" />
+              <input type="hidden" id="free-existing-file-url" />
+              <input type="hidden" id="free-existing-file-name" />
+              <input type="hidden" id="free-existing-cover-path" />
+              <input type="hidden" id="free-existing-cover-url" />
+
+              <div class="admin-modal-header">
+                <div>
+                  <h2 id="free-form-title">Novo material gratuito</h2>
+                  <p class="muted">Envie o arquivo (PDF, ZIP, etc.) e publique para aparecer na home.</p>
+                </div>
+                <button id="free-modal-close" class="admin-modal-close" type="button" aria-label="Fechar">×</button>
               </div>
 
-              <form id="free-material-form" class="product-form">
-                <input type="hidden" id="free-material-id" />
-                <input type="hidden" id="free-existing-file-path" />
-                <input type="hidden" id="free-existing-file-url" />
-                <input type="hidden" id="free-existing-file-name" />
-                <input type="hidden" id="free-existing-cover-path" />
-                <input type="hidden" id="free-existing-cover-url" />
-
+              <div class="admin-modal-body">
                 <label>
                   Título
                   <input id="free-title" type="text" required placeholder="Ex.: Guia de atividades lúdicas" />
@@ -297,23 +313,15 @@
                 </label>
                 <div id="free-cover-preview" class="image-preview"></div>
 
-                <div class="form-actions">
-                  <button class="btn-primary" type="submit">Salvar material</button>
-                  <button id="free-clear-btn" class="btn-ghost" type="button">Novo cadastro</button>
-                </div>
-
                 <p id="free-form-status" class="form-status"></p>
-              </form>
-            </article>
-
-            <article class="panel list-panel">
-              <div class="panel-head">
-                <h2>Materiais cadastrados</h2>
-                <p class="muted">Edite, abra o arquivo ou exclua um material gratuito.</p>
               </div>
-              <div id="free-materials-list" class="products-list"></div>
-            </article>
-          </div>
+
+              <div class="admin-modal-footer">
+                <button id="free-cancel-btn" class="btn-ghost" type="button">Cancelar</button>
+                <button class="btn-primary" type="submit">Salvar material</button>
+              </div>
+            </form>
+          </dialog>
         </section>
 
         <!-- Métricas -->
@@ -423,6 +431,6 @@
     </div>
   </div>
 
-  <script type="module" src="./js/admin-router.js?v=a50ab0b"></script>
+  <script type="module" src="./js/admin-router.js?v=a47670f"></script>
 </body>
 </html>
