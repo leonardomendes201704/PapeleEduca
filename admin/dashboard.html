@@ -4,6 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Papelê Educa — Painel Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="./css/admin.css" />
 </head>
 <body>
@@ -315,61 +318,76 @@
 
         <!-- Métricas -->
         <section class="admin-view" data-view="metricas">
-          <div class="metrics-stack">
-            <article class="panel">
-              <h3 class="metrics-block-title">Produtos pagos</h3>
-              <p class="muted">Visualizações, aberturas e cliques em &quot;Comprar agora&quot;.</p>
-
-              <div class="stat-grid" style="margin-top: 16px;">
-                <article class="stat-card accent-teal">
-                  <span class="stat-label">Visualizações</span>
-                  <strong class="stat-value" id="metric-views">0</strong>
-                </article>
-                <article class="stat-card">
-                  <span class="stat-label">Visitas únicas</span>
-                  <strong class="stat-value" id="metric-unique-views">0</strong>
-                </article>
-                <article class="stat-card accent-orange">
-                  <span class="stat-label">Aberturas</span>
-                  <strong class="stat-value" id="metric-opens">0</strong>
-                </article>
-                <article class="stat-card accent-purple">
-                  <span class="stat-label">Cliques em comprar</span>
-                  <strong class="stat-value" id="metric-buy-clicks">0</strong>
-                </article>
-                <article class="stat-card accent-teal">
-                  <span class="stat-label">Taxa de conversão</span>
-                  <strong class="stat-value" id="metric-conversion">0%</strong>
-                </article>
+          <div class="kpi-hero-grid">
+            <article class="kpi-hero kpi-teal">
+              <div class="kpi-hero-top">
+                <span class="kpi-hero-label">Visualizações</span>
+                <span class="kpi-hero-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M12 5C7 5 2.7 8.1 1 12c1.7 3.9 6 7 11 7s9.3-3.1 11-7c-1.7-3.9-6-7-11-7Zm0 11a4 4 0 1 1 0-8 4 4 0 0 1 0 8Z"/></svg>
+                </span>
               </div>
+              <strong class="kpi-hero-value" id="metric-hero-views">0</strong>
+              <div class="kpi-hero-wave" aria-hidden="true"></div>
+            </article>
+            <article class="kpi-hero kpi-orange">
+              <div class="kpi-hero-top">
+                <span class="kpi-hero-label">Downloads</span>
+                <span class="kpi-hero-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M12 3a1 1 0 0 1 1 1v9.59l2.3-2.3a1 1 0 1 1 1.4 1.42l-4 4a1 1 0 0 1-1.4 0l-4-4a1 1 0 1 1 1.4-1.42L11 13.59V4a1 1 0 0 1 1-1Z"/></svg>
+                </span>
+              </div>
+              <strong class="kpi-hero-value" id="metric-hero-downloads">0</strong>
+              <div class="kpi-hero-wave" aria-hidden="true"></div>
+            </article>
+            <article class="kpi-hero kpi-purple">
+              <div class="kpi-hero-top">
+                <span class="kpi-hero-label">Cliques em comprar</span>
+                <span class="kpi-hero-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M7 4h-2l-1 2H3v2h18V6h-2l-1-2h-2l-1 2H8L7 4Zm-1 6v9a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-9H6Zm4 3h2v5h-2v-5Z"/></svg>
+                </span>
+              </div>
+              <strong class="kpi-hero-value" id="metric-hero-buy-clicks">0</strong>
+              <div class="kpi-hero-wave" aria-hidden="true"></div>
+            </article>
+            <article class="kpi-hero kpi-gold">
+              <div class="kpi-hero-top">
+                <span class="kpi-hero-label">Taxa</span>
+                <span class="kpi-hero-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M7 15h2v2H7v-2Zm0-4h2v2H7v-2Zm4 4h6v2h-6v-2Zm0-4h6v2h-6v-2ZM5 21V3h14v18H5Z"/></svg>
+                </span>
+              </div>
+              <strong class="kpi-hero-value" id="metric-hero-rate">0%</strong>
+              <div class="kpi-hero-wave" aria-hidden="true"></div>
+            </article>
+          </div>
 
-              <div id="metrics-list" class="metrics-list"></div>
+          <div class="metrics-columns">
+            <article class="panel metrics-panel-card">
+              <div class="metrics-panel-head">
+                <div class="metrics-panel-title">
+                  <span class="metrics-panel-icon metrics-panel-icon--teal" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><path d="M7 4h10l1 3h3v2H3V7h3l1-3Zm-2 7h14v9H5v-9Z"/></svg>
+                  </span>
+                  <h3>Produtos pagos</h3>
+                </div>
+                <a class="metrics-panel-link" href="#/produtos" data-nav="produtos">Ver todos ›</a>
+              </div>
+              <div id="metrics-list" class="ranking-table"></div>
+              <a class="metrics-panel-footer" href="#/produtos" data-nav="produtos">Ver todos os produtos pagos ›</a>
             </article>
 
-            <article class="panel">
-              <h3 class="metrics-block-title">Materiais gratuitos</h3>
-              <p class="muted">Visualizações dos cards na home e cliques em &quot;Baixar grátis&quot;.</p>
-
-              <div class="stat-grid" style="margin-top: 16px;">
-                <article class="stat-card accent-teal">
-                  <span class="stat-label">Visualizações</span>
-                  <strong class="stat-value" id="free-metric-views">0</strong>
-                </article>
-                <article class="stat-card">
-                  <span class="stat-label">Visitas únicas</span>
-                  <strong class="stat-value" id="free-metric-unique-views">0</strong>
-                </article>
-                <article class="stat-card accent-orange">
-                  <span class="stat-label">Downloads</span>
-                  <strong class="stat-value" id="free-metric-downloads">0</strong>
-                </article>
-                <article class="stat-card accent-purple">
-                  <span class="stat-label">Taxa de download</span>
-                  <strong class="stat-value" id="free-metric-conversion">0%</strong>
-                </article>
+            <article class="panel metrics-panel-card">
+              <div class="metrics-panel-head">
+                <div class="metrics-panel-title">
+                  <span class="metrics-panel-icon metrics-panel-icon--orange" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><path d="M12 3a1 1 0 0 1 1 1v9.59l2.3-2.3a1 1 0 1 1 1.4 1.42l-4 4a1 1 0 0 1-1.4 0l-4-4a1 1 0 1 1 1.4-1.42L11 13.59V4a1 1 0 0 1 1-1Z"/></svg>
+                  </span>
+                  <h3>Materiais gratuitos</h3>
+                </div>
+                <a class="metrics-panel-link" href="#/gratuitos" data-nav="gratuitos">Ver todos ›</a>
               </div>
-
-              <div id="free-metrics-list" class="metrics-list"></div>
+              <div id="free-metrics-list" class="ranking-table"></div>
+              <a class="metrics-panel-footer" href="#/gratuitos" data-nav="gratuitos">Ver todos os materiais gratuitos ›</a>
             </article>
           </div>
         </section>

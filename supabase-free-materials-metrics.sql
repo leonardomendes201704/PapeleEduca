@@ -49,7 +49,8 @@ select
   coalesce(count(*) filter (where e.event_type = 'view'), 0)::int as views,
   coalesce(count(distinct e.session_id) filter (where e.event_type = 'view'), 0)::int as unique_views,
   coalesce(count(*) filter (where e.event_type = 'download'), 0)::int as downloads,
-  max(e.created_at) as last_event_at
+  max(e.created_at) as last_event_at,
+  fm.cover_url
 from public.free_materials fm
 left join public.free_material_events e
   on e.free_material_id = fm.id

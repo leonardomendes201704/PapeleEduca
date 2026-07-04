@@ -19,7 +19,7 @@ const ROUTES = {
   metricas: {
     hash: '#/metricas',
     title: 'Desempenho do site',
-    breadcrumb: 'Painel / Métricas',
+    breadcrumb: 'Métricas / Visão geral',
   },
   configuracoes: {
     hash: '#/configuracoes',
