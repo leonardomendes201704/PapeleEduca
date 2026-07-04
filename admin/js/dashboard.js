@@ -1,5 +1,6 @@
 import { supabase } from './supabase-client.js';
 import { STORAGE_BUCKET } from './config.js';
+import { initFreeMaterialsAdmin } from './free-materials-admin.js';
 
 const form = document.getElementById('product-form');
 const statusEl = document.getElementById('form-status');
@@ -447,5 +448,5 @@ await requireAdmin();
 const isAdmin = await ensureAdminRole();
 if (isAdmin) {
   resetForm();
-  await Promise.all([loadProducts(), loadMetrics(), loadSocialLinks()]);
+  await Promise.all([loadProducts(), loadMetrics(), loadSocialLinks(), initFreeMaterialsAdmin()]);
 }

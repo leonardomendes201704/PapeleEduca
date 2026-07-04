@@ -156,6 +156,112 @@
       </article>
     </section>
 
+    <section class="free-materials-admin" id="admin-free-materials">
+      <div class="panel free-materials-intro">
+        <div class="panel-head">
+          <h2>Materiais gratuitos</h2>
+          <p class="muted">Cadastre arquivos para download gratuito na página inicial do site.</p>
+        </div>
+
+        <div class="summary-grid free-summary-grid">
+          <article class="summary-card">
+            <span class="summary-label">Total gratuitos</span>
+            <strong id="free-count-total">0</strong>
+          </article>
+          <article class="summary-card">
+            <span class="summary-label">Publicados</span>
+            <strong id="free-count-published">0</strong>
+          </article>
+          <article class="summary-card">
+            <span class="summary-label">Rascunhos</span>
+            <strong id="free-count-draft">0</strong>
+          </article>
+        </div>
+      </div>
+
+      <div class="admin-grid">
+        <article class="panel form-panel">
+          <div class="panel-head">
+            <h2 id="free-form-title">Novo material gratuito</h2>
+            <p class="muted">Envie o arquivo (PDF, ZIP, etc.) e publique para aparecer na home.</p>
+          </div>
+
+          <form id="free-material-form" class="product-form">
+            <input type="hidden" id="free-material-id" />
+            <input type="hidden" id="free-existing-file-path" />
+            <input type="hidden" id="free-existing-file-url" />
+            <input type="hidden" id="free-existing-file-name" />
+            <input type="hidden" id="free-existing-cover-path" />
+            <input type="hidden" id="free-existing-cover-url" />
+
+            <label>
+              Título
+              <input id="free-title" type="text" required placeholder="Ex.: Guia de atividades lúdicas" />
+            </label>
+
+            <div class="two-cols">
+              <label>
+                Categoria
+                <input id="free-category" type="text" placeholder="Ex.: Alfabetização" />
+              </label>
+              <label>
+                Tipo do arquivo
+                <input id="free-file-type" type="text" placeholder="PDF" />
+              </label>
+            </div>
+
+            <label>
+              Descrição
+              <textarea id="free-description" rows="4" placeholder="Descreva o material gratuito..."></textarea>
+            </label>
+
+            <div class="two-cols">
+              <label>
+                Status
+                <select id="free-status">
+                  <option value="draft">Rascunho</option>
+                  <option value="published">Publicado</option>
+                  <option value="archived">Arquivado</option>
+                </select>
+              </label>
+              <label>
+                Ordem de exibição
+                <input id="free-sort-order" type="number" min="0" step="1" value="0" />
+              </label>
+            </div>
+
+            <label>
+              Arquivo para download
+              <input id="free-file" type="file" accept=".pdf,.doc,.docx,.zip,.png,.jpg,.jpeg,.webp,application/pdf" />
+            </label>
+            <div id="free-file-info" class="file-info"></div>
+
+            <label>
+              Capa (opcional)
+              <input id="free-cover" type="file" accept="image/*" />
+            </label>
+            <div id="free-cover-preview" class="image-preview"></div>
+
+            <div class="form-actions">
+              <button class="btn-primary" type="submit">Salvar material</button>
+              <button id="free-clear-btn" class="btn-ghost" type="button">Novo cadastro</button>
+            </div>
+
+            <p id="free-form-status" class="form-status"></p>
+          </form>
+        </article>
+
+        <article class="panel list-panel">
+          <div class="panel-head">
+            <h2>Materiais cadastrados</h2>
+            <p class="muted">Edite, abra o arquivo ou exclua um material gratuito.</p>
+          </div>
+
+          <div id="free-materials-list" class="products-list"></div>
+        </article>
+      </div>
+    </section>
+
     <section class="panel metrics-panel">
       <div class="panel-head">
         <h2>Ranking de produtos</h2>

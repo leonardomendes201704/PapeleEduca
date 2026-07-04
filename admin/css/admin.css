@@ -331,6 +331,51 @@ textarea { resize: vertical; }
   margin-top: 18px;
 }
 
+.free-materials-admin {
+  margin-top: 18px;
+  display: grid;
+  gap: 18px;
+}
+
+.free-materials-intro {
+  padding-bottom: 8px;
+}
+
+.free-summary-grid {
+  margin-top: 16px;
+}
+
+.file-info {
+  margin-top: -4px;
+}
+
+.file-info-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--panel-2);
+}
+
+.file-info-card strong {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.file-info-card p {
+  margin: 0;
+}
+
+.free-material-row img {
+  object-fit: cover;
+  background:
+    linear-gradient(135deg, rgba(47, 183, 176, 0.18), rgba(244, 165, 59, 0.18)),
+    #fff;
+}
+
 .metrics-list {
   display: grid;
   gap: 12px;

@@ -586,6 +586,154 @@
       display: flex;
     }
 
+    #materiais-gratuitos {
+      scroll-margin-top: 150px;
+      background:
+        radial-gradient(circle at top right, rgba(244, 165, 59, 0.14), transparent 34%),
+        radial-gradient(circle at bottom left, rgba(47, 183, 176, 0.12), transparent 30%),
+        rgba(255, 255, 255, 0.82);
+    }
+
+    .free-materials {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .free-card {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      min-height: 100%;
+      padding: 22px 20px 20px;
+      border-radius: 26px;
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, #fff, #fcfaf6);
+      box-shadow: 0 10px 28px rgba(35, 41, 50, 0.05);
+      transition: transform 180ms ease, box-shadow 180ms ease;
+    }
+
+    .free-card:hover,
+    .free-card:focus-within {
+      transform: translateY(-4px);
+      box-shadow: 0 16px 34px rgba(35, 41, 50, 0.1);
+    }
+
+    .free-card-badge {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      padding: 7px 12px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #f4a53b, #f2c24f);
+      color: #5b4622;
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+    }
+
+    .free-card-icon {
+      width: 58px;
+      height: 58px;
+      border-radius: 18px;
+      display: grid;
+      place-items: center;
+      color: #fff;
+      box-shadow: 0 10px 20px rgba(35, 41, 50, 0.12);
+    }
+
+    .free-card-icon svg {
+      width: 28px;
+      height: 28px;
+      fill: currentColor;
+    }
+
+    .free-card-icon.teal { background: linear-gradient(135deg, #2fb7b0, #20a8bb); }
+    .free-card-icon.orange { background: linear-gradient(135deg, #f4a53b, #ef8d2a); }
+    .free-card-icon.purple { background: linear-gradient(135deg, #7c6ae6, #6a57d8); }
+
+    .free-card-cover {
+      margin-top: 8px;
+      border-radius: 18px;
+      overflow: hidden;
+      border: 1px solid rgba(216, 210, 198, 0.65);
+      aspect-ratio: 1.4 / 1;
+      background: #fff;
+    }
+
+    .free-card-cover img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .free-card--message {
+      grid-column: 1 / -1;
+      min-height: auto;
+      text-align: center;
+      align-items: center;
+    }
+
+    .free-card--message h3 {
+      padding-right: 0;
+    }
+
+    .free-card--message p {
+      max-width: 46ch;
+    }
+
+    .free-card-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .free-card-meta span {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: var(--surface-2);
+      border: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
+
+    .free-card h3 {
+      font-size: 1.14rem;
+      line-height: 1.25;
+      letter-spacing: -0.02em;
+      padding-right: 64px;
+    }
+
+    .free-card p {
+      color: var(--muted);
+      line-height: 1.55;
+      flex: 1;
+    }
+
+    .free-card .btn {
+      width: 100%;
+      margin-top: 4px;
+    }
+
+    .free-materials-note {
+      margin-top: 20px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.95rem;
+      line-height: 1.55;
+    }
+
+    .free-materials-note a {
+      color: #1f9f9b;
+      font-weight: 700;
+      border-bottom: 2px solid rgba(31, 159, 155, 0.25);
+    }
+
     .steps {
       width: 100%;
       border-radius: 26px;
@@ -810,7 +958,7 @@
     }
 
     @media (max-width: 980px) {
-      .topbar, .hero-grid, .cards-3, .products, .steps {
+      .topbar, .hero-grid, .cards-3, .products, .free-materials, .steps {
         grid-template-columns: 1fr;
       }
 
@@ -900,6 +1048,7 @@
       <nav class="nav" aria-label="Navegação principal">
         <a class="active" href="#inicio">Início</a>
         <a href="#categorias">Materiais</a>
+        <a href="#materiais-gratuitos">Gratuitos</a>
         <a href="#contato">Contato</a>
       </nav>
 
@@ -1000,6 +1149,20 @@
       </div>
     </section>
 
+    <section class="section" id="materiais-gratuitos" aria-labelledby="materiais-gratuitos-title">
+      <div class="section-head">
+        <h2 id="materiais-gratuitos-title">Materiais gratuitos</h2>
+        <p>Recursos prontos para baixar e usar em casa ou na escola — sem custo, com muito carinho pedagógico.</p>
+      </div>
+
+      <div id="free-materials-grid" class="free-materials" aria-live="polite"></div>
+
+      <p id="free-materials-note" class="free-materials-note">
+        Os arquivos abrem em uma nova aba para download imediato. Dúvidas?
+        <a href="#contato">Fale com a gente</a>.
+      </p>
+    </section>
+
     <section class="section">
       <div class="section-head">
         <h2>Como funciona</h2>
@@ -1086,6 +1249,7 @@
     </footer>
   </main>
   <script type="module" src="./js/public-products.js"></script>
+  <script type="module" src="./js/free-materials.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <a
     class="whatsapp-float"
