@@ -376,6 +376,22 @@ textarea { resize: vertical; }
     #fff;
 }
 
+.free-metrics-panel {
+  margin-top: 0;
+}
+
+.free-metrics-grid {
+  margin-top: 14px;
+}
+
+.free-metrics-list {
+  margin-top: 18px;
+}
+
+.free-metric-row {
+  grid-template-columns: 1.5fr 0.7fr 0.7fr 0.8fr 0.7fr 0.9fr;
+}
+
 .metrics-list {
   display: grid;
   gap: 12px;

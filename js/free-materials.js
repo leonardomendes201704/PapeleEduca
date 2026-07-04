@@ -1,5 +1,6 @@
 import { supabase } from './supabase-client.js';
 import { safeText } from './product-card.js';
+import { bindFreeMaterialTracking } from './metrics.js';
 
 const grid = document.getElementById('free-materials-grid');
 const noteEl = document.getElementById('free-materials-note');
@@ -53,7 +54,7 @@ function renderCard(material, index) {
   const fileName = material.file_name || 'material';
 
   return `
-    <article class="free-card">
+    <article class="free-card" data-free-material-id="${safeText(material.id)}">
       <span class="free-card-badge">Grátis</span>
       ${renderMedia(material, index)}
       ${renderMeta(material)}
@@ -63,6 +64,8 @@ function renderCard(material, index) {
         class="btn"
         href="${safeText(fileUrl)}"
         download="${safeText(fileName)}"
+        data-free-download-id="${safeText(material.id)}"
+        data-file-name="${safeText(fileName)}"
         target="_blank"
         rel="noopener noreferrer"
       >
@@ -108,6 +111,7 @@ async function loadFreeMaterials() {
   }
 
   grid.innerHTML = data.map((material, index) => renderCard(material, index)).join('');
+  bindFreeMaterialTracking(grid, 'home_free_materials');
 
   if (noteEl) {
     noteEl.hidden = false;

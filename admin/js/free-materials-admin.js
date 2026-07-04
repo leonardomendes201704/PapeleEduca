@@ -11,6 +11,11 @@ const fileInfoEl = document.getElementById('free-file-info');
 const totalEl = document.getElementById('free-count-total');
 const publishedEl = document.getElementById('free-count-published');
 const draftEl = document.getElementById('free-count-draft');
+const freeMetricViewsEl = document.getElementById('free-metric-views');
+const freeMetricUniqueViewsEl = document.getElementById('free-metric-unique-views');
+const freeMetricDownloadsEl = document.getElementById('free-metric-downloads');
+const freeMetricConversionEl = document.getElementById('free-metric-conversion');
+const freeMetricsListEl = document.getElementById('free-metrics-list');
 
 const fields = {
   id: document.getElementById('free-material-id'),
@@ -140,6 +145,76 @@ async function removeStoragePaths(paths) {
   await supabase.storage.from(FREE_MATERIALS_BUCKET).remove(validPaths);
 }
 
+function formatPercent(value) {
+  return `${Math.round(value * 100)}%`;
+}
+
+async function loadFreeMaterialMetrics() {
+  if (!freeMetricsListEl) return;
+
+  const { data, error } = await supabase
+    .from('free_material_metrics_report')
+    .select('id,title,category,file_type,status,views,unique_views,downloads,last_event_at')
+    .order('downloads', { ascending: false })
+    .order('views', { ascending: false });
+
+  if (error) {
+    freeMetricsListEl.innerHTML = `<p class="metric-empty">Erro ao carregar métricas: ${error.message}</p>`;
+    return;
+  }
+
+  const rows = (data || []).filter((item) => Number(item.views || 0) > 0 || Number(item.downloads || 0) > 0);
+  const totals = rows.reduce((acc, item) => {
+    acc.views += Number(item.views || 0);
+    acc.uniqueViews += Number(item.unique_views || 0);
+    acc.downloads += Number(item.downloads || 0);
+    return acc;
+  }, { views: 0, uniqueViews: 0, downloads: 0 });
+
+  if (freeMetricViewsEl) freeMetricViewsEl.textContent = totals.views;
+  if (freeMetricUniqueViewsEl) freeMetricUniqueViewsEl.textContent = totals.uniqueViews;
+  if (freeMetricDownloadsEl) freeMetricDownloadsEl.textContent = totals.downloads;
+  if (freeMetricConversionEl) {
+    const rate = totals.views > 0 ? totals.downloads / totals.views : 0;
+    freeMetricConversionEl.textContent = formatPercent(rate);
+  }
+
+  if (!rows.length) {
+    freeMetricsListEl.innerHTML = '<p class="metric-empty">Ainda não há visualizações ou downloads registrados.</p>';
+    return;
+  }
+
+  freeMetricsListEl.innerHTML = `
+    <div class="metric-row head free-metric-row">
+      <div>Material</div>
+      <div class="metric-value">Vis.</div>
+      <div class="metric-value">Únicas</div>
+      <div class="metric-value">Downloads</div>
+      <div class="metric-value">Taxa</div>
+      <div>Último evento</div>
+    </div>
+    ${rows.map((item) => {
+      const rate = item.views > 0 ? Number(item.downloads || 0) / Number(item.views || 1) : 0;
+      const lastEvent = item.last_event_at
+        ? new Date(item.last_event_at).toLocaleString('pt-BR')
+        : 'Sem dados';
+      return `
+        <div class="metric-row free-metric-row">
+          <div>
+            <div class="metric-product">${item.title}</div>
+            <div class="muted">${item.category || 'Sem categoria'} • ${item.file_type || 'Arquivo'}</div>
+          </div>
+          <div class="metric-value">${item.views || 0}</div>
+          <div class="metric-value">${item.unique_views || 0}</div>
+          <div class="metric-value">${item.downloads || 0}</div>
+          <div class="metric-value metric-rate">${formatPercent(rate)}</div>
+          <div class="muted">${lastEvent}</div>
+        </div>
+      `;
+    }).join('')}
+  `;
+}
+
 async function loadFreeMaterials() {
   if (!listEl) return;
 
@@ -239,6 +314,7 @@ async function deleteMaterial(material) {
 
   await loadFreeMaterials();
   if (fields.id.value === material.id) resetForm();
+  await loadFreeMaterialMetrics();
 }
 
 form?.addEventListener('submit', async (event) => {
@@ -310,7 +386,7 @@ form?.addEventListener('submit', async (event) => {
 
     statusEl.textContent = 'Material gratuito salvo com sucesso.';
     resetForm();
-    await loadFreeMaterials();
+    await Promise.all([loadFreeMaterials(), loadFreeMaterialMetrics()]);
   } catch (error) {
     statusEl.textContent = error.message;
     statusEl.classList.add('error');
@@ -336,5 +412,5 @@ clearBtn?.addEventListener('click', resetForm);
 export async function initFreeMaterialsAdmin() {
   if (!form || !listEl) return;
   resetForm();
-  await loadFreeMaterials();
+  await Promise.all([loadFreeMaterials(), loadFreeMaterialMetrics()]);
 }
