@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Papelê Educa - Acesso Admin</title>
+  <title>Papelê Educa — Acesso Admin</title>
   <link rel="stylesheet" href="./css/admin.css" />
 </head>
 <body>
@@ -13,8 +13,12 @@
         <img src="../images/logo-header.png" alt="Papelê Educa" />
       </div>
 
+      <div class="eyebrow" style="display:inline-block;padding:8px 12px;border-radius:999px;background:#e8f6f5;color:#1a5f5c;font-weight:700;font-size:0.82rem;margin-bottom:12px;">
+        Painel Admin
+      </div>
+
       <h1>Área protegida</h1>
-      <p class="muted">Entre com seu e-mail e senha do Supabase para gerenciar os materiais.</p>
+      <p class="muted">Entre com seu e-mail e senha para gerenciar produtos e materiais.</p>
 
       <form id="login-form" class="auth-form">
         <label>
@@ -25,11 +29,11 @@
           Senha
           <input id="password" type="password" placeholder="Sua senha" autocomplete="current-password" required />
         </label>
-        <button class="btn-primary" type="submit">Entrar</button>
+        <button class="btn-primary" type="submit">Entrar no painel</button>
         <p class="form-status" id="status"></p>
       </form>
 
-      <a class="auth-link" href="../index.html">Voltar para o site</a>
+      <a class="auth-link" href="../index.html">← Voltar para o site</a>
     </section>
   </main>
 
@@ -41,7 +45,7 @@
 
     const { data } = await supabase.auth.getSession();
     if (data.session) {
-      window.location.href = './dashboard.html';
+      window.location.href = './dashboard.html#/overview';
     }
 
     form.addEventListener('submit', async (event) => {
@@ -59,18 +63,8 @@
         return;
       }
 
-      window.location.href = './dashboard.html';
+      window.location.href = './dashboard.html#/overview';
     });
   </script>
-  <a
-    class="whatsapp-float"
-    href="https://wa.me/5513997291237?text=Ol%C3%A1%21%20Vim%20pelo%20site%20Papel%C3%AA%20Educa%20e%20gostaria%20de%20mais%20informa%C3%A7%C3%B5es."
-    target="_blank"
-    rel="noopener noreferrer"
-    aria-label="Chamar no WhatsApp"
-    title="Falar no WhatsApp"
-  >
-    <img src="./images/whatsapp-svgrepo-com.svg" alt="" aria-hidden="true" />
-  </a>
 </body>
 </html>

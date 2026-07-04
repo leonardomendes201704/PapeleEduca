@@ -11,11 +11,6 @@ const fileInfoEl = document.getElementById('free-file-info');
 const totalEl = document.getElementById('free-count-total');
 const publishedEl = document.getElementById('free-count-published');
 const draftEl = document.getElementById('free-count-draft');
-const freeMetricViewsEl = document.getElementById('free-metric-views');
-const freeMetricUniqueViewsEl = document.getElementById('free-metric-unique-views');
-const freeMetricDownloadsEl = document.getElementById('free-metric-downloads');
-const freeMetricConversionEl = document.getElementById('free-metric-conversion');
-const freeMetricsListEl = document.getElementById('free-metrics-list');
 
 const fields = {
   id: document.getElementById('free-material-id'),
@@ -38,6 +33,7 @@ let currentMaterials = [];
 let pendingFile = null;
 let pendingCover = null;
 let coverPathToRemove = '';
+let freeMaterialsBound = false;
 
 function safeName(name) {
   return String(name || 'arquivo').replace(/[^a-zA-Z0-9._-]+/g, '_');
@@ -145,77 +141,7 @@ async function removeStoragePaths(paths) {
   await supabase.storage.from(FREE_MATERIALS_BUCKET).remove(validPaths);
 }
 
-function formatPercent(value) {
-  return `${Math.round(value * 100)}%`;
-}
-
-async function loadFreeMaterialMetrics() {
-  if (!freeMetricsListEl) return;
-
-  const { data, error } = await supabase
-    .from('free_material_metrics_report')
-    .select('id,title,category,file_type,status,views,unique_views,downloads,last_event_at')
-    .order('downloads', { ascending: false })
-    .order('views', { ascending: false });
-
-  if (error) {
-    freeMetricsListEl.innerHTML = `<p class="metric-empty">Erro ao carregar métricas: ${error.message}</p>`;
-    return;
-  }
-
-  const rows = (data || []).filter((item) => Number(item.views || 0) > 0 || Number(item.downloads || 0) > 0);
-  const totals = rows.reduce((acc, item) => {
-    acc.views += Number(item.views || 0);
-    acc.uniqueViews += Number(item.unique_views || 0);
-    acc.downloads += Number(item.downloads || 0);
-    return acc;
-  }, { views: 0, uniqueViews: 0, downloads: 0 });
-
-  if (freeMetricViewsEl) freeMetricViewsEl.textContent = totals.views;
-  if (freeMetricUniqueViewsEl) freeMetricUniqueViewsEl.textContent = totals.uniqueViews;
-  if (freeMetricDownloadsEl) freeMetricDownloadsEl.textContent = totals.downloads;
-  if (freeMetricConversionEl) {
-    const rate = totals.views > 0 ? totals.downloads / totals.views : 0;
-    freeMetricConversionEl.textContent = formatPercent(rate);
-  }
-
-  if (!rows.length) {
-    freeMetricsListEl.innerHTML = '<p class="metric-empty">Ainda não há visualizações ou downloads registrados.</p>';
-    return;
-  }
-
-  freeMetricsListEl.innerHTML = `
-    <div class="metric-row head free-metric-row">
-      <div>Material</div>
-      <div class="metric-value">Vis.</div>
-      <div class="metric-value">Únicas</div>
-      <div class="metric-value">Downloads</div>
-      <div class="metric-value">Taxa</div>
-      <div>Último evento</div>
-    </div>
-    ${rows.map((item) => {
-      const rate = item.views > 0 ? Number(item.downloads || 0) / Number(item.views || 1) : 0;
-      const lastEvent = item.last_event_at
-        ? new Date(item.last_event_at).toLocaleString('pt-BR')
-        : 'Sem dados';
-      return `
-        <div class="metric-row free-metric-row">
-          <div>
-            <div class="metric-product">${item.title}</div>
-            <div class="muted">${item.category || 'Sem categoria'} • ${item.file_type || 'Arquivo'}</div>
-          </div>
-          <div class="metric-value">${item.views || 0}</div>
-          <div class="metric-value">${item.unique_views || 0}</div>
-          <div class="metric-value">${item.downloads || 0}</div>
-          <div class="metric-value metric-rate">${formatPercent(rate)}</div>
-          <div class="muted">${lastEvent}</div>
-        </div>
-      `;
-    }).join('')}
-  `;
-}
-
-async function loadFreeMaterials() {
+export async function loadFreeMaterials() {
   if (!listEl) return;
 
   const { data, error } = await supabase
@@ -266,7 +192,7 @@ async function loadFreeMaterials() {
 
     wrapper.querySelector('[data-action="edit"]').addEventListener('click', () => {
       editMaterial(material);
-      document.getElementById('admin-free-materials')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      form?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
 
     wrapper.querySelector('[data-action="delete"]').addEventListener('click', async () => {
@@ -314,103 +240,108 @@ async function deleteMaterial(material) {
 
   await loadFreeMaterials();
   if (fields.id.value === material.id) resetForm();
-  await loadFreeMaterialMetrics();
 }
 
-form?.addEventListener('submit', async (event) => {
-  event.preventDefault();
-  statusEl.textContent = 'Salvando...';
-  statusEl.className = 'form-status';
+function bindFreeMaterialsForm() {
+  if (freeMaterialsBound || !form) return;
+  freeMaterialsBound = true;
 
-  try {
-    const title = fields.title.value.trim();
-    if (!title) throw new Error('Informe o título do material.');
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    statusEl.textContent = 'Salvando...';
+    statusEl.className = 'form-status';
 
-    const id = fields.id.value || null;
-    let filePath = fields.existingFilePath.value;
-    let fileUrl = fields.existingFileUrl.value;
-    let fileName = fields.existingFileName.value;
-    let coverPath = fields.existingCoverPath.value;
-    let coverUrl = fields.existingCoverUrl.value;
-    const pathsToRemove = [];
+    try {
+      const title = fields.title.value.trim();
+      if (!title) throw new Error('Informe o título do material.');
 
+      const id = fields.id.value || null;
+      let filePath = fields.existingFilePath.value;
+      let fileUrl = fields.existingFileUrl.value;
+      let fileName = fields.existingFileName.value;
+      let coverPath = fields.existingCoverPath.value;
+      let coverUrl = fields.existingCoverUrl.value;
+      const pathsToRemove = [];
+
+      if (pendingFile) {
+        const uploaded = await uploadAsset(pendingFile, 'files');
+        if (filePath) pathsToRemove.push(filePath);
+        filePath = uploaded.path;
+        fileUrl = uploaded.url;
+        fileName = uploaded.name;
+        fields.fileType.value = detectFileType(uploaded.name, fields.fileType.value || 'PDF');
+      }
+
+      if (!filePath || !fileUrl) {
+        throw new Error('Envie o arquivo para download.');
+      }
+
+      if (pendingCover) {
+        const uploadedCover = await uploadAsset(pendingCover, 'covers');
+        if (coverPath) pathsToRemove.push(coverPath);
+        coverPath = uploadedCover.path;
+        coverUrl = uploadedCover.url;
+      } else if (coverPathToRemove) {
+        pathsToRemove.push(coverPathToRemove);
+        coverPath = '';
+        coverUrl = '';
+      }
+
+      const payload = {
+        title,
+        description: fields.description.value.trim(),
+        category: fields.category.value.trim(),
+        file_type: fields.fileType.value.trim() || detectFileType(fileName),
+        file_path: filePath,
+        file_url: fileUrl,
+        file_name: fileName,
+        cover_path: coverPath,
+        cover_url: coverUrl,
+        status: fields.status.value,
+        sort_order: Number(fields.sortOrder.value || 0),
+        updated_at: new Date().toISOString(),
+      };
+
+      let error = null;
+      if (id) {
+        ({ error } = await supabase.from('free_materials').update(payload).eq('id', id));
+      } else {
+        ({ error } = await supabase.from('free_materials').insert(payload));
+      }
+
+      if (error) throw error;
+
+      await removeStoragePaths(pathsToRemove);
+
+      statusEl.textContent = 'Material gratuito salvo com sucesso.';
+      resetForm();
+      await loadFreeMaterials();
+    } catch (error) {
+      statusEl.textContent = error.message;
+      statusEl.classList.add('error');
+    }
+  });
+
+  fields.file?.addEventListener('change', () => {
+    pendingFile = fields.file.files?.[0] || null;
     if (pendingFile) {
-      const uploaded = await uploadAsset(pendingFile, 'files');
-      if (filePath) pathsToRemove.push(filePath);
-      filePath = uploaded.path;
-      fileUrl = uploaded.url;
-      fileName = uploaded.name;
-      fields.fileType.value = detectFileType(uploaded.name, fields.fileType.value || 'PDF');
+      fields.fileType.value = detectFileType(pendingFile.name, fields.fileType.value || 'PDF');
     }
+    renderFileInfo();
+  });
 
-    if (!filePath || !fileUrl) {
-      throw new Error('Envie o arquivo para download.');
-    }
+  fields.cover?.addEventListener('change', () => {
+    pendingCover = fields.cover.files?.[0] || null;
+    coverPathToRemove = '';
+    renderCoverPreview();
+  });
 
-    if (pendingCover) {
-      const uploadedCover = await uploadAsset(pendingCover, 'covers');
-      if (coverPath) pathsToRemove.push(coverPath);
-      coverPath = uploadedCover.path;
-      coverUrl = uploadedCover.url;
-    } else if (coverPathToRemove) {
-      pathsToRemove.push(coverPathToRemove);
-      coverPath = '';
-      coverUrl = '';
-    }
+  clearBtn?.addEventListener('click', resetForm);
+}
 
-    const payload = {
-      title,
-      description: fields.description.value.trim(),
-      category: fields.category.value.trim(),
-      file_type: fields.fileType.value.trim() || detectFileType(fileName),
-      file_path: filePath,
-      file_url: fileUrl,
-      file_name: fileName,
-      cover_path: coverPath,
-      cover_url: coverUrl,
-      status: fields.status.value,
-      sort_order: Number(fields.sortOrder.value || 0),
-      updated_at: new Date().toISOString(),
-    };
-
-    let error = null;
-    if (id) {
-      ({ error } = await supabase.from('free_materials').update(payload).eq('id', id));
-    } else {
-      ({ error } = await supabase.from('free_materials').insert(payload));
-    }
-
-    if (error) throw error;
-
-    await removeStoragePaths(pathsToRemove);
-
-    statusEl.textContent = 'Material gratuito salvo com sucesso.';
-    resetForm();
-    await Promise.all([loadFreeMaterials(), loadFreeMaterialMetrics()]);
-  } catch (error) {
-    statusEl.textContent = error.message;
-    statusEl.classList.add('error');
-  }
-});
-
-fields.file?.addEventListener('change', () => {
-  pendingFile = fields.file.files?.[0] || null;
-  if (pendingFile) {
-    fields.fileType.value = detectFileType(pendingFile.name, fields.fileType.value || 'PDF');
-  }
-  renderFileInfo();
-});
-
-fields.cover?.addEventListener('change', () => {
-  pendingCover = fields.cover.files?.[0] || null;
-  coverPathToRemove = '';
-  renderCoverPreview();
-});
-
-clearBtn?.addEventListener('click', resetForm);
-
-export async function initFreeMaterialsAdmin() {
+export async function initFreeMaterials() {
   if (!form || !listEl) return;
+  bindFreeMaterialsForm();
   resetForm();
-  await Promise.all([loadFreeMaterials(), loadFreeMaterialMetrics()]);
+  await loadFreeMaterials();
 }

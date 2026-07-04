@@ -3,337 +3,408 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Papelê Educa - Painel Admin</title>
+  <title>Papelê Educa — Painel Admin</title>
   <link rel="stylesheet" href="./css/admin.css" />
 </head>
 <body>
-  <main class="admin-shell">
-    <header class="admin-topbar">
-      <div>
-        <div class="eyebrow">Painel Admin</div>
-        <h1>Materiais e Produtos</h1>
-      </div>
-      <button id="logout-btn" class="btn-ghost" type="button">Sair</button>
-    </header>
-
-    <section class="summary-grid">
-      <article class="summary-card">
-        <span class="summary-label">Total de produtos</span>
-        <strong id="count-total">0</strong>
-      </article>
-      <article class="summary-card">
-        <span class="summary-label">Publicados</span>
-        <strong id="count-published">0</strong>
-      </article>
-      <article class="summary-card">
-        <span class="summary-label">Rascunhos</span>
-        <strong id="count-draft">0</strong>
-      </article>
-    </section>
-
-    <section class="metrics-section">
-      <div class="panel-head">
-        <h2>Métricas do site</h2>
-        <p class="muted">Visualizações, aberturas e cliques de compra coletados em tempo real.</p>
-      </div>
-
-      <div class="metrics-grid">
-        <article class="summary-card">
-          <span class="summary-label">Visualizações</span>
-          <strong id="metric-views">0</strong>
-        </article>
-        <article class="summary-card">
-          <span class="summary-label">Visitas únicas</span>
-          <strong id="metric-unique-views">0</strong>
-        </article>
-        <article class="summary-card">
-          <span class="summary-label">Aberturas de produto</span>
-          <strong id="metric-opens">0</strong>
-        </article>
-        <article class="summary-card">
-          <span class="summary-label">Cliques em comprar</span>
-          <strong id="metric-buy-clicks">0</strong>
-        </article>
-        <article class="summary-card">
-          <span class="summary-label">Taxa de conversão</span>
-          <strong id="metric-conversion">0%</strong>
-        </article>
-      </div>
-    </section>
-
-    <section class="admin-grid">
-      <article class="panel form-panel">
-        <div class="panel-head">
-          <h2 id="form-title">Novo produto</h2>
-          <p class="muted">Cadastre titulo, imagens, preços e datas de oferta.</p>
-        </div>
-
-        <form id="product-form" class="product-form">
-          <input type="hidden" id="product-id" />
-          <input type="hidden" id="existing-images" />
-
-          <label>
-            Título
-            <input id="title" type="text" required placeholder="Ex.: Kit Alfabetização Divertida" />
-          </label>
-
-          <label>
-            Categoria
-            <input id="category" type="text" placeholder="Ex.: Leitura e Escrita" />
-          </label>
-
-          <label>
-            Link da Hotmart
-            <input id="hotmart-url" type="url" placeholder="https://..." />
-          </label>
-
-          <label>
-            Descrição
-            <textarea id="description" rows="5" placeholder="Descreva o material..."></textarea>
-          </label>
-
-          <div class="two-cols">
-            <label>
-              Preço
-              <input id="price" type="number" min="0" step="0.01" placeholder="29.90" />
-            </label>
-            <label>
-              Preço em oferta
-              <input id="promo-price" type="number" min="0" step="0.01" placeholder="19.90" />
-            </label>
-          </div>
-
-          <div class="two-cols">
-            <label>
-              Início da oferta
-              <input id="promo-start" type="date" />
-            </label>
-            <label>
-              Fim da oferta
-              <input id="promo-end" type="date" />
-            </label>
-          </div>
-
-          <div class="two-cols">
-            <label>
-              Status
-              <select id="status">
-                <option value="draft">Rascunho</option>
-                <option value="published">Publicado</option>
-                <option value="archived">Arquivado</option>
-              </select>
-            </label>
-
-            <label class="checkbox-label">
-              <input id="featured" type="checkbox" />
-              Produto em destaque
-            </label>
-          </div>
-
-          <label>
-            Imagens do produto
-            <input id="images" type="file" accept="image/*" multiple />
-          </label>
-
-          <div id="image-preview" class="image-preview"></div>
-
-          <div class="form-actions">
-            <button class="btn-primary" type="submit">Salvar produto</button>
-            <button id="clear-btn" class="btn-ghost" type="button">Novo cadastro</button>
-          </div>
-
-          <p id="form-status" class="form-status"></p>
-        </form>
-      </article>
-
-      <article class="panel list-panel">
-        <div class="panel-head">
-          <h2>Produtos cadastrados</h2>
-          <p class="muted">Clique em editar para atualizar os dados.</p>
-        </div>
-
-        <div id="products-list" class="products-list"></div>
-      </article>
-    </section>
-
-    <section class="free-materials-admin" id="admin-free-materials">
-      <div class="panel free-materials-intro">
-        <div class="panel-head">
-          <h2>Materiais gratuitos</h2>
-          <p class="muted">Cadastre arquivos para download gratuito na página inicial do site.</p>
-        </div>
-
-        <div class="summary-grid free-summary-grid">
-          <article class="summary-card">
-            <span class="summary-label">Total gratuitos</span>
-            <strong id="free-count-total">0</strong>
-          </article>
-          <article class="summary-card">
-            <span class="summary-label">Publicados</span>
-            <strong id="free-count-published">0</strong>
-          </article>
-          <article class="summary-card">
-            <span class="summary-label">Rascunhos</span>
-            <strong id="free-count-draft">0</strong>
-          </article>
+  <div class="admin-app">
+    <aside class="admin-sidebar" aria-label="Menu principal">
+      <div class="sidebar-brand">
+        <img src="../images/logo-header.png" alt="" />
+        <div class="sidebar-brand-copy">
+          <strong>Papelê Educa</strong>
+          <span>Painel Admin</span>
         </div>
       </div>
 
-      <div class="admin-grid">
-        <article class="panel form-panel">
-          <div class="panel-head">
-            <h2 id="free-form-title">Novo material gratuito</h2>
-            <p class="muted">Envie o arquivo (PDF, ZIP, etc.) e publique para aparecer na home.</p>
+      <nav class="sidebar-nav">
+        <a class="sidebar-link" href="#/overview" data-route="overview">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 13h7V4H4v9Zm0 7h7v-5H4v5Zm9 0h7V11h-7v9Zm0-18v5h7V2h-7Z"/></svg>
+          Visão geral
+        </a>
+        <a class="sidebar-link" href="#/produtos" data-route="produtos">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4h10l1 3h3v2H3V7h3l1-3Zm-2 7h14v9H5v-9Zm2 2v5h10v-5H7Z"/></svg>
+          Produtos
+        </a>
+        <a class="sidebar-link" href="#/gratuitos" data-route="gratuitos">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a1 1 0 0 1 1 1v9.59l2.3-2.3a1 1 0 1 1 1.4 1.42l-4 4a1 1 0 0 1-1.4 0l-4-4a1 1 0 1 1 1.4-1.42L11 13.59V4a1 1 0 0 1 1-1Zm-7 14a1 1 0 0 1 1 1v1h12v-1a1 1 0 1 1 2 0v2a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-2a1 1 0 0 1 1-1Z"/></svg>
+          Materiais gratuitos
+        </a>
+        <a class="sidebar-link" href="#/metricas" data-route="metricas">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19V9h3v10H5Zm5.5 0V5H14v14h-3.5ZM16 19v-7h3v7h-3Z"/></svg>
+          Métricas
+        </a>
+        <a class="sidebar-link" href="#/configuracoes" data-route="configuracoes">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8.5A3.5 3.5 0 1 0 12 15.5 3.5 3.5 0 0 0 12 8.5ZM19.4 13a7.9 7.9 0 0 0 .1-2l2-1.5-2-3.5-2.3 1a8 8 0 0 0-1.7-1L15 2h-4l-.5 2.5a8 8 0 0 0-1.7 1l-2.3-1-2 3.5 2 1.5a7.9 7.9 0 0 0 0 2l-2 1.5 2 3.5 2.3-1a8 8 0 0 0 1.7 1L11 22h4l.5-2.5a8 8 0 0 0 1.7-1l2.3 1 2-3.5-2-1.5Z"/></svg>
+          Configurações
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <button id="logout-btn" class="btn-ghost" type="button">Sair</button>
+      </div>
+    </aside>
+
+    <div class="admin-sidebar-backdrop" aria-hidden="true"></div>
+
+    <div class="admin-main">
+      <header class="admin-page-header">
+        <button id="sidebar-toggle" class="sidebar-toggle" type="button" aria-label="Abrir menu">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16v2H4V7Zm0 5h16v2H4v-2Zm0 5h16v2H4v-2Z"/></svg>
+        </button>
+        <div id="page-breadcrumb" class="breadcrumb">Painel / Visão geral</div>
+        <h1 id="page-title" class="page-title">Visão geral</h1>
+      </header>
+
+      <div class="admin-content">
+        <!-- Visão geral -->
+        <section class="admin-view" data-view="overview">
+          <div class="stat-grid">
+            <article class="stat-card accent-teal">
+              <span class="stat-label">Produtos publicados</span>
+              <strong class="stat-value" id="overview-products-published">0</strong>
+            </article>
+            <article class="stat-card">
+              <span class="stat-label">Total de produtos</span>
+              <strong class="stat-value" id="overview-products-total">0</strong>
+            </article>
+            <article class="stat-card accent-orange">
+              <span class="stat-label">Gratuitos publicados</span>
+              <strong class="stat-value" id="overview-free-published">0</strong>
+            </article>
+            <article class="stat-card">
+              <span class="stat-label">Total gratuitos</span>
+              <strong class="stat-value" id="overview-free-total">0</strong>
+            </article>
+            <article class="stat-card accent-purple">
+              <span class="stat-label">Cliques em comprar</span>
+              <strong class="stat-value" id="overview-buy-clicks">0</strong>
+            </article>
+            <article class="stat-card accent-teal">
+              <span class="stat-label">Downloads gratuitos</span>
+              <strong class="stat-value" id="overview-downloads">0</strong>
+            </article>
           </div>
 
-          <form id="free-material-form" class="product-form">
-            <input type="hidden" id="free-material-id" />
-            <input type="hidden" id="free-existing-file-path" />
-            <input type="hidden" id="free-existing-file-url" />
-            <input type="hidden" id="free-existing-file-name" />
-            <input type="hidden" id="free-existing-cover-path" />
-            <input type="hidden" id="free-existing-cover-url" />
+          <div class="panel" style="margin-top: 20px;">
+            <div class="panel-head">
+              <h2>Atalhos rápidos</h2>
+              <p class="muted">Acesse as áreas mais usadas do painel.</p>
+            </div>
+            <div class="quick-actions">
+              <a class="btn-primary" href="#/produtos" data-nav="produtos">Cadastrar produto</a>
+              <a class="btn-ghost" href="#/gratuitos" data-nav="gratuitos">Cadastrar material gratuito</a>
+              <a class="btn-ghost" href="#/metricas" data-nav="metricas">Ver métricas</a>
+            </div>
+            <p class="muted" style="margin-top: 16px;">
+              Taxa de conversão (cliques em comprar / visualizações): <strong id="overview-conversion">0%</strong>
+            </p>
+          </div>
+        </section>
 
-            <label>
-              Título
-              <input id="free-title" type="text" required placeholder="Ex.: Guia de atividades lúdicas" />
-            </label>
+        <!-- Produtos -->
+        <section class="admin-view" data-view="produtos">
+          <div class="stat-grid view-intro">
+            <article class="stat-card accent-teal">
+              <span class="stat-label">Total</span>
+              <strong class="stat-value" id="count-total">0</strong>
+            </article>
+            <article class="stat-card accent-orange">
+              <span class="stat-label">Publicados</span>
+              <strong class="stat-value" id="count-published">0</strong>
+            </article>
+            <article class="stat-card">
+              <span class="stat-label">Rascunhos</span>
+              <strong class="stat-value" id="count-draft">0</strong>
+            </article>
+          </div>
 
-            <div class="two-cols">
-              <label>
-                Categoria
-                <input id="free-category" type="text" placeholder="Ex.: Alfabetização" />
-              </label>
-              <label>
-                Tipo do arquivo
-                <input id="free-file-type" type="text" placeholder="PDF" />
-              </label>
+          <div class="admin-grid">
+            <article class="panel form-panel">
+              <div class="panel-head">
+                <h2 id="form-title">Novo produto</h2>
+                <p class="muted">Cadastre título, imagens, preços e link da Hotmart.</p>
+              </div>
+
+              <form id="product-form" class="product-form">
+                <input type="hidden" id="product-id" />
+                <input type="hidden" id="existing-images" />
+
+                <label>
+                  Título
+                  <input id="title" type="text" required placeholder="Ex.: Kit Alfabetização Divertida" />
+                </label>
+
+                <label>
+                  Categoria
+                  <input id="category" type="text" placeholder="Ex.: Leitura e Escrita" />
+                </label>
+
+                <label>
+                  Link da Hotmart
+                  <input id="hotmart-url" type="url" placeholder="https://..." />
+                </label>
+
+                <label>
+                  Descrição
+                  <textarea id="description" rows="5" placeholder="Descreva o material..."></textarea>
+                </label>
+
+                <div class="two-cols">
+                  <label>
+                    Preço
+                    <input id="price" type="number" min="0" step="0.01" placeholder="29.90" />
+                  </label>
+                  <label>
+                    Preço em oferta
+                    <input id="promo-price" type="number" min="0" step="0.01" placeholder="19.90" />
+                  </label>
+                </div>
+
+                <div class="two-cols">
+                  <label>
+                    Início da oferta
+                    <input id="promo-start" type="date" />
+                  </label>
+                  <label>
+                    Fim da oferta
+                    <input id="promo-end" type="date" />
+                  </label>
+                </div>
+
+                <div class="two-cols">
+                  <label>
+                    Status
+                    <select id="status">
+                      <option value="draft">Rascunho</option>
+                      <option value="published">Publicado</option>
+                      <option value="archived">Arquivado</option>
+                    </select>
+                  </label>
+
+                  <label class="checkbox-label">
+                    <input id="featured" type="checkbox" />
+                    Produto em destaque
+                  </label>
+                </div>
+
+                <label>
+                  Imagens do produto
+                  <input id="images" type="file" accept="image/*" multiple />
+                </label>
+
+                <div id="image-preview" class="image-preview"></div>
+
+                <div class="form-actions">
+                  <button class="btn-primary" type="submit">Salvar produto</button>
+                  <button id="clear-btn" class="btn-ghost" type="button">Novo cadastro</button>
+                </div>
+
+                <p id="form-status" class="form-status"></p>
+              </form>
+            </article>
+
+            <article class="panel list-panel">
+              <div class="panel-head">
+                <h2>Produtos cadastrados</h2>
+                <p class="muted">Clique em editar para atualizar os dados.</p>
+              </div>
+              <div id="products-list" class="products-list"></div>
+            </article>
+          </div>
+        </section>
+
+        <!-- Materiais gratuitos -->
+        <section class="admin-view" data-view="gratuitos">
+          <div class="stat-grid view-intro">
+            <article class="stat-card accent-teal">
+              <span class="stat-label">Total gratuitos</span>
+              <strong class="stat-value" id="free-count-total">0</strong>
+            </article>
+            <article class="stat-card accent-orange">
+              <span class="stat-label">Publicados</span>
+              <strong class="stat-value" id="free-count-published">0</strong>
+            </article>
+            <article class="stat-card">
+              <span class="stat-label">Rascunhos</span>
+              <strong class="stat-value" id="free-count-draft">0</strong>
+            </article>
+          </div>
+
+          <div class="admin-grid">
+            <article class="panel form-panel">
+              <div class="panel-head">
+                <h2 id="free-form-title">Novo material gratuito</h2>
+                <p class="muted">Envie o arquivo (PDF, ZIP, etc.) e publique para aparecer na home.</p>
+              </div>
+
+              <form id="free-material-form" class="product-form">
+                <input type="hidden" id="free-material-id" />
+                <input type="hidden" id="free-existing-file-path" />
+                <input type="hidden" id="free-existing-file-url" />
+                <input type="hidden" id="free-existing-file-name" />
+                <input type="hidden" id="free-existing-cover-path" />
+                <input type="hidden" id="free-existing-cover-url" />
+
+                <label>
+                  Título
+                  <input id="free-title" type="text" required placeholder="Ex.: Guia de atividades lúdicas" />
+                </label>
+
+                <div class="two-cols">
+                  <label>
+                    Categoria
+                    <input id="free-category" type="text" placeholder="Ex.: Alfabetização" />
+                  </label>
+                  <label>
+                    Tipo do arquivo
+                    <input id="free-file-type" type="text" placeholder="PDF" />
+                  </label>
+                </div>
+
+                <label>
+                  Descrição
+                  <textarea id="free-description" rows="4" placeholder="Descreva o material gratuito..."></textarea>
+                </label>
+
+                <div class="two-cols">
+                  <label>
+                    Status
+                    <select id="free-status">
+                      <option value="draft">Rascunho</option>
+                      <option value="published">Publicado</option>
+                      <option value="archived">Arquivado</option>
+                    </select>
+                  </label>
+                  <label>
+                    Ordem de exibição
+                    <input id="free-sort-order" type="number" min="0" step="1" value="0" />
+                  </label>
+                </div>
+
+                <label>
+                  Arquivo para download
+                  <input id="free-file" type="file" accept=".pdf,.doc,.docx,.zip,.png,.jpg,.jpeg,.webp,application/pdf" />
+                </label>
+                <div id="free-file-info" class="file-info"></div>
+
+                <label>
+                  Capa (opcional)
+                  <input id="free-cover" type="file" accept="image/*" />
+                </label>
+                <div id="free-cover-preview" class="image-preview"></div>
+
+                <div class="form-actions">
+                  <button class="btn-primary" type="submit">Salvar material</button>
+                  <button id="free-clear-btn" class="btn-ghost" type="button">Novo cadastro</button>
+                </div>
+
+                <p id="free-form-status" class="form-status"></p>
+              </form>
+            </article>
+
+            <article class="panel list-panel">
+              <div class="panel-head">
+                <h2>Materiais cadastrados</h2>
+                <p class="muted">Edite, abra o arquivo ou exclua um material gratuito.</p>
+              </div>
+              <div id="free-materials-list" class="products-list"></div>
+            </article>
+          </div>
+        </section>
+
+        <!-- Métricas -->
+        <section class="admin-view" data-view="metricas">
+          <div class="metrics-stack">
+            <article class="panel">
+              <h3 class="metrics-block-title">Produtos pagos</h3>
+              <p class="muted">Visualizações, aberturas e cliques em &quot;Comprar agora&quot;.</p>
+
+              <div class="stat-grid" style="margin-top: 16px;">
+                <article class="stat-card accent-teal">
+                  <span class="stat-label">Visualizações</span>
+                  <strong class="stat-value" id="metric-views">0</strong>
+                </article>
+                <article class="stat-card">
+                  <span class="stat-label">Visitas únicas</span>
+                  <strong class="stat-value" id="metric-unique-views">0</strong>
+                </article>
+                <article class="stat-card accent-orange">
+                  <span class="stat-label">Aberturas</span>
+                  <strong class="stat-value" id="metric-opens">0</strong>
+                </article>
+                <article class="stat-card accent-purple">
+                  <span class="stat-label">Cliques em comprar</span>
+                  <strong class="stat-value" id="metric-buy-clicks">0</strong>
+                </article>
+                <article class="stat-card accent-teal">
+                  <span class="stat-label">Taxa de conversão</span>
+                  <strong class="stat-value" id="metric-conversion">0%</strong>
+                </article>
+              </div>
+
+              <div id="metrics-list" class="metrics-list"></div>
+            </article>
+
+            <article class="panel">
+              <h3 class="metrics-block-title">Materiais gratuitos</h3>
+              <p class="muted">Visualizações dos cards na home e cliques em &quot;Baixar grátis&quot;.</p>
+
+              <div class="stat-grid" style="margin-top: 16px;">
+                <article class="stat-card accent-teal">
+                  <span class="stat-label">Visualizações</span>
+                  <strong class="stat-value" id="free-metric-views">0</strong>
+                </article>
+                <article class="stat-card">
+                  <span class="stat-label">Visitas únicas</span>
+                  <strong class="stat-value" id="free-metric-unique-views">0</strong>
+                </article>
+                <article class="stat-card accent-orange">
+                  <span class="stat-label">Downloads</span>
+                  <strong class="stat-value" id="free-metric-downloads">0</strong>
+                </article>
+                <article class="stat-card accent-purple">
+                  <span class="stat-label">Taxa de download</span>
+                  <strong class="stat-value" id="free-metric-conversion">0%</strong>
+                </article>
+              </div>
+
+              <div id="free-metrics-list" class="metrics-list"></div>
+            </article>
+          </div>
+        </section>
+
+        <!-- Configurações -->
+        <section class="admin-view" data-view="configuracoes">
+          <article class="panel" style="max-width: 560px;">
+            <div class="panel-head">
+              <h2>Links de redes sociais</h2>
+              <p class="muted">Cadastre os links oficiais do Instagram e do Facebook usados no site.</p>
             </div>
 
-            <label>
-              Descrição
-              <textarea id="free-description" rows="4" placeholder="Descreva o material gratuito..."></textarea>
-            </label>
-
-            <div class="two-cols">
+            <form id="social-links-form" class="social-links-form">
               <label>
-                Status
-                <select id="free-status">
-                  <option value="draft">Rascunho</option>
-                  <option value="published">Publicado</option>
-                  <option value="archived">Arquivado</option>
-                </select>
+                Instagram
+                <input id="instagram-url" type="url" placeholder="https://instagram.com/sua-pagina" />
               </label>
+
               <label>
-                Ordem de exibição
-                <input id="free-sort-order" type="number" min="0" step="1" value="0" />
+                Facebook
+                <input id="facebook-url" type="url" placeholder="https://facebook.com/sua-pagina" />
               </label>
-            </div>
 
-            <label>
-              Arquivo para download
-              <input id="free-file" type="file" accept=".pdf,.doc,.docx,.zip,.png,.jpg,.jpeg,.webp,application/pdf" />
-            </label>
-            <div id="free-file-info" class="file-info"></div>
+              <div class="form-actions">
+                <button class="btn-primary" type="submit">Salvar links</button>
+              </div>
 
-            <label>
-              Capa (opcional)
-              <input id="free-cover" type="file" accept="image/*" />
-            </label>
-            <div id="free-cover-preview" class="image-preview"></div>
-
-            <div class="form-actions">
-              <button class="btn-primary" type="submit">Salvar material</button>
-              <button id="free-clear-btn" class="btn-ghost" type="button">Novo cadastro</button>
-            </div>
-
-            <p id="free-form-status" class="form-status"></p>
-          </form>
-        </article>
-
-        <article class="panel list-panel">
-          <div class="panel-head">
-            <h2>Materiais cadastrados</h2>
-            <p class="muted">Edite, abra o arquivo ou exclua um material gratuito.</p>
-          </div>
-
-          <div id="free-materials-list" class="products-list"></div>
-        </article>
-      </div>
-
-      <div class="panel free-metrics-panel">
-        <div class="panel-head">
-          <h2>Métricas de downloads</h2>
-          <p class="muted">Visualizações dos cards na home e cliques em &quot;Baixar grátis&quot;.</p>
-        </div>
-
-        <div class="metrics-grid free-metrics-grid">
-          <article class="summary-card">
-            <span class="summary-label">Visualizações</span>
-            <strong id="free-metric-views">0</strong>
+              <p id="social-status" class="form-status"></p>
+            </form>
           </article>
-          <article class="summary-card">
-            <span class="summary-label">Visitas únicas</span>
-            <strong id="free-metric-unique-views">0</strong>
-          </article>
-          <article class="summary-card">
-            <span class="summary-label">Downloads</span>
-            <strong id="free-metric-downloads">0</strong>
-          </article>
-          <article class="summary-card">
-            <span class="summary-label">Taxa de download</span>
-            <strong id="free-metric-conversion">0%</strong>
-          </article>
-        </div>
-
-        <div id="free-metrics-list" class="metrics-list free-metrics-list"></div>
+        </section>
       </div>
-    </section>
+    </div>
+  </div>
 
-    <section class="panel metrics-panel">
-      <div class="panel-head">
-        <h2>Ranking de produtos</h2>
-        <p class="muted">Top produtos por visualizações e cliques em compra.</p>
-      </div>
-
-      <div id="metrics-list" class="metrics-list"></div>
-    </section>
-    <section class="panel social-panel">
-      <div class="panel-head">
-        <h2>Links de redes sociais</h2>
-        <p class="muted">Cadastre os links oficiais do Instagram e do Facebook usados nos Ã­cones do site.</p>
-      </div>
-
-      <form id="social-links-form" class="social-links-form">
-        <label>
-          Instagram
-          <input id="instagram-url" type="url" placeholder="https://instagram.com/sua-pagina" />
-        </label>
-
-        <label>
-          Facebook
-          <input id="facebook-url" type="url" placeholder="https://facebook.com/sua-pagina" />
-        </label>
-
-        <div class="form-actions">
-          <button class="btn-primary" type="submit">Salvar links</button>
-        </div>
-
-        <p id="social-status" class="form-status"></p>
-      </form>
-    </section>
-  </main>
-
-  <script type="module" src="./js/dashboard.js"></script>
-  <a
-    class="whatsapp-float"
-    href="https://wa.me/5513997291237?text=Ol%C3%A1%21%20Vim%20pelo%20site%20Papel%C3%AA%20Educa%20e%20gostaria%20de%20mais%20informa%C3%A7%C3%B5es."
-    target="_blank"
-    rel="noopener noreferrer"
-    aria-label="Chamar no WhatsApp"
-    title="Falar no WhatsApp"
-  >
-    <img src="./images/whatsapp-svgrepo-com.svg" alt="" aria-hidden="true" />
-  </a>
+  <script type="module" src="./js/admin-router.js"></script>
 </body>
 </html>
