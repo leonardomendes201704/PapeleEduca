@@ -725,82 +725,147 @@ textarea { resize: vertical; }
 }
 
 .ranking-table {
-  padding: 8px 12px 4px;
+  padding: 0;
 }
 
-.ranking-row {
-  display: grid;
-  grid-template-columns: 28px 1fr 44px 44px 56px;
-  gap: 10px;
-  align-items: center;
-  padding: 10px 8px;
-  border-radius: 12px;
+.corp-table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
-.ranking-row--free {
-  grid-template-columns: 28px 1fr 72px;
+.corp-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
 }
 
-.ranking-row.head {
-  font-size: 0.72rem;
-  font-weight: 800;
-  color: var(--muted);
+.corp-table thead th {
+  padding: 10px 16px 12px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.07em;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  padding-bottom: 4px;
+  color: #8a959e;
+  text-align: left;
+  border-bottom: 1px solid rgba(228, 220, 207, 0.9);
+  background: rgba(251, 248, 242, 0.6);
 }
 
-.ranking-row:not(.head):hover {
-  background: var(--panel-2);
+.corp-table tbody tr {
+  transition: background 160ms ease;
 }
 
-.ranking-rank {
-  font-weight: 800;
-  color: var(--muted);
-  font-size: 0.88rem;
+.corp-table tbody tr:not(:last-child) td {
+  border-bottom: 1px solid rgba(240, 235, 227, 0.95);
 }
 
-.ranking-product {
+.corp-table tbody tr:hover td {
+  background: rgba(251, 248, 242, 0.65);
+}
+
+.corp-table td {
+  padding: 14px 16px;
+  vertical-align: middle;
+}
+
+.col-rank {
+  width: 44px;
+  text-align: center;
+}
+
+.col-metric {
+  width: 56px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: #4f5f6b;
+  white-space: nowrap;
+}
+
+.corp-table thead .col-metric {
+  text-align: right;
+}
+
+.col-metric--accent {
+  color: var(--accent-dark);
+  font-weight: 700;
+}
+
+.rank-badge {
+  display: inline-grid;
+  place-items: center;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: rgba(228, 220, 207, 0.35);
+  color: #6c7a86;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.corp-product {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   min-width: 0;
 }
 
-.ranking-product img {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
+.corp-product img {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
   object-fit: cover;
-  border: 1px solid var(--line);
-  flex-shrink: 0;
+  border: 1px solid rgba(228, 220, 207, 0.85);
   background: #fff;
+  flex-shrink: 0;
 }
 
-.ranking-name {
-  font-weight: 800;
-  font-size: 0.9rem;
-  line-height: 1.25;
+.corp-product-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.corp-product-name {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: 0.84rem;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--text);
+  letter-spacing: -0.01em;
+}
+
+.corp-product-meta {
+  font-size: 0.74rem;
+  color: #8a959e;
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
-.ranking-product .muted {
-  font-size: 0.78rem;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.corp-table--free .col-metric {
+  width: 72px;
 }
 
-.ranking-num {
-  text-align: right;
-  font-weight: 800;
-  font-size: 0.92rem;
+.metrics-panel-head {
+  padding: 16px 20px;
 }
 
-.ranking-highlight {
-  color: var(--accent-dark);
+.metrics-panel-title h3 {
+  font-size: 0.98rem;
+  font-weight: 700;
+}
+
+.metrics-panel-footer {
+  font-size: 0.84rem;
+  font-weight: 600;
+  padding: 12px 20px 16px;
 }
 
 .metrics-panel-footer {
@@ -849,19 +914,15 @@ textarea { resize: vertical; }
     grid-template-columns: 1fr;
   }
 
-  .ranking-row {
-    grid-template-columns: 24px 1fr 40px 40px 48px;
-  }
-
-  .ranking-row--free {
-    grid-template-columns: 24px 1fr 56px;
-  }
-
-  .ranking-row.head { display: none; }
-
   .product-row { grid-template-columns: 64px 1fr; }
   .product-row > .product-actions-row:last-child {
     grid-column: 1 / -1;
+  }
+
+  .corp-table .col-metric {
+    width: 48px;
+    padding-left: 8px;
+    padding-right: 12px;
   }
 }
 

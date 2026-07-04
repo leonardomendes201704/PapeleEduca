@@ -4,6 +4,16 @@ function formatPercent(value) {
   return `${Math.round(value * 100)}%`;
 }
 
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, (char) => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;',
+  })[char]);
+}
+
 function firstImage(images) {
   if (!Array.isArray(images) || !images.length) return '../images/hero.png';
   const first = images[0];
@@ -25,56 +35,79 @@ function renderProductTable(rows) {
 
   const topRows = rows.slice(0, 5);
   return `
-    <div class="ranking-row head">
-      <div>#</div>
-      <div>Produto</div>
-      <div class="ranking-num">Vis.</div>
-      <div class="ranking-num">Abert.</div>
-      <div class="ranking-num">Compras</div>
+    <div class="corp-table-wrap">
+      <table class="corp-table">
+        <thead>
+          <tr>
+            <th scope="col" class="col-rank">#</th>
+            <th scope="col" class="col-product">Produto</th>
+            <th scope="col" class="col-metric">Vis.</th>
+            <th scope="col" class="col-metric">Abert.</th>
+            <th scope="col" class="col-metric">Compras</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${topRows.map((item, index) => `
+            <tr>
+              <td class="col-rank"><span class="rank-badge">${index + 1}</span></td>
+              <td class="col-product">
+                <div class="corp-product">
+                  <img src="${escapeHtml(firstImage(item.images))}" alt="" loading="lazy" />
+                  <div class="corp-product-copy">
+                    <span class="corp-product-name" title="${escapeHtml(item.title)}">${escapeHtml(item.title)}</span>
+                    <span class="corp-product-meta">${escapeHtml(item.category || 'Sem categoria')}</span>
+                  </div>
+                </div>
+              </td>
+              <td class="col-metric">${item.views || 0}</td>
+              <td class="col-metric">${item.opens || 0}</td>
+              <td class="col-metric col-metric--accent">${item.buy_clicks || 0}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
     </div>
-    ${topRows.map((item, index) => `
-      <div class="ranking-row">
-        <div class="ranking-rank">${index + 1}</div>
-        <div class="ranking-product">
-          <img src="${firstImage(item.images)}" alt="" />
-          <div>
-            <div class="ranking-name">${item.title}</div>
-            <div class="muted">${item.category || 'Sem categoria'}</div>
-          </div>
-        </div>
-        <div class="ranking-num">${item.views || 0}</div>
-        <div class="ranking-num">${item.opens || 0}</div>
-        <div class="ranking-num ranking-highlight">${item.buy_clicks || 0}</div>
-      </div>
-    `).join('')}
   `;
 }
 
-function renderFreeTable(rows) {
+function renderFreeTable(rows, coverMap = {}) {
   if (!rows.length) {
     return '<p class="metric-empty">Ainda não há downloads registrados.</p>';
   }
 
   const topRows = rows.slice(0, 5);
   return `
-    <div class="ranking-row head ranking-row--free">
-      <div>#</div>
-      <div>Material</div>
-      <div class="ranking-num">Downloads</div>
+    <div class="corp-table-wrap">
+      <table class="corp-table corp-table--free">
+        <thead>
+          <tr>
+            <th scope="col" class="col-rank">#</th>
+            <th scope="col" class="col-product">Material</th>
+            <th scope="col" class="col-metric">Downloads</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${topRows.map((item, index) => {
+            const cover = coverMap[item.id] || '../images/hero.png';
+            return `
+              <tr>
+                <td class="col-rank"><span class="rank-badge">${index + 1}</span></td>
+                <td class="col-product">
+                  <div class="corp-product">
+                    <img src="${escapeHtml(cover)}" alt="" loading="lazy" />
+                    <div class="corp-product-copy">
+                      <span class="corp-product-name" title="${escapeHtml(item.title)}">${escapeHtml(item.title)}</span>
+                      <span class="corp-product-meta">${escapeHtml(item.category || 'Sem categoria')}</span>
+                    </div>
+                  </div>
+                </td>
+                <td class="col-metric col-metric--accent">${item.downloads || 0}</td>
+              </tr>
+            `;
+          }).join('')}
+        </tbody>
+      </table>
     </div>
-    ${topRows.map((item, index) => `
-      <div class="ranking-row ranking-row--free">
-        <div class="ranking-rank">${index + 1}</div>
-        <div class="ranking-product">
-          <img src="${item.cover_url || '../images/hero.png'}" alt="" />
-          <div>
-            <div class="ranking-name">${item.title}</div>
-            <div class="muted">${item.category || 'Sem categoria'}</div>
-          </div>
-        </div>
-        <div class="ranking-num ranking-highlight">${item.downloads || 0}</div>
-      </div>
-    `).join('')}
   `;
 }
 
@@ -88,7 +121,7 @@ async function loadProductMetrics() {
     .order('buy_clicks', { ascending: false });
 
   if (error) {
-    metricsListEl.innerHTML = `<p class="metric-empty">Erro ao carregar métricas: ${error.message}</p>`;
+    metricsListEl.innerHTML = `<p class="metric-empty">Erro ao carregar métricas: ${escapeHtml(error.message)}</p>`;
     return { views: 0, buyClicks: 0 };
   }
 
@@ -106,24 +139,33 @@ async function loadProductMetrics() {
 async function loadFreeMaterialMetrics() {
   if (!freeMetricsListEl) return { downloads: 0 };
 
-  const { data, error } = await supabase
-    .from('free_material_metrics_report')
-    .select('id,title,category,file_type,status,views,unique_views,downloads,last_event_at,cover_url')
-    .order('downloads', { ascending: false })
-    .order('views', { ascending: false });
+  const [metricsRes, materialsRes] = await Promise.all([
+    supabase
+      .from('free_material_metrics_report')
+      .select('id,title,category,file_type,status,views,unique_views,downloads,last_event_at')
+      .order('downloads', { ascending: false })
+      .order('views', { ascending: false }),
+    supabase.from('free_materials').select('id,cover_url'),
+  ]);
 
-  if (error) {
-    freeMetricsListEl.innerHTML = `<p class="metric-empty">Erro ao carregar métricas: ${error.message}</p>`;
+  if (metricsRes.error) {
+    freeMetricsListEl.innerHTML = `<p class="metric-empty">Erro ao carregar métricas: ${escapeHtml(metricsRes.error.message)}</p>`;
     return { downloads: 0 };
   }
 
-  const rows = (data || []).filter((item) => Number(item.views || 0) > 0 || Number(item.downloads || 0) > 0);
+  const coverMap = Object.fromEntries(
+    (materialsRes.data || []).map((item) => [item.id, item.cover_url || '']),
+  );
+
+  const rows = (metricsRes.data || []).filter(
+    (item) => Number(item.views || 0) > 0 || Number(item.downloads || 0) > 0,
+  );
   const totals = rows.reduce((acc, item) => {
     acc.downloads += Number(item.downloads || 0);
     return acc;
   }, { downloads: 0 });
 
-  freeMetricsListEl.innerHTML = renderFreeTable(rows);
+  freeMetricsListEl.innerHTML = renderFreeTable(rows, coverMap);
   return totals;
 }
 
