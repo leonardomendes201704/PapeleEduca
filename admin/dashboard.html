@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="./css/admin.css?v=59a6bf7" />
+  <link rel="stylesheet" href="./css/admin.css?v=0eab456" />
 </head>
 <body>
   <div class="admin-app">
@@ -62,30 +62,66 @@
       <div class="admin-content">
         <!-- Visão geral -->
         <section class="admin-view" data-view="overview">
-          <div class="stat-grid">
-            <article class="stat-card accent-teal">
-              <span class="stat-label">Produtos publicados</span>
-              <strong class="stat-value" id="overview-products-published">0</strong>
+          <div class="overview-kpi-grid">
+            <article class="overview-kpi kpi-teal">
+              <div class="overview-kpi-top">
+                <span class="overview-kpi-label">Produtos publicados</span>
+                <span class="overview-kpi-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2Z"/></svg>
+                </span>
+              </div>
+              <strong class="overview-kpi-value" id="overview-products-published">0</strong>
+              <div class="overview-kpi-wave" aria-hidden="true"></div>
             </article>
-            <article class="stat-card">
-              <span class="stat-label">Total de produtos</span>
-              <strong class="stat-value" id="overview-products-total">0</strong>
+            <article class="overview-kpi kpi-teal">
+              <div class="overview-kpi-top">
+                <span class="overview-kpi-label">Total de produtos</span>
+                <span class="overview-kpi-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M7 4h10l1 3h3v2H3V7h3l1-3Zm-2 7h14v9H5v-9Z"/></svg>
+                </span>
+              </div>
+              <strong class="overview-kpi-value" id="overview-products-total">0</strong>
+              <div class="overview-kpi-wave" aria-hidden="true"></div>
             </article>
-            <article class="stat-card accent-orange">
-              <span class="stat-label">Gratuitos publicados</span>
-              <strong class="stat-value" id="overview-free-published">0</strong>
+            <article class="overview-kpi kpi-orange">
+              <div class="overview-kpi-top">
+                <span class="overview-kpi-label">Gratuitos publicados</span>
+                <span class="overview-kpi-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M12 3a1 1 0 0 1 1 1v9.59l2.3-2.3a1 1 0 1 1 1.4 1.42l-4 4a1 1 0 0 1-1.4 0l-4-4a1 1 0 1 1 1.4-1.42L11 13.59V4a1 1 0 0 1 1-1Z"/></svg>
+                </span>
+              </div>
+              <strong class="overview-kpi-value" id="overview-free-published">0</strong>
+              <div class="overview-kpi-wave" aria-hidden="true"></div>
             </article>
-            <article class="stat-card">
-              <span class="stat-label">Total gratuitos</span>
-              <strong class="stat-value" id="overview-free-total">0</strong>
+            <article class="overview-kpi kpi-gold">
+              <div class="overview-kpi-top">
+                <span class="overview-kpi-label">Total gratuitos</span>
+                <span class="overview-kpi-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M12 2 4 6v6c0 5.5 3.8 10.7 8 12 4.2-1.3 8-6.5 8-12V6l-8-4Zm0 2.2 6 3v5.8c0 4.2-2.9 8.3-6 9.5-3.1-1.2-6-5.3-6-9.5V7.2l6-3Z"/></svg>
+                </span>
+              </div>
+              <strong class="overview-kpi-value" id="overview-free-total">0</strong>
+              <div class="overview-kpi-wave" aria-hidden="true"></div>
             </article>
-            <article class="stat-card accent-purple">
-              <span class="stat-label">Cliques em comprar</span>
-              <strong class="stat-value" id="overview-buy-clicks">0</strong>
+            <article class="overview-kpi kpi-purple">
+              <div class="overview-kpi-top">
+                <span class="overview-kpi-label">Cliques em comprar</span>
+                <span class="overview-kpi-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M7 4h-2l-1 2H3v2h18V6h-2l-1-2h-2l-1 2H8L7 4Zm-1 6v9a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-9H6Zm4 3h2v5h-2v-5Z"/></svg>
+                </span>
+              </div>
+              <strong class="overview-kpi-value" id="overview-buy-clicks">0</strong>
+              <div class="overview-kpi-wave" aria-hidden="true"></div>
             </article>
-            <article class="stat-card accent-teal">
-              <span class="stat-label">Downloads gratuitos</span>
-              <strong class="stat-value" id="overview-downloads">0</strong>
+            <article class="overview-kpi kpi-teal">
+              <div class="overview-kpi-top">
+                <span class="overview-kpi-label">Downloads gratuitos</span>
+                <span class="overview-kpi-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M12 3a1 1 0 0 1 1 1v9.59l2.3-2.3a1 1 0 1 1 1.4 1.42l-4 4a1 1 0 0 1-1.4 0l-4-4a1 1 0 1 1 1.4-1.42L11 13.59V4a1 1 0 0 1 1-1Zm-7 14a1 1 0 0 1 1 1v1h12v-1a1 1 0 1 1 2 0v2a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-2a1 1 0 0 1 1-1Z"/></svg>
+                </span>
+              </div>
+              <strong class="overview-kpi-value" id="overview-downloads">0</strong>
+              <div class="overview-kpi-wave" aria-hidden="true"></div>
             </article>
           </div>
 
@@ -439,6 +475,6 @@
     </div>
   </div>
 
-  <script type="module" src="./js/admin-router.js?v=59a6bf7"></script>
+  <script type="module" src="./js/admin-router.js?v=0eab456"></script>
 </body>
 </html>

@@ -338,6 +338,93 @@ button { font: inherit; }
   margin-top: 20px;
 }
 
+/* ── Overview KPIs ── */
+.overview-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.overview-kpi {
+  position: relative;
+  background: #fff;
+  border: 1px solid rgba(228, 220, 207, 0.9);
+  border-radius: 18px;
+  padding: 14px 14px 22px;
+  overflow: hidden;
+  box-shadow: 0 8px 22px rgba(35, 41, 50, 0.05);
+  min-width: 0;
+}
+
+.overview-kpi-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.overview-kpi-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--muted);
+  letter-spacing: 0.01em;
+}
+
+.overview-kpi-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.overview-kpi-icon svg {
+  width: 17px;
+  height: 17px;
+  fill: currentColor;
+}
+
+.overview-kpi.kpi-teal .overview-kpi-icon { background: rgba(47, 183, 176, 0.14); color: #1a5f5c; }
+.overview-kpi.kpi-orange .overview-kpi-icon { background: rgba(244, 165, 59, 0.16); color: #9a6b17; }
+.overview-kpi.kpi-purple .overview-kpi-icon { background: rgba(124, 106, 230, 0.14); color: #5a4bb8; }
+.overview-kpi.kpi-gold .overview-kpi-icon { background: rgba(244, 194, 79, 0.18); color: #9a6b17; }
+
+.overview-kpi-value {
+  display: block;
+  margin-top: 10px;
+  font-size: clamp(1.35rem, 1.6vw, 1.85rem);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  color: var(--text);
+}
+
+.overview-kpi-wave {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 22px;
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.overview-kpi.kpi-teal .overview-kpi-wave {
+  background: radial-gradient(ellipse 80% 100% at 50% 100%, rgba(47, 183, 176, 0.32), transparent 70%);
+}
+.overview-kpi.kpi-orange .overview-kpi-wave {
+  background: radial-gradient(ellipse 80% 100% at 50% 100%, rgba(244, 165, 59, 0.38), transparent 70%);
+}
+.overview-kpi.kpi-purple .overview-kpi-wave {
+  background: radial-gradient(ellipse 80% 100% at 50% 100%, rgba(124, 106, 230, 0.32), transparent 70%);
+}
+.overview-kpi.kpi-gold .overview-kpi-wave {
+  background: radial-gradient(ellipse 80% 100% at 50% 100%, rgba(244, 194, 79, 0.42), transparent 70%);
+}
+
 .admin-grid {
   display: grid;
   grid-template-columns: 1.05fr 0.95fr;
@@ -1095,6 +1182,10 @@ textarea { resize: vertical; }
     grid-template-columns: 1fr;
   }
 
+  .overview-kpi-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
   .product-row { grid-template-columns: 64px 1fr; }
   .product-row > .product-actions-row:last-child {
     grid-column: 1 / -1;
@@ -1125,4 +1216,8 @@ textarea { resize: vertical; }
 
   .stat-value,
   .kpi-hero-value { font-size: 1.6rem; }
+
+  .overview-kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
