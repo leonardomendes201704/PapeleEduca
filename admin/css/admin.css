@@ -729,8 +729,7 @@ textarea { resize: vertical; }
 }
 
 .corp-table-wrap {
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
+  overflow: hidden;
 }
 
 .corp-table {
@@ -740,7 +739,7 @@ textarea { resize: vertical; }
 }
 
 .corp-table thead th {
-  padding: 10px 16px 12px;
+  padding: 10px 12px 12px;
   font-size: 0.68rem;
   font-weight: 600;
   letter-spacing: 0.07em;
@@ -764,27 +763,39 @@ textarea { resize: vertical; }
 }
 
 .corp-table td {
-  padding: 14px 16px;
+  padding: 14px 12px;
   vertical-align: middle;
 }
 
 .col-rank {
-  width: 44px;
+  width: 5%;
   text-align: center;
 }
 
+.col-product {
+  width: auto;
+  overflow: hidden;
+  max-width: 0;
+}
+
 .col-metric {
-  width: 56px;
+  width: 11%;
   text-align: right;
   font-variant-numeric: tabular-nums;
   font-size: 0.84rem;
   font-weight: 600;
   color: #4f5f6b;
   white-space: nowrap;
+  padding-left: 6px;
+  padding-right: 10px;
 }
 
 .corp-table thead .col-metric {
   text-align: right;
+  font-size: 0.62rem;
+  letter-spacing: 0.04em;
+  white-space: normal;
+  line-height: 1.2;
 }
 
 .col-metric--accent {
@@ -850,7 +861,7 @@ textarea { resize: vertical; }
 }
 
 .corp-table--free .col-metric {
-  width: 72px;
+  width: 14%;
 }
 
 .metrics-panel-head {
@@ -920,9 +931,9 @@ textarea { resize: vertical; }
   }
 
   .corp-table .col-metric {
-    width: 48px;
-    padding-left: 8px;
-    padding-right: 12px;
+    width: 14%;
+    padding-left: 4px;
+    padding-right: 8px;
   }
 }
 
