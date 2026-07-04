@@ -44,6 +44,57 @@ let pendingCover = null;
 let coverPathToRemove = '';
 let freeMaterialsBound = false;
 
+const MAX_DOWNLOAD_FILE_BYTES = 50 * 1024 * 1024;
+const MAX_COVER_BYTES = 10 * 1024 * 1024;
+
+function formatFileSize(bytes) {
+  if (bytes >= 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  return `${Math.ceil(bytes / 1024)} KB`;
+}
+
+function mapSaveError(error, step = '') {
+  const message = String(error?.message || error || 'Erro desconhecido ao salvar.');
+  const status = error?.statusCode || error?.status;
+
+  if (/failed to fetch|networkerror|network request failed/i.test(message)) {
+    const prefix = step ? `${step}: ` : '';
+    return `${prefix}Falha de conexão ao enviar dados. Verifique sua internet, teste em aba anônima (sem extensões) e confirme no Supabase se o bucket "free-materials" foi criado executando o arquivo supabase-free-materials.sql.`;
+  }
+
+  if (status === 403 || /row-level security|permission denied|42501/i.test(message)) {
+    return `${step ? `${step}: ` : ''}Permissão negada. Confirme que seu usuário é admin e que as políticas de storage foram aplicadas (supabase-free-materials.sql).`;
+  }
+
+  if (/bucket not found|404/i.test(message)) {
+    return 'Bucket "free-materials" não encontrado no Supabase. Execute supabase-free-materials.sql no SQL Editor.';
+  }
+
+  return step ? `${step}: ${message}` : message;
+}
+
+async function ensureAuthenticatedSession() {
+  const { data: { session }, error } = await supabase.auth.getSession();
+  if (error || !session) {
+    throw new Error('Sessão expirada. Saia e entre no painel novamente.');
+  }
+
+  const expiresAtMs = (session.expires_at || 0) * 1000;
+  if (expiresAtMs && expiresAtMs - Date.now() < 60_000) {
+    const { data: refreshed, error: refreshError } = await supabase.auth.refreshSession();
+    if (refreshError || !refreshed.session) {
+      throw new Error('Não foi possível renovar a sessão. Entre no painel novamente.');
+    }
+    return refreshed.session;
+  }
+
+  return session;
+}
+
+function assertFileSize(file, maxBytes, label) {
+  if (!file || file.size <= maxBytes) return;
+  throw new Error(`${label} muito grande (${formatFileSize(file.size)}). Limite: ${formatFileSize(maxBytes)}.`);
+}
+
 function escapeHtml(value) {
   return String(value ?? '').replace(/[&<>"']/g, (char) => ({
     '&': '&amp;',
@@ -241,13 +292,26 @@ function bindTableActions() {
   });
 }
 
-async function uploadAsset(file, folder) {
+async function uploadAsset(file, folder, label) {
+  assertFileSize(file, folder === 'covers' ? MAX_COVER_BYTES : MAX_DOWNLOAD_FILE_BYTES, label);
+
+  await ensureAuthenticatedSession();
+
   const path = `${folder}/${crypto.randomUUID()}-${safeName(file.name)}`;
+  const contentType = file.type || (folder === 'covers' ? 'image/jpeg' : 'application/octet-stream');
+  const body = await file.arrayBuffer();
+
   const { error } = await supabase.storage
     .from(FREE_MATERIALS_BUCKET)
-    .upload(path, file, { contentType: file.type || undefined, upsert: false });
+    .upload(path, body, {
+      contentType,
+      upsert: true,
+      cacheControl: '3600',
+    });
 
-  if (error) throw error;
+  if (error) {
+    throw new Error(mapSaveError(error, label));
+  }
 
   const { data } = supabase.storage.from(FREE_MATERIALS_BUCKET).getPublicUrl(path);
   return { path, url: data.publicUrl, name: file.name };
@@ -356,6 +420,8 @@ function bindFreeMaterialsForm() {
     statusEl.className = 'form-status';
 
     try {
+      await ensureAuthenticatedSession();
+
       const title = fields.title.value.trim();
       if (!title) throw new Error('Informe o título do material.');
 
@@ -368,7 +434,8 @@ function bindFreeMaterialsForm() {
       const pathsToRemove = [];
 
       if (pendingFile) {
-        const uploaded = await uploadAsset(pendingFile, 'files');
+        statusEl.textContent = 'Enviando arquivo para download...';
+        const uploaded = await uploadAsset(pendingFile, 'files', 'Arquivo para download');
         if (filePath) pathsToRemove.push(filePath);
         filePath = uploaded.path;
         fileUrl = uploaded.url;
@@ -381,7 +448,8 @@ function bindFreeMaterialsForm() {
       }
 
       if (pendingCover) {
-        const uploadedCover = await uploadAsset(pendingCover, 'covers');
+        statusEl.textContent = 'Enviando capa...';
+        const uploadedCover = await uploadAsset(pendingCover, 'covers', 'Capa');
         if (coverPath) pathsToRemove.push(coverPath);
         coverPath = uploadedCover.path;
         coverUrl = uploadedCover.url;
@@ -390,6 +458,8 @@ function bindFreeMaterialsForm() {
         coverPath = '';
         coverUrl = '';
       }
+
+      statusEl.textContent = 'Salvando registro...';
 
       const payload = {
         title,
@@ -413,7 +483,7 @@ function bindFreeMaterialsForm() {
         ({ error } = await supabase.from('free_materials').insert(payload));
       }
 
-      if (error) throw error;
+      if (error) throw new Error(mapSaveError(error, 'Registro'));
 
       await removeStoragePaths(pathsToRemove);
 
@@ -422,7 +492,7 @@ function bindFreeMaterialsForm() {
       closeFreeMaterialModal();
       await loadFreeMaterials();
     } catch (error) {
-      statusEl.textContent = error.message;
+      statusEl.textContent = mapSaveError(error);
       statusEl.classList.add('error');
     }
   });
