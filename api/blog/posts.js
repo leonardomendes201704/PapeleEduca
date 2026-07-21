@@ -47,9 +47,19 @@ function estimateReadingTime(html) {
   return Math.max(1, Math.ceil(words / 200));
 }
 
+function cleanSecret(value) {
+  let raw = String(value || '').trim().replace(/^["']|["']$/g, '');
+  if (!raw) return '';
+  const parts = raw.split(/\s+/).filter(Boolean);
+  if (parts.length > 1 && parts.every((p) => p === parts[0])) {
+    return parts[0];
+  }
+  return parts[0] || raw;
+}
+
 async function supabaseRequest(path, { method = 'GET', body, prefer } = {}) {
-  const base = process.env.SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const base = cleanSecret(process.env.SUPABASE_URL).replace(/\/$/, '');
+  const key = cleanSecret(process.env.SUPABASE_SERVICE_ROLE_KEY);
   if (!base || !key) {
     const err = new Error('Configure SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY.');
     err.statusCode = 500;
