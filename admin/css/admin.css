@@ -852,7 +852,7 @@ textarea { resize: vertical; }
 
 .metrics-columns {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  grid-template-columns: 1fr;
   gap: 18px;
 }
 
@@ -1382,6 +1382,15 @@ textarea { resize: vertical; }
 /* Scale Blog CMS content only — shell (sidebar/header) stays full size */
 .admin-view[data-view="blog"] {
   zoom: 0.65;
+}
+
+/* Scale metrics view content to 75% */
+.admin-view[data-view="metricas"] {
+  zoom: 0.75;
+}
+
+.metrics-blog-kpi-grid {
+  margin-top: 16px;
 }
 
 /* Reset dialog zoom so modal isn't double-scaled under the view zoom */

@@ -25,6 +25,10 @@ const heroViewsEl = document.getElementById('metric-hero-views');
 const heroDownloadsEl = document.getElementById('metric-hero-downloads');
 const heroBuyClicksEl = document.getElementById('metric-hero-buy-clicks');
 const heroRateEl = document.getElementById('metric-hero-rate');
+const heroBlogListingEl = document.getElementById('metric-hero-blog-listing');
+const heroBlogViewsEl = document.getElementById('metric-hero-blog-views');
+const heroBlogReadsEl = document.getElementById('metric-hero-blog-reads');
+const heroBlogRateEl = document.getElementById('metric-hero-blog-rate');
 const metricsListEl = document.getElementById('metrics-list');
 const freeMetricsListEl = document.getElementById('free-metrics-list');
 const blogMetricsListEl = document.getElementById('blog-metrics-list');
@@ -213,7 +217,9 @@ function renderBlogTable(rows) {
 }
 
 async function loadBlogPostMetrics() {
-  if (!blogMetricsListEl) return;
+  if (!blogMetricsListEl) {
+    return { listingViews: 0, views: 0, reads: 0 };
+  }
 
   const [metricsRes, listingRes] = await Promise.all([
     supabase
@@ -224,39 +230,55 @@ async function loadBlogPostMetrics() {
     supabase.from('blog_listing_metrics_report').select('views').maybeSingle(),
   ]);
 
+  const listingViews = Number(listingRes.data?.views || 0);
   const listingEl = document.getElementById('blog-listing-views-value');
-  if (listingEl) listingEl.textContent = Number(listingRes.data?.views || 0);
+  if (listingEl) listingEl.textContent = listingViews;
 
   if (metricsRes.error) {
     blogMetricsListEl.innerHTML = `<p class="metric-empty">Erro ao carregar métricas: ${escapeHtml(metricsRes.error.message)}</p>`;
-    return;
+    return { listingViews, views: 0, reads: 0 };
   }
 
-  const rows = (metricsRes.data || []).filter(
+  const allRows = metricsRes.data || [];
+  const totals = allRows.reduce((acc, item) => {
+    acc.views += Number(item.views || 0);
+    acc.reads += Number(item.read_completes || 0);
+    return acc;
+  }, { views: 0, reads: 0 });
+
+  const rows = allRows.filter(
     (item) => Number(item.views || 0) > 0 || Number(item.read_completes || 0) > 0,
   );
   blogMetricsListEl.innerHTML = renderBlogTable(rows);
+  return { listingViews, views: totals.views, reads: totals.reads };
 }
 
-function updateHeroKpis(productTotals, freeTotals) {
+function updateHeroKpis(productTotals, freeTotals, blogTotals = {}) {
   const views = productTotals.views;
   const buyClicks = productTotals.buyClicks;
   const downloads = freeTotals.downloads;
   const rate = views > 0 ? buyClicks / views : 0;
+  const blogViews = Number(blogTotals.views || 0);
+  const blogReads = Number(blogTotals.reads || 0);
+  const blogRate = blogViews > 0 ? blogReads / blogViews : 0;
 
   if (heroViewsEl) heroViewsEl.textContent = views;
   if (heroDownloadsEl) heroDownloadsEl.textContent = downloads;
   if (heroBuyClicksEl) heroBuyClicksEl.textContent = buyClicks;
   if (heroRateEl) heroRateEl.textContent = formatPercent(rate);
+  if (heroBlogListingEl) heroBlogListingEl.textContent = Number(blogTotals.listingViews || 0);
+  if (heroBlogViewsEl) heroBlogViewsEl.textContent = blogViews;
+  if (heroBlogReadsEl) heroBlogReadsEl.textContent = blogReads;
+  if (heroBlogRateEl) heroBlogRateEl.textContent = formatPercent(blogRate);
 }
 
 export async function initMetrics() {
-  const [productTotals, freeTotals] = await Promise.all([
+  const [productTotals, freeTotals, blogTotals] = await Promise.all([
     loadProductMetrics(),
     loadFreeMaterialMetrics(),
     loadBlogPostMetrics(),
   ]);
-  updateHeroKpis(productTotals, freeTotals);
+  updateHeroKpis(productTotals, freeTotals, blogTotals);
 }
 
 export async function refreshMetrics() {
