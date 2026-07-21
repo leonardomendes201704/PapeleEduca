@@ -41,9 +41,9 @@ where id = 'USER_UUID_HERE';
    - `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_ANON_KEY`
    - `CRON_SECRET` (string aleatória; a Vercel envia no header `Authorization` do cron)
 3. No admin, em **Configurações**, ligue o envio, defina o horário (BRT) e os destinatários.
-4. O cron chama `/api/metrics-report` a cada hora; o e-mail só sai no horário configurado (e no máximo 1x por dia).
+4. A Vercel chama `/api/metrics-report` a cada hora UTC (24 crons diários, compatível com o plano Hobby); o e-mail só sai no horário configurado em Brasília (e no máximo 1x por dia).
 
-> O plano Hobby da Vercel só permite cron diário. Para horário configurável no admin, use o cron horário (`0 * * * *`) no plano Pro.
+> No plano Hobby não é permitido `0 * * * *` (cron horário). Por isso usamos 24 expressões diárias (`0 0` … `0 23`).
 
 ## 5. Public products
 
