@@ -49,6 +49,7 @@ const STATUS_LABELS = {
 };
 
 let currentProducts = [];
+let productMetricsById = {};
 let currentImages = [];
 let pendingFiles = [];
 let productsBound = false;
@@ -215,6 +216,8 @@ function renderProductsTable(rows) {
             <th scope="col" class="col-product">Produto</th>
             <th scope="col" class="col-price">Preço</th>
             <th scope="col" class="col-status">Status</th>
+            <th scope="col" class="col-metric">Views</th>
+            <th scope="col" class="col-metric">FB</th>
             <th scope="col" class="col-file">Hotmart</th>
             <th scope="col" class="col-actions">Ações</th>
           </tr>
@@ -225,6 +228,7 @@ function renderProductsTable(rows) {
             const featured = product.featured
               ? '<span class="chip chip-sm">Destaque</span>'
               : '';
+            const metrics = productMetricsById[product.id] || {};
             return `
               <tr data-id="${escapeHtml(product.id)}">
                 <td class="col-rank"><span class="rank-badge">${index + 1}</span></td>
@@ -244,6 +248,8 @@ function renderProductsTable(rows) {
                     ${featured}
                   </div>
                 </td>
+                <td class="col-metric">${Number(metrics.views || 0)}</td>
+                <td class="col-metric">${Number(metrics.facebook_views || 0)}</td>
                 <td class="col-file">
                   ${product.hotmart_url
                     ? `<a class="table-link" href="${escapeHtml(product.hotmart_url)}" target="_blank" rel="noopener noreferrer">Abrir</a>`
