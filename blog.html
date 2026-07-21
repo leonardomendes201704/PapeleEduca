@@ -59,7 +59,6 @@
       width: min(var(--max), calc(100% - 32px));
       margin: 0 auto;
       padding: 18px 0 40px;
-      zoom: 0.65;
     }
 
     .topbar {
@@ -217,6 +216,21 @@
       border-radius: 36px;
       box-shadow: var(--shadow);
       padding: 28px;
+      zoom: 0.65;
+    }
+
+    .blog-infinite-sentinel {
+      height: 1px;
+      width: 100%;
+      pointer-events: none;
+    }
+
+    .blog-load-status {
+      text-align: center;
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 0.95rem;
+      min-height: 1.4em;
     }
 
     .section-head {
@@ -416,7 +430,8 @@
       <div id="blog-posts-grid" class="post-grid" aria-live="polite">
         <p class="empty-state">Carregando posts...</p>
       </div>
-      <p id="blog-list-note" class="muted" style="text-align:center;margin-top:18px;"></p>
+      <div id="blog-infinite-sentinel" class="blog-infinite-sentinel" aria-hidden="true"></div>
+      <p id="blog-list-note" class="blog-load-status" role="status"></p>
     </section>
 
     <footer class="footer" id="sobre">
