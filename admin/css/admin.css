@@ -195,6 +195,7 @@ button { font: inherit; }
   min-width: 0;
   display: flex;
   flex-direction: column;
+  overflow-x: hidden;
 }
 
 .admin-page-header {
@@ -246,6 +247,8 @@ button { font: inherit; }
 .admin-content {
   flex: 1;
   padding: 24px 28px 40px;
+  min-width: 0;
+  overflow-x: hidden;
 }
 
 .admin-view {
@@ -1454,15 +1457,32 @@ textarea { resize: vertical; }
 /* Scale Blog CMS content only — shell (sidebar/header) stays full size */
 .admin-view[data-view="blog"] {
   zoom: 0.65;
-  width: calc(100% / 0.65);
-  max-width: none;
-  transform-origin: top left;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-x: hidden;
+}
+
+.admin-content:has(.admin-view[data-view="blog"].is-active),
+.admin-content:has(.admin-view[data-view="blog"]:not([hidden])) {
+  overflow-x: hidden;
+}
+
+/* Fallback when :has is unavailable / active class differs */
+.admin-main {
+  overflow-x: hidden;
 }
 
 .overview-kpi-grid.blog-kpi-grid {
   width: 100%;
+  max-width: 100%;
   margin-bottom: 18px;
   grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+#blog-posts-list {
+  max-width: 100%;
+  overflow-x: auto;
 }
 
 /* Scale metrics view content to 75% */
