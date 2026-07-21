@@ -1615,7 +1615,9 @@ textarea { resize: vertical; }
 #blog-cat-modal,
 #blog-tag-modal,
 #blog-facebook-modal,
-#blog-facebook-delete-modal {
+#blog-facebook-delete-modal,
+#product-facebook-modal,
+#product-facebook-delete-modal {
   zoom: 1;
 }
 

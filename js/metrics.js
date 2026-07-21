@@ -40,15 +40,42 @@ function getCampaignParams() {
   }, {});
 }
 
+function isFacebookReferrer(referrer) {
+  const ref = String(referrer || '').toLowerCase();
+  return (
+    ref.includes('facebook.com') ||
+    ref.includes('fb.com') ||
+    ref.includes('fb.me') ||
+    ref.includes('l.facebook.com') ||
+    ref.includes('m.facebook.com') ||
+    ref.includes('lm.facebook.com')
+  );
+}
+
+function resolveTrafficSource(metadata = {}) {
+  const explicit = String(metadata.source || '').trim().toLowerCase();
+  if (explicit && explicit !== 'site') return explicit;
+
+  const campaign = getCampaignParams();
+  const utmSource = String(campaign.utm_source || '').trim().toLowerCase();
+  if (utmSource) return utmSource;
+
+  const referrer = metadata.referrer || document.referrer || '';
+  if (isFacebookReferrer(referrer)) return 'facebook';
+
+  return 'site';
+}
+
 function getRequestPayload(productId, eventType, metadata = {}) {
+  const referrer = metadata.referrer || document.referrer || null;
   return {
     product_id: productId,
     event_type: eventType,
     visitor_id: getVisitorId(),
     session_id: getSessionId(),
-    source: metadata.source || 'site',
+    source: resolveTrafficSource({ ...metadata, referrer }),
     pathname: metadata.pathname || window.location.pathname,
-    referrer: metadata.referrer || document.referrer || null,
+    referrer,
     metadata: {
       ...getCampaignParams(),
       viewport: {

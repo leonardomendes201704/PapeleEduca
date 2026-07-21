@@ -66,6 +66,8 @@ create table if not exists public.products (
   featured boolean not null default false,
   images jsonb not null default '[]'::jsonb,
   tags text[] not null default '{}',
+  facebook_post_id text not null default '',
+  facebook_posted_at timestamptz,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -263,6 +265,8 @@ using (public.is_admin(auth.uid()));
 create index if not exists product_events_product_created_idx on public.product_events (product_id, created_at desc);
 create index if not exists product_events_type_created_idx on public.product_events (event_type, created_at desc);
 create index if not exists product_events_visitor_idx on public.product_events (visitor_id);
+create index if not exists product_events_source_idx on public.product_events (source);
+create index if not exists product_events_utm_source_idx on public.product_events ((metadata->>'utm_source'));
 
 create or replace view public.product_metrics_report as
 select
@@ -277,8 +281,22 @@ select
   p.images,
   coalesce(count(*) filter (where e.event_type = 'view'), 0)::int as views,
   coalesce(count(distinct e.session_id) filter (where e.event_type = 'view'), 0)::int as unique_views,
+  coalesce(count(*) filter (
+    where e.event_type = 'view'
+      and (
+        e.source = 'facebook'
+        or lower(coalesce(e.metadata->>'utm_source', '')) = 'facebook'
+      )
+  ), 0)::int as facebook_views,
   coalesce(count(*) filter (where e.event_type = 'open'), 0)::int as opens,
   coalesce(count(*) filter (where e.event_type = 'buy_click'), 0)::int as buy_clicks,
+  coalesce(count(*) filter (
+    where e.event_type = 'buy_click'
+      and (
+        e.source = 'facebook'
+        or lower(coalesce(e.metadata->>'utm_source', '')) = 'facebook'
+      )
+  ), 0)::int as facebook_buy_clicks,
   max(e.created_at) as last_event_at
 from public.products p
 left join public.product_events e

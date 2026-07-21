@@ -54,8 +54,14 @@ let pendingFiles = [];
 let productsBound = false;
 let settingsBound = false;
 let metricsEmailBound = false;
+let facebookModalProduct = null;
+let facebookDeleteModalProduct = null;
 
 const currency = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+
+function $(id) {
+  return document.getElementById(id);
+}
 
 function escapeHtml(value) {
   return String(value ?? '').replace(/[&<>"']/g, (char) => ({
@@ -65,6 +71,27 @@ function escapeHtml(value) {
     '"': '&quot;',
     "'": '&#39;',
   })[char]);
+}
+
+function productPublicUrl(productId) {
+  const origin = window.location.origin || 'https://papele-educa.vercel.app';
+  return `${origin.replace(/\/$/, '')}/product.html?id=${encodeURIComponent(productId)}`;
+}
+
+function productFacebookShareUrl(product) {
+  const url = new URL(productPublicUrl(product.id));
+  url.searchParams.set('utm_source', 'facebook');
+  url.searchParams.set('utm_medium', 'social');
+  url.searchParams.set('utm_campaign', 'product');
+  url.searchParams.set('utm_content', String(product.slug || product.id || ''));
+  return url.toString();
+}
+
+function defaultProductFacebookMessage(product) {
+  const title = String(product?.title || '').trim();
+  const description = String(product?.description || '').trim().replace(/\s+/g, ' ').slice(0, 280);
+  if (description) return `${title}\n\n${description}`;
+  return title;
 }
 
 function slugify(text) {
@@ -225,6 +252,18 @@ function renderProductsTable(rows) {
                 <td class="col-actions">
                   <div class="table-actions">
                     <button type="button" class="btn-ghost btn-sm" data-action="edit">Editar</button>
+                    <button
+                      type="button"
+                      class="btn-ghost btn-sm btn-facebook${product.facebook_post_id ? ' is-posted' : ''}"
+                      data-action="facebook"
+                      ${product.status !== 'published' ? 'disabled title="Publique o produto antes de compartilhar no Facebook"' : ''}
+                    >${product.facebook_post_id ? 'Repostar FB' : 'Postar no Facebook'}</button>
+                    ${product.facebook_post_id ? `
+                    <button
+                      type="button"
+                      class="btn-ghost btn-sm btn-facebook-delete"
+                      data-action="facebook-delete"
+                    >Excluir postagem</button>` : ''}
                     <button type="button" class="btn-ghost btn-sm btn-danger" data-action="delete">Excluir</button>
                   </div>
                 </td>
@@ -249,6 +288,24 @@ function bindTableActions() {
     });
   });
 
+  listEl.querySelectorAll('[data-action="facebook"]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const row = button.closest('tr');
+      const id = row?.dataset.id;
+      const product = currentProducts.find((item) => item.id === id);
+      if (product) openProductFacebookModal(product);
+    });
+  });
+
+  listEl.querySelectorAll('[data-action="facebook-delete"]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const row = button.closest('tr');
+      const id = row?.dataset.id;
+      const product = currentProducts.find((item) => item.id === id);
+      if (product) openProductFacebookDeleteModal(product);
+    });
+  });
+
   listEl.querySelectorAll('[data-action="delete"]').forEach((button) => {
     button.addEventListener('click', async () => {
       const row = button.closest('tr');
@@ -259,6 +316,227 @@ function bindTableActions() {
       await deleteProduct(product);
     });
   });
+}
+
+function closeProductFacebookModal() {
+  facebookModalProduct = null;
+  const modalEl = $('product-facebook-modal');
+  if (modalEl?.open) modalEl.close();
+}
+
+function openProductFacebookModal(product) {
+  if (!product || product.status !== 'published') {
+    alert('Só é possível postar no Facebook produtos publicados.');
+    return;
+  }
+
+  facebookModalProduct = product;
+  const modalEl = $('product-facebook-modal');
+  const titleEl = $('product-facebook-title');
+  const linkEl = $('product-facebook-link');
+  const messageEl = $('product-facebook-message');
+  const alreadyEl = $('product-facebook-already');
+  const statusElFb = $('product-facebook-form-status');
+  const idEl = $('product-facebook-id');
+  const confirmBtn = $('product-facebook-confirm-btn');
+
+  if (!modalEl || !messageEl) return;
+
+  const url = productFacebookShareUrl(product);
+  if (idEl) idEl.value = product.id;
+  if (titleEl) titleEl.textContent = product.title || '';
+  if (linkEl) {
+    linkEl.href = url;
+    linkEl.textContent = url;
+  }
+  messageEl.value = defaultProductFacebookMessage(product);
+  if (statusElFb) {
+    statusElFb.textContent = '';
+    statusElFb.className = 'form-status';
+  }
+  if (alreadyEl) alreadyEl.hidden = !product.facebook_post_id;
+  if (confirmBtn) {
+    confirmBtn.disabled = false;
+    confirmBtn.textContent = product.facebook_post_id ? 'Confirmar e repostar' : 'Confirmar e postar';
+  }
+
+  if (typeof modalEl.showModal === 'function') modalEl.showModal();
+  else modalEl.setAttribute('open', '');
+}
+
+async function submitProductFacebookPost(event) {
+  event.preventDefault();
+  const statusElFb = $('product-facebook-form-status');
+  const confirmBtn = $('product-facebook-confirm-btn');
+  const messageEl = $('product-facebook-message');
+  const product =
+    facebookModalProduct ||
+    currentProducts.find((item) => item.id === $('product-facebook-id')?.value);
+
+  if (!product) {
+    if (statusElFb) {
+      statusElFb.textContent = 'Produto não encontrado.';
+      statusElFb.classList.add('error');
+    }
+    return;
+  }
+
+  const message = String(messageEl?.value || '').trim();
+  if (!message) {
+    if (statusElFb) {
+      statusElFb.textContent = 'Escreva uma mensagem para o post.';
+      statusElFb.classList.add('error');
+    }
+    return;
+  }
+
+  if (statusElFb) {
+    statusElFb.textContent = 'Publicando na página do Facebook...';
+    statusElFb.className = 'form-status';
+  }
+  if (confirmBtn) confirmBtn.disabled = true;
+
+  try {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    if (!session?.access_token) {
+      throw new Error('Sessão expirada. Faça login novamente.');
+    }
+
+    const response = await fetch('/api/products/facebook-post', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify({
+        id: product.id,
+        message,
+        force: Boolean(product.facebook_post_id),
+      }),
+    });
+
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(payload.error || `HTTP ${response.status}`);
+    }
+
+    if (statusElFb) {
+      const fbLink = payload.facebook_url
+        ? ` <a href="${escapeHtml(payload.facebook_url)}" target="_blank" rel="noopener noreferrer">Ver no Facebook</a>`
+        : '';
+      statusElFb.innerHTML = `Publicado com sucesso.${fbLink}`;
+      statusElFb.className = 'form-status';
+    }
+
+    await loadProducts();
+    setTimeout(() => closeProductFacebookModal(), 900);
+  } catch (error) {
+    if (statusElFb) {
+      statusElFb.textContent = error.message || 'Falha ao postar no Facebook.';
+      statusElFb.classList.add('error');
+    }
+    if (confirmBtn) confirmBtn.disabled = false;
+  }
+}
+
+function closeProductFacebookDeleteModal() {
+  facebookDeleteModalProduct = null;
+  const modalEl = $('product-facebook-delete-modal');
+  if (modalEl?.open) modalEl.close();
+}
+
+function openProductFacebookDeleteModal(product) {
+  if (!product?.facebook_post_id) {
+    alert('Este produto não tem postagem registrada no Facebook.');
+    return;
+  }
+
+  facebookDeleteModalProduct = product;
+  const modalEl = $('product-facebook-delete-modal');
+  const titleEl = $('product-facebook-delete-title');
+  const idEl = $('product-facebook-delete-id');
+  const statusElFb = $('product-facebook-delete-form-status');
+  const confirmBtn = $('product-facebook-delete-confirm-btn');
+
+  if (!modalEl) return;
+
+  if (idEl) idEl.value = product.id;
+  if (titleEl) titleEl.textContent = product.title || '';
+  if (statusElFb) {
+    statusElFb.textContent = '';
+    statusElFb.className = 'form-status';
+  }
+  if (confirmBtn) {
+    confirmBtn.disabled = false;
+    confirmBtn.textContent = 'Excluir postagem';
+  }
+
+  if (typeof modalEl.showModal === 'function') modalEl.showModal();
+  else modalEl.setAttribute('open', '');
+}
+
+async function submitProductFacebookDelete(event) {
+  event.preventDefault();
+  const statusElFb = $('product-facebook-delete-form-status');
+  const confirmBtn = $('product-facebook-delete-confirm-btn');
+  const product =
+    facebookDeleteModalProduct ||
+    currentProducts.find((item) => item.id === $('product-facebook-delete-id')?.value);
+
+  if (!product) {
+    if (statusElFb) {
+      statusElFb.textContent = 'Produto não encontrado.';
+      statusElFb.classList.add('error');
+    }
+    return;
+  }
+
+  if (statusElFb) {
+    statusElFb.textContent = 'Excluindo postagem no Facebook...';
+    statusElFb.className = 'form-status';
+  }
+  if (confirmBtn) confirmBtn.disabled = true;
+
+  try {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    if (!session?.access_token) {
+      throw new Error('Sessão expirada. Faça login novamente.');
+    }
+
+    const response = await fetch(`/api/products/facebook-post?id=${encodeURIComponent(product.id)}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify({ id: product.id }),
+    });
+
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(payload.error || `HTTP ${response.status}`);
+    }
+
+    if (statusElFb) {
+      statusElFb.textContent = payload.already_gone
+        ? 'Postagem já não existia no Facebook. Registro local limpo.'
+        : 'Postagem excluída do Facebook.';
+      statusElFb.className = 'form-status';
+    }
+
+    await loadProducts();
+    setTimeout(() => closeProductFacebookDeleteModal(), 900);
+  } catch (error) {
+    if (statusElFb) {
+      statusElFb.textContent = error.message || 'Falha ao excluir a postagem do Facebook.';
+      statusElFb.classList.add('error');
+    }
+    if (confirmBtn) confirmBtn.disabled = false;
+  }
 }
 
 async function uploadFiles(files) {
@@ -462,6 +740,21 @@ function bindProductsForm() {
       resetForm();
       closeProductModal();
     }
+  });
+
+  $('product-facebook-form')?.addEventListener('submit', submitProductFacebookPost);
+  $('product-facebook-cancel-btn')?.addEventListener('click', closeProductFacebookModal);
+  $('product-facebook-modal-close')?.addEventListener('click', closeProductFacebookModal);
+  $('product-facebook-modal')?.addEventListener('cancel', (event) => {
+    event.preventDefault();
+    closeProductFacebookModal();
+  });
+  $('product-facebook-delete-form')?.addEventListener('submit', submitProductFacebookDelete);
+  $('product-facebook-delete-cancel-btn')?.addEventListener('click', closeProductFacebookDeleteModal);
+  $('product-facebook-delete-modal-close')?.addEventListener('click', closeProductFacebookDeleteModal);
+  $('product-facebook-delete-modal')?.addEventListener('cancel', (event) => {
+    event.preventDefault();
+    closeProductFacebookDeleteModal();
   });
 
   form.addEventListener('submit', async (event) => {

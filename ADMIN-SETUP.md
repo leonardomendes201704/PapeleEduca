@@ -57,6 +57,7 @@ Publicação **manual** pela tabela de posts do CMS (botão **Postar no Facebook
    - `SITE_URL` (opcional) — ex.: `https://papele-educa.vercel.app`
 4. Redeploy. No admin → Blog → Posts, use **Postar no Facebook** (só em posts publicados).
 5. Para medir cliques vindos do Facebook, execute também [`supabase-blog-facebook-metrics.sql`](./supabase-blog-facebook-metrics.sql). Os links postados incluem UTM (`utm_source=facebook`) e o admin mostra a coluna **FB** / KPI **Views do Facebook**.
+6. Para produtos, execute [`supabase-products-facebook.sql`](./supabase-products-facebook.sql). No admin → Produtos, use **Postar no Facebook** / **Excluir postagem** (mesmo fluxo do blog; o link aponta para `product.html?id=...` com UTM).
 
 ## 5. Public products
 

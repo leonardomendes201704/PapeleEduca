@@ -48,6 +48,7 @@ function renderProductTable(rows) {
             <th scope="col" class="col-rank">#</th>
             <th scope="col" class="col-product">Produto</th>
             <th scope="col" class="col-metric">Vis.</th>
+            <th scope="col" class="col-metric">FB</th>
             <th scope="col" class="col-metric">Abert.</th>
             <th scope="col" class="col-metric">Compras</th>
           </tr>
@@ -66,6 +67,7 @@ function renderProductTable(rows) {
                 </div>
               </td>
               <td class="col-metric">${item.views || 0}</td>
+              <td class="col-metric">${item.facebook_views || 0}</td>
               <td class="col-metric">${item.opens || 0}</td>
               <td class="col-metric col-metric--accent">${item.buy_clicks || 0}</td>
             </tr>
@@ -122,7 +124,7 @@ async function loadProductMetrics() {
 
   const { data, error } = await supabase
     .from('product_metrics_report')
-    .select('id,title,category,status,views,unique_views,opens,buy_clicks,last_event_at,images')
+    .select('id,title,category,status,views,facebook_views,unique_views,opens,buy_clicks,last_event_at,images')
     .order('views', { ascending: false })
     .order('buy_clicks', { ascending: false });
 

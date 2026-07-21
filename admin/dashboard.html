@@ -316,6 +316,68 @@
               </div>
             </form>
           </dialog>
+
+          <!-- Product Facebook post confirmation modal -->
+          <dialog id="product-facebook-modal" class="admin-modal">
+            <form id="product-facebook-form" class="admin-modal-panel blog-facebook-form" method="dialog">
+              <div class="admin-modal-header">
+                <div>
+                  <h2>Postar no Facebook</h2>
+                  <p class="muted">Revise a mensagem e confirme para publicar na Página.</p>
+                </div>
+                <button type="button" class="admin-modal-close" id="product-facebook-modal-close" aria-label="Fechar">×</button>
+              </div>
+              <div class="admin-modal-body">
+                <input type="hidden" id="product-facebook-id" />
+                <div class="blog-facebook-summary">
+                  <p class="blog-facebook-summary-label">Produto</p>
+                  <p class="blog-facebook-summary-title" id="product-facebook-title"></p>
+                  <p class="blog-facebook-summary-label">Link</p>
+                  <a class="blog-facebook-summary-link" id="product-facebook-link" href="#" target="_blank" rel="noopener noreferrer"></a>
+                </div>
+                <p id="product-facebook-already" class="form-status error" hidden>
+                  Este produto já foi publicado na página. Confirmar cria um novo post no Facebook.
+                </p>
+                <label>
+                  Mensagem
+                  <textarea id="product-facebook-message" rows="6" required></textarea>
+                </label>
+                <p id="product-facebook-form-status" class="form-status"></p>
+              </div>
+              <div class="admin-modal-footer">
+                <button type="button" class="btn-ghost" id="product-facebook-cancel-btn">Cancelar</button>
+                <button type="submit" class="btn-primary" id="product-facebook-confirm-btn">Confirmar e postar</button>
+              </div>
+            </form>
+          </dialog>
+
+          <!-- Product Facebook delete confirmation modal -->
+          <dialog id="product-facebook-delete-modal" class="admin-modal">
+            <form id="product-facebook-delete-form" class="admin-modal-panel blog-facebook-form" method="dialog">
+              <div class="admin-modal-header">
+                <div>
+                  <h2>Excluir postagem do Facebook</h2>
+                  <p class="muted">Remove a publicação da Página. O produto no site permanece.</p>
+                </div>
+                <button type="button" class="admin-modal-close" id="product-facebook-delete-modal-close" aria-label="Fechar">×</button>
+              </div>
+              <div class="admin-modal-body">
+                <input type="hidden" id="product-facebook-delete-id" />
+                <div class="blog-facebook-summary">
+                  <p class="blog-facebook-summary-label">Produto</p>
+                  <p class="blog-facebook-summary-title" id="product-facebook-delete-title"></p>
+                </div>
+                <p class="muted">
+                  Esta ação apaga a postagem na Página PapelêEduca. Não exclui o produto do site.
+                </p>
+                <p id="product-facebook-delete-form-status" class="form-status"></p>
+              </div>
+              <div class="admin-modal-footer">
+                <button type="button" class="btn-ghost" id="product-facebook-delete-cancel-btn">Cancelar</button>
+                <button type="submit" class="btn-danger" id="product-facebook-delete-confirm-btn">Excluir postagem</button>
+              </div>
+            </form>
+          </dialog>
         </section>
 
         <!-- Materiais gratuitos -->
