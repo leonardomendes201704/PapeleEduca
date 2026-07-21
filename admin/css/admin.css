@@ -465,6 +465,44 @@ label {
   margin-top: 16px;
 }
 
+.settings-stack {
+  display: grid;
+  gap: 18px;
+}
+
+.form-actions-split {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.metrics-email-meta {
+  font-size: 0.9rem;
+  line-height: 1.45;
+  padding: 12px 14px;
+  border: 1px dashed var(--line);
+  border-radius: 14px;
+  background: #fff;
+  white-space: pre-line;
+}
+
+.metrics-email-meta:empty {
+  display: none;
+}
+
+.social-links-form textarea {
+  width: 100%;
+  resize: vertical;
+  min-height: 88px;
+  font: inherit;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #fff;
+  color: inherit;
+}
+
 .setting-toggle-row {
   display: flex;
   align-items: center;

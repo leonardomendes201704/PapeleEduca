@@ -20,5 +20,11 @@
       "source": "/blog/:slug",
       "destination": "/api/blog/render?slug=:slug"
     }
+  ],
+  "crons": [
+    {
+      "path": "/api/metrics-report",
+      "schedule": "0 * * * *"
+    }
   ]
 }

@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
-  <link rel="stylesheet" href="css/admin.css?v=blog-ui-4" />
+  <link rel="stylesheet" href="css/admin.css?v=metrics-email-1" />
 </head>
 <body>
   <div class="admin-app">
@@ -916,35 +916,78 @@
 
         <!-- Configurações -->
         <section class="admin-view" data-view="configuracoes">
-          <article class="panel" style="max-width: 560px;">
-            <div class="panel-head">
-              <h2>Links de redes sociais</h2>
-              <p class="muted">Cadastre os links oficiais do Instagram e do Facebook usados no site.</p>
-            </div>
-
-            <form id="social-links-form" class="social-links-form">
-              <label>
-                Instagram
-                <input id="instagram-url" type="url" placeholder="https://instagram.com/sua-pagina" />
-              </label>
-
-              <label>
-                Facebook
-                <input id="facebook-url" type="url" placeholder="https://facebook.com/sua-pagina" />
-              </label>
-
-              <div class="form-actions">
-                <button class="btn-primary" type="submit">Salvar links</button>
+          <div class="settings-stack">
+            <article class="panel" style="max-width: 560px;">
+              <div class="panel-head">
+                <h2>Links de redes sociais</h2>
+                <p class="muted">Cadastre os links oficiais do Instagram e do Facebook usados no site.</p>
               </div>
 
-              <p id="social-status" class="form-status"></p>
-            </form>
-          </article>
+              <form id="social-links-form" class="social-links-form">
+                <label>
+                  Instagram
+                  <input id="instagram-url" type="url" placeholder="https://instagram.com/sua-pagina" />
+                </label>
+
+                <label>
+                  Facebook
+                  <input id="facebook-url" type="url" placeholder="https://facebook.com/sua-pagina" />
+                </label>
+
+                <div class="form-actions">
+                  <button class="btn-primary" type="submit">Salvar links</button>
+                </div>
+
+                <p id="social-status" class="form-status"></p>
+              </form>
+            </article>
+
+            <article class="panel" style="max-width: 560px;">
+              <div class="panel-head">
+                <h2>Relatório de métricas por e-mail</h2>
+                <p class="muted">Extrato diário em HTML, enviado automaticamente no horário de Brasília configurado abaixo.</p>
+              </div>
+
+              <form id="metrics-email-form" class="social-links-form">
+                <div class="setting-toggle-row">
+                  <div class="setting-toggle-copy">
+                    <strong>Envio automático</strong>
+                    <span id="metrics-email-state-label" class="setting-toggle-state" data-state="off">Relatório desligado</span>
+                  </div>
+                  <label class="switch" for="metrics-email-enabled">
+                    <input id="metrics-email-enabled" type="checkbox" />
+                    <span class="switch-slider" aria-hidden="true"></span>
+                    <span class="sr-only">Ligar ou desligar o envio automático do relatório</span>
+                  </label>
+                </div>
+
+                <label>
+                  Horário de envio (Brasília)
+                  <input id="metrics-email-time" type="time" value="08:00" required />
+                </label>
+
+                <label>
+                  Destinatários
+                  <textarea id="metrics-email-recipients" rows="3" placeholder="pessoa1@email.com&#10;pessoa2@email.com"></textarea>
+                </label>
+                <p class="muted setting-help">Separe por vírgula ou uma linha por e-mail. O relatório cobre o dia civil anterior (BRT).</p>
+
+                <div class="metrics-email-meta muted" id="metrics-email-meta"></div>
+
+                <div class="form-actions form-actions-split">
+                  <button class="btn-primary" type="submit">Salvar relatório</button>
+                  <button id="metrics-email-send-now" class="btn-ghost" type="button">Enviar agora</button>
+                </div>
+
+                <p id="metrics-email-status" class="form-status"></p>
+              </form>
+            </article>
+          </div>
         </section>
       </div>
     </div>
   </div>
 
-  <script type="module" src="js/admin-router.js?v=blog-ui-4"></script>
+  <script type="module" src="js/admin-router.js?v=metrics-email-1"></script>
 </body>
 </html>

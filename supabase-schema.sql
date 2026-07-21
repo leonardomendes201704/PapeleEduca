@@ -93,6 +93,11 @@ create table if not exists public.site_settings (
   instagram_url text not null default '',
   facebook_url text not null default '',
   blog_menu_enabled boolean not null default true,
+  metrics_email_enabled boolean not null default false,
+  metrics_email_recipients text not null default '',
+  metrics_email_time text not null default '08:00',
+  metrics_email_last_sent_at timestamptz,
+  metrics_email_last_error text not null default '',
   updated_at timestamptz not null default now()
 );
 
@@ -102,6 +107,21 @@ on conflict (id) do nothing;
 
 alter table public.site_settings
   add column if not exists blog_menu_enabled boolean not null default true;
+
+alter table public.site_settings
+  add column if not exists metrics_email_enabled boolean not null default false;
+
+alter table public.site_settings
+  add column if not exists metrics_email_recipients text not null default '';
+
+alter table public.site_settings
+  add column if not exists metrics_email_time text not null default '08:00';
+
+alter table public.site_settings
+  add column if not exists metrics_email_last_sent_at timestamptz;
+
+alter table public.site_settings
+  add column if not exists metrics_email_last_error text not null default '';
 
 alter table public.site_settings enable row level security;
 grant select on public.site_settings to anon, authenticated;

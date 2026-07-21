@@ -33,6 +33,18 @@ where id = 'USER_UUID_HERE';
 - Connect the repo to Vercel.
 - Set the same Supabase URL and anon key in the deployed admin files.
 
+### Relatório de métricas por e-mail
+
+1. No SQL Editor do Supabase, execute [`supabase-metrics-email.sql`](./supabase-metrics-email.sql).
+2. Na Vercel, configure as variáveis de ambiente (reaproveitam o SMTP do contato):
+   - `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`
+   - `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_ANON_KEY`
+   - `CRON_SECRET` (string aleatória; a Vercel envia no header `Authorization` do cron)
+3. No admin, em **Configurações**, ligue o envio, defina o horário (BRT) e os destinatários.
+4. O cron chama `/api/metrics-report` a cada hora; o e-mail só sai no horário configurado (e no máximo 1x por dia).
+
+> O plano Hobby da Vercel só permite cron diário. Para horário configurável no admin, use o cron horário (`0 * * * *`) no plano Pro.
+
 ## 5. Public products
 
 Only rows with `status = 'published'` are visible to the public site when it is connected to Supabase.

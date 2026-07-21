@@ -15,6 +15,11 @@ const publishedEl = document.getElementById('count-published');
 const draftEl = document.getElementById('count-draft');
 const socialForm = document.getElementById('social-links-form');
 const socialStatusEl = document.getElementById('social-status');
+const metricsEmailForm = document.getElementById('metrics-email-form');
+const metricsEmailStatusEl = document.getElementById('metrics-email-status');
+const metricsEmailMetaEl = document.getElementById('metrics-email-meta');
+const metricsEmailStateLabelEl = document.getElementById('metrics-email-state-label');
+const metricsEmailSendNowBtn = document.getElementById('metrics-email-send-now');
 
 const fields = {
   id: document.getElementById('product-id'),
@@ -32,6 +37,9 @@ const fields = {
   images: document.getElementById('images'),
   instagramUrl: document.getElementById('instagram-url'),
   facebookUrl: document.getElementById('facebook-url'),
+  metricsEmailEnabled: document.getElementById('metrics-email-enabled'),
+  metricsEmailTime: document.getElementById('metrics-email-time'),
+  metricsEmailRecipients: document.getElementById('metrics-email-recipients'),
 };
 
 const STATUS_LABELS = {
@@ -45,6 +53,7 @@ let currentImages = [];
 let pendingFiles = [];
 let productsBound = false;
 let settingsBound = false;
+let metricsEmailBound = false;
 
 const currency = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
 
@@ -312,6 +321,79 @@ async function loadSocialLinks() {
   socialStatusEl.className = 'form-status';
 }
 
+function syncMetricsEmailStateLabel(enabled) {
+  if (!metricsEmailStateLabelEl) return;
+  metricsEmailStateLabelEl.dataset.state = enabled ? 'on' : 'off';
+  metricsEmailStateLabelEl.textContent = enabled
+    ? 'Relatório automático ligado'
+    : 'Relatório desligado';
+}
+
+function formatBrazilDateTime(value) {
+  if (!value) return '—';
+  try {
+    return new Intl.DateTimeFormat('pt-BR', {
+      timeZone: 'America/Sao_Paulo',
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(new Date(value));
+  } catch {
+    return String(value);
+  }
+}
+
+function renderMetricsEmailMeta(data) {
+  if (!metricsEmailMetaEl) return;
+  const lastSent = formatBrazilDateTime(data?.metrics_email_last_sent_at);
+  const lastError = String(data?.metrics_email_last_error || '').trim();
+  const lines = [`Último envio: ${lastSent} (BRT)`];
+  if (lastError) {
+    lines.push(`Último erro: ${lastError}`);
+  }
+  metricsEmailMetaEl.textContent = lines.join('\n');
+}
+
+function parseRecipientsInput(raw) {
+  return String(raw || '')
+    .split(/[,;\n]+/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function isValidEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+async function loadMetricsEmailSettings() {
+  if (!metricsEmailForm) return;
+
+  const { data, error } = await supabase
+    .from('site_settings')
+    .select(
+      'metrics_email_enabled,metrics_email_recipients,metrics_email_time,metrics_email_last_sent_at,metrics_email_last_error',
+    )
+    .eq('id', 1)
+    .maybeSingle();
+
+  if (error) {
+    metricsEmailStatusEl.textContent = `Erro ao carregar relatório: ${error.message}`;
+    metricsEmailStatusEl.classList.add('error');
+    return;
+  }
+
+  const enabled = Boolean(data?.metrics_email_enabled);
+  fields.metricsEmailEnabled.checked = enabled;
+  fields.metricsEmailTime.value = data?.metrics_email_time || '08:00';
+  fields.metricsEmailRecipients.value = data?.metrics_email_recipients || '';
+  syncMetricsEmailStateLabel(enabled);
+  renderMetricsEmailMeta(data);
+  metricsEmailStatusEl.textContent = '';
+  metricsEmailStatusEl.className = 'form-status';
+}
+
 function editProduct(product) {
   formTitle.textContent = 'Editar produto';
   fields.id.value = product.id;
@@ -467,6 +549,116 @@ function bindSettingsForm() {
   });
 }
 
+function bindMetricsEmailForm() {
+  if (metricsEmailBound || !metricsEmailForm) return;
+  metricsEmailBound = true;
+
+  fields.metricsEmailEnabled?.addEventListener('change', () => {
+    syncMetricsEmailStateLabel(Boolean(fields.metricsEmailEnabled.checked));
+  });
+
+  metricsEmailForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    metricsEmailStatusEl.textContent = 'Salvando relatório...';
+    metricsEmailStatusEl.className = 'form-status';
+
+    try {
+      const recipients = parseRecipientsInput(fields.metricsEmailRecipients.value);
+      const invalid = recipients.filter((email) => !isValidEmail(email));
+      if (invalid.length) {
+        throw new Error(`E-mails inválidos: ${invalid.join(', ')}`);
+      }
+
+      const enabled = Boolean(fields.metricsEmailEnabled.checked);
+      if (enabled && !recipients.length) {
+        throw new Error('Informe ao menos um destinatário para ligar o envio automático.');
+      }
+
+      const time = fields.metricsEmailTime.value || '08:00';
+      const payload = {
+        id: 1,
+        metrics_email_enabled: enabled,
+        metrics_email_recipients: recipients.join('\n'),
+        metrics_email_time: time,
+        updated_at: new Date().toISOString(),
+      };
+
+      const { error } = await supabase.from('site_settings').upsert(payload, { onConflict: 'id' });
+      if (error) throw error;
+
+      syncMetricsEmailStateLabel(enabled);
+      metricsEmailStatusEl.textContent = 'Configuração do relatório salva com sucesso.';
+      metricsEmailStatusEl.className = 'form-status';
+      await loadMetricsEmailSettings();
+    } catch (error) {
+      metricsEmailStatusEl.textContent = error.message;
+      metricsEmailStatusEl.classList.add('error');
+    }
+  });
+
+  metricsEmailSendNowBtn?.addEventListener('click', async () => {
+    metricsEmailStatusEl.textContent = 'Salvando e enviando relatório...';
+    metricsEmailStatusEl.className = 'form-status';
+    metricsEmailSendNowBtn.disabled = true;
+
+    try {
+      const recipients = parseRecipientsInput(fields.metricsEmailRecipients.value);
+      const invalid = recipients.filter((email) => !isValidEmail(email));
+      if (invalid.length) {
+        throw new Error(`E-mails inválidos: ${invalid.join(', ')}`);
+      }
+      if (!recipients.length) {
+        throw new Error('Informe ao menos um destinatário antes de enviar.');
+      }
+
+      const time = fields.metricsEmailTime.value || '08:00';
+      const { error: saveError } = await supabase.from('site_settings').upsert(
+        {
+          id: 1,
+          metrics_email_enabled: Boolean(fields.metricsEmailEnabled.checked),
+          metrics_email_recipients: recipients.join('\n'),
+          metrics_email_time: time,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: 'id' },
+      );
+      if (saveError) throw saveError;
+
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
+      if (sessionError) throw sessionError;
+      if (!session?.access_token) {
+        throw new Error('Sessão expirada. Faça login novamente.');
+      }
+
+      const response = await fetch('/api/metrics-report?force=1', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ force: true }),
+      });
+
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(payload.error || 'Falha ao enviar o relatório.');
+      }
+
+      metricsEmailStatusEl.textContent = `Relatório enviado para ${payload.recipients?.join(', ') || 'os destinatários'}.`;
+      metricsEmailStatusEl.className = 'form-status';
+      await loadMetricsEmailSettings();
+    } catch (error) {
+      metricsEmailStatusEl.textContent = error.message;
+      metricsEmailStatusEl.classList.add('error');
+    } finally {
+      metricsEmailSendNowBtn.disabled = false;
+    }
+  });
+}
+
 export async function initProducts() {
   if (!form || !listEl) return;
   bindProductsForm();
@@ -474,7 +666,12 @@ export async function initProducts() {
 }
 
 export async function initSettings() {
-  if (!socialForm) return;
-  bindSettingsForm();
-  await loadSocialLinks();
+  if (socialForm) {
+    bindSettingsForm();
+    await loadSocialLinks();
+  }
+  if (metricsEmailForm) {
+    bindMetricsEmailForm();
+    await loadMetricsEmailSettings();
+  }
 }
