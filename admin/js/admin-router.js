@@ -1,6 +1,6 @@
 import { supabase } from './supabase-client.js';
 
-const ASSET_VERSION = 'blog-ui-3';
+const ASSET_VERSION = 'blog-ui-4';
 
 function loadModule(path) {
   return import(`${path}?v=${ASSET_VERSION}`);

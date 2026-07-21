@@ -232,7 +232,6 @@ function renderPosts() {
           <tr>
             <td>
               <strong>${escapeHtml(p.title)}</strong>
-              <div class="muted">/${escapeHtml(p.slug)}</div>
             </td>
             <td class="col-center"><span class="status-chip status-${escapeHtml(p.status)}">${escapeHtml(STATUS_LABELS[p.status] || p.status)}</span></td>
             <td class="col-center">${escapeHtml(p.blog_categories?.name || '—')}</td>
