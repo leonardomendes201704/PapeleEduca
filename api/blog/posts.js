@@ -1,9 +1,10 @@
 /**
- * POST /api/blog/posts
+ * POST /api/blog/posts — create post (default status draft)
+ * PATCH /api/blog/posts — update by id or slug
+ * DELETE /api/blog/posts — delete by id or slug
  * Auth: X-API-Key === process.env.BLOG_API_KEY
- * Default status = 'draft'. Accepts status draft|published|scheduled|archived when sent.
  *
- * Body JSON:
+ * Body JSON (POST):
  * {
  *   "title": "required",
  *   "content_html" | "content": "required",
@@ -138,12 +139,29 @@ async function resolveTagIds(tagNames = []) {
   return ids;
 }
 
-module.exports = async function handler(req, res) {
-  if (req.method !== 'POST') {
-    res.setHeader('Allow', 'POST');
-    return sendJson(res, 405, { error: 'Method not allowed.' });
-  }
+async function findPostId({ id, slug }) {
+  if (id) return id;
+  if (!slug) return null;
+  const rows = await supabaseRequest(
+    `blog_posts?slug=eq.${encodeURIComponent(slug)}&select=id&limit=1`
+  );
+  return Array.isArray(rows) ? rows[0]?.id : null;
+}
 
+function resolveStatus(body, fallback = 'draft') {
+  const allowedStatus = new Set(['draft', 'published', 'scheduled', 'archived']);
+  const requestedStatus = String(body.status || fallback).trim().toLowerCase();
+  const status = allowedStatus.has(requestedStatus) ? requestedStatus : fallback;
+  let publishedAt = null;
+  if (Object.prototype.hasOwnProperty.call(body, 'published_at')) {
+    publishedAt = body.published_at ? String(body.published_at) : null;
+  } else if (status === 'published') {
+    publishedAt = new Date().toISOString();
+  }
+  return { status, publishedAt };
+}
+
+module.exports = async function handler(req, res) {
   const apiKey = process.env.BLOG_API_KEY;
   if (!apiKey) {
     return sendJson(res, 500, { error: 'BLOG_API_KEY não configurada no ambiente.' });
@@ -154,14 +172,70 @@ module.exports = async function handler(req, res) {
     return sendJson(res, 401, { error: 'Unauthorized.' });
   }
 
-  const body = parseBody(req.body);
-  const title = String(body.title || '').trim();
-  const contentHtml = stripScripts(String(body.content_html || body.content || '').trim());
-  if (!title || !contentHtml) {
-    return sendJson(res, 400, { error: 'Informe title e content_html (ou content).' });
+  if (!['POST', 'PATCH', 'DELETE'].includes(req.method)) {
+    res.setHeader('Allow', 'POST, PATCH, DELETE');
+    return sendJson(res, 405, { error: 'Method not allowed.' });
   }
 
+  const body = parseBody(req.body);
+
   try {
+    if (req.method === 'DELETE') {
+      const postId = await findPostId(body);
+      if (!postId) return sendJson(res, 400, { error: 'Informe id ou slug.' });
+      await supabaseRequest(`blog_posts?id=eq.${encodeURIComponent(postId)}`, { method: 'DELETE' });
+      return sendJson(res, 200, { ok: true, id: postId });
+    }
+
+    if (req.method === 'PATCH') {
+      const postId = await findPostId(body);
+      if (!postId) return sendJson(res, 400, { error: 'Informe id ou slug do post.' });
+
+      const patch = { updated_at: new Date().toISOString() };
+      if (body.title != null) patch.title = String(body.title).trim();
+      if (body.content_html != null || body.content != null) {
+        patch.content_html = stripScripts(String(body.content_html || body.content || '').trim());
+        patch.reading_time_min = estimateReadingTime(patch.content_html);
+      }
+      if (body.excerpt != null) patch.excerpt = String(body.excerpt).trim();
+      if (body.cover_url != null) patch.cover_url = String(body.cover_url).trim();
+      if (body.og_image_url != null || body.cover_url != null) {
+        patch.og_image_url = String(body.og_image_url || body.cover_url || '').trim();
+      }
+      if (body.seo_title != null) patch.seo_title = String(body.seo_title).trim();
+      if (body.seo_description != null) patch.seo_description = String(body.seo_description).trim();
+      if (body.author_name != null) patch.author_name = String(body.author_name).trim();
+      if (body.category != null) patch.category_id = await resolveCategoryId(body.category);
+      if (body.category_slug != null) {
+        const rows = await supabaseRequest(
+          `blog_categories?slug=eq.${encodeURIComponent(slugify(body.category_slug))}&select=id&limit=1`
+        );
+        if (Array.isArray(rows) && rows[0]?.id) patch.category_id = rows[0].id;
+      }
+      if (body.status != null) {
+        const { status, publishedAt } = resolveStatus(body, 'draft');
+        patch.status = status;
+        if (publishedAt !== null || status === 'published') patch.published_at = publishedAt;
+      } else if (Object.prototype.hasOwnProperty.call(body, 'published_at')) {
+        patch.published_at = body.published_at ? String(body.published_at) : null;
+      }
+
+      const updated = await supabaseRequest(`blog_posts?id=eq.${encodeURIComponent(postId)}`, {
+        method: 'PATCH',
+        prefer: 'return=representation',
+        body: patch,
+      });
+      const post = Array.isArray(updated) ? updated[0] : updated;
+      return sendJson(res, 200, { id: postId, slug: post?.slug, status: post?.status });
+    }
+
+    // POST create
+    const title = String(body.title || '').trim();
+    const contentHtml = stripScripts(String(body.content_html || body.content || '').trim());
+    if (!title || !contentHtml) {
+      return sendJson(res, 400, { error: 'Informe title e content_html (ou content).' });
+    }
+
     let slug = slugify(body.slug || title) || `post-${Date.now()}`;
     const existingSlug = await supabaseRequest(
       `blog_posts?slug=eq.${encodeURIComponent(slug)}&select=id&limit=1`
@@ -172,16 +246,7 @@ module.exports = async function handler(req, res) {
 
     const categoryId = await resolveCategoryId(body.category);
     const tagIds = await resolveTagIds(Array.isArray(body.tags) ? body.tags : []);
-
-    const allowedStatus = new Set(['draft', 'published', 'scheduled', 'archived']);
-    const requestedStatus = String(body.status || 'draft').trim().toLowerCase();
-    const status = allowedStatus.has(requestedStatus) ? requestedStatus : 'draft';
-    let publishedAt = null;
-    if (status === 'published') {
-      publishedAt = body.published_at ? String(body.published_at) : new Date().toISOString();
-    } else if (status === 'scheduled' && body.published_at) {
-      publishedAt = String(body.published_at);
-    }
+    const { status, publishedAt } = resolveStatus(body, 'draft');
 
     const payload = {
       title,
@@ -222,6 +287,6 @@ module.exports = async function handler(req, res) {
       admin_url: `/admin/dashboard.html#/blog`,
     });
   } catch (error) {
-    return sendJson(res, error.statusCode || 500, { error: error.message || 'Erro ao criar post.' });
+    return sendJson(res, error.statusCode || 500, { error: error.message || 'Erro na API de posts.' });
   }
 };
