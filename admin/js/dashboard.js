@@ -75,7 +75,7 @@ function escapeHtml(value) {
 
 function productPublicUrl(productId) {
   const origin = window.location.origin || 'https://papele-educa.vercel.app';
-  return `${origin.replace(/\/$/, '')}/product.html?id=${encodeURIComponent(productId)}`;
+  return `${origin.replace(/\/$/, '')}/produto/${encodeURIComponent(productId)}`;
 }
 
 function productFacebookShareUrl(product) {

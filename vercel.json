@@ -19,6 +19,10 @@
     {
       "source": "/blog/:slug",
       "destination": "/api/blog/render?slug=:slug"
+    },
+    {
+      "source": "/produto/:id",
+      "destination": "/api/products/render?id=:id"
     }
   ],
   "crons": [

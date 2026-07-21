@@ -57,8 +57,7 @@ function siteOrigin(req) {
 }
 
 function buildFacebookShareLink(origin, product) {
-  const url = new URL(`${origin.replace(/\/$/, '')}/product.html`);
-  url.searchParams.set('id', String(product.id));
+  const url = new URL(`${origin.replace(/\/$/, '')}/produto/${encodeURIComponent(product.id)}`);
   url.searchParams.set('utm_source', 'facebook');
   url.searchParams.set('utm_medium', 'social');
   url.searchParams.set('utm_campaign', 'product');
