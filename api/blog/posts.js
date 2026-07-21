@@ -41,6 +41,12 @@ function stripScripts(html) {
   return String(html || '').replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '');
 }
 
+function estimateReadingTime(html) {
+  const text = String(html || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+  const words = text ? text.split(' ').length : 0;
+  return Math.max(1, Math.ceil(words / 200));
+}
+
 async function supabaseRequest(path, { method = 'GET', body, prefer } = {}) {
   const base = process.env.SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
