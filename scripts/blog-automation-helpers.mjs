@@ -1,6 +1,6 @@
 /**
  * Helpers for the Cursor Automation that publishes one blog post on a schedule.
- * Category cycling + duplicate-title checks against live Supabase data.
+ * Category cycling, default cover_url per category, and publish via API.
  *
  * Usage:
  *   node scripts/blog-automation-helpers.mjs next-category
@@ -20,19 +20,51 @@ const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || 'sb_publishable_afdZ3
 const API_KEY = process.env.BLOG_API_KEY || '';
 
 const CATEGORY_ORDER = [
-  { name: 'Educação Infantil', slug: 'educacao-infantil' },
-  { name: 'BNCC na prática', slug: 'bncc-na-pratica' },
-  { name: 'Brincar e interações', slug: 'brincar-e-interacoes' },
-  { name: 'Alfabetização e letramento', slug: 'alfabetizacao-e-letramento' },
-  { name: 'Matemática lúdica', slug: 'matematica-ludica' },
-  { name: 'Arte e expressão', slug: 'arte-e-expressao' },
-  { name: 'Socioemocional', slug: 'socioemocional' },
-  { name: 'Família e escola', slug: 'familia-e-escola' },
-  { name: 'Inclusão e diversidade', slug: 'inclusao-e-diversidade' },
-  { name: 'Rotina e organização', slug: 'rotina-e-organizacao' },
-  { name: 'Materiais pedagógicos', slug: 'materiais-pedagogicos' },
-  { name: 'Ideias prontas', slug: 'ideias-prontas' },
+  { name: 'Educação Infantil', slug: 'educacao-infantil', cover: 'blog-observacao-doc.png' },
+  { name: 'BNCC na prática', slug: 'bncc-na-pratica', cover: 'blog-bncc-planejamento.png' },
+  { name: 'Brincar e interações', slug: 'brincar-e-interacoes', cover: 'blog-faz-de-conta.png' },
+  { name: 'Alfabetização e letramento', slug: 'alfabetizacao-e-letramento', cover: 'blog-letramento.png' },
+  { name: 'Matemática lúdica', slug: 'matematica-ludica', cover: 'blog-matematica-concreta.png' },
+  { name: 'Arte e expressão', slug: 'arte-e-expressao', cover: 'blog-arte-atelier.png' },
+  { name: 'Socioemocional', slug: 'socioemocional', cover: 'blog-socioemocional.png' },
+  { name: 'Família e escola', slug: 'familia-e-escola', cover: 'blog-familia-escola.png' },
+  { name: 'Inclusão e diversidade', slug: 'inclusao-e-diversidade', cover: 'blog-inclusao.png' },
+  { name: 'Rotina e organização', slug: 'rotina-e-organizacao', cover: 'blog-rotina-acolhida.png' },
+  { name: 'Materiais pedagógicos', slug: 'materiais-pedagogicos', cover: 'blog-materiais.png' },
+  { name: 'Ideias prontas', slug: 'ideias-prontas', cover: 'blog-ideias-natureza.png' },
 ];
+
+const FALLBACK_COVERS = [
+  'blog-brincar-bncc.png',
+  'blog-seis-direitos-bncc.png',
+  'blog-bncc-planejamento.png',
+  'blog-observacao-doc.png',
+];
+
+function coverUrlForFile(file) {
+  return `${BASE}/images/${file}`;
+}
+
+function resolveCoverUrl({ categorySlug, categoryName, coverUrl, avoidUrl } = {}) {
+  const explicit = String(coverUrl || '').trim();
+  if (explicit) return explicit;
+
+  const bySlug = CATEGORY_ORDER.find((c) => c.slug === categorySlug);
+  const byName = CATEGORY_ORDER.find(
+    (c) => c.name.toLowerCase() === String(categoryName || '').trim().toLowerCase(),
+  );
+  const preferred = bySlug || byName;
+  if (preferred?.cover) {
+    const url = coverUrlForFile(preferred.cover);
+    if (url !== avoidUrl) return url;
+  }
+
+  for (const file of FALLBACK_COVERS) {
+    const url = coverUrlForFile(file);
+    if (url !== avoidUrl) return url;
+  }
+  return coverUrlForFile(FALLBACK_COVERS[0]);
+}
 
 async function supabaseSelect(path) {
   const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
@@ -73,8 +105,15 @@ export async function pickNextCategory() {
     }
   }
 
+  const cover_url = resolveCoverUrl({
+    categorySlug: best.slug,
+    categoryName: best.name,
+  });
+
   return {
     ...best,
+    cover_url,
+    cover_file: best.cover,
     postsInCategory: bestCount,
     recentTitles: posts.slice(0, 40).map((p) => p.title),
     recentSlugs: posts.slice(0, 40).map((p) => p.slug),
@@ -83,17 +122,31 @@ export async function pickNextCategory() {
 
 export async function publishPost(payload) {
   if (!API_KEY) throw new Error('BLOG_API_KEY is required');
+
+  const category = String(payload.category || '').trim();
+  const categorySlug = String(payload.category_slug || '').trim();
+  const cover_url = resolveCoverUrl({
+    categorySlug,
+    categoryName: category,
+    coverUrl: payload.cover_url,
+  });
+  const og_image_url = String(payload.og_image_url || cover_url).trim();
+
+  const body = {
+    status: 'published',
+    author_name: 'Papelê Educa',
+    ...payload,
+    cover_url,
+    og_image_url,
+  };
+
   const res = await fetch(`${BASE}/api/blog/posts`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json; charset=utf-8',
       'X-API-Key': API_KEY,
     },
-    body: JSON.stringify({
-      status: 'published',
-      author_name: 'Papelê Educa',
-      ...payload,
-    }),
+    body: JSON.stringify(body),
   });
   const text = await res.text();
   let data;
