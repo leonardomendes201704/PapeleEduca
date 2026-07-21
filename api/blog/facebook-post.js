@@ -2,6 +2,9 @@
  * POST /api/blog/facebook-post
  * Publishes a blog post link to the Facebook Page (manual action from admin).
  *
+ * DELETE /api/blog/facebook-post
+ * Deletes the registered Facebook Page post and clears local tracking fields.
+ *
  * Auth: Bearer <Supabase access_token> of an admin user
  * Body: { id: string, message?: string, force?: boolean }
  *
@@ -177,15 +180,78 @@ async function publishToFacebook({ pageId, pageToken, graphVersion, message, lin
   return data;
 }
 
+async function deleteFromFacebook({ facebookPostId, pageToken, graphVersion }) {
+  const version = graphVersion || 'v21.0';
+  const endpoint = new URL(
+    `https://graph.facebook.com/${version}/${encodeURIComponent(facebookPostId)}`
+  );
+  endpoint.searchParams.set('access_token', pageToken);
+
+  const response = await fetch(endpoint.toString(), { method: 'DELETE' });
+  const text = await response.text();
+  let data = null;
+  try {
+    data = text ? JSON.parse(text) : null;
+  } catch {
+    data = { raw: text };
+  }
+
+  if (!response.ok) {
+    const code = data?.error?.code;
+    const subcode = data?.error?.error_subcode;
+    // Already gone / unknown object — treat as removable locally
+    const alreadyGone =
+      response.status === 404 ||
+      code === 100 ||
+      code === 803 ||
+      subcode === 33;
+
+    if (alreadyGone) {
+      return { success: true, already_gone: true, facebook: data?.error || null };
+    }
+
+    const fbMessage =
+      data?.error?.message ||
+      data?.error?.error_user_msg ||
+      text ||
+      `Facebook Graph API ${response.status}`;
+    const err = new Error(fbMessage);
+    err.statusCode = response.status >= 400 && response.status < 600 ? response.status : 502;
+    err.facebook = data?.error || null;
+    throw err;
+  }
+
+  return { success: Boolean(data?.success !== false), already_gone: false };
+}
+
+async function clearFacebookFields(postId) {
+  const updatedAt = new Date().toISOString();
+  await supabaseRequest(`blog_posts?id=eq.${encodeURIComponent(postId)}`, {
+    method: 'PATCH',
+    prefer: 'return=minimal',
+    body: {
+      facebook_post_id: '',
+      facebook_posted_at: null,
+      updated_at: updatedAt,
+    },
+  });
+  return updatedAt;
+}
+
 module.exports = async function handler(req, res) {
-  if (req.method !== 'POST') {
-    res.setHeader('Allow', 'POST');
+  if (!['POST', 'DELETE'].includes(req.method)) {
+    res.setHeader('Allow', 'POST, DELETE');
     return sendJson(res, 405, { error: 'Method not allowed.' });
   }
 
   const token = extractBearer(req);
   if (!token) {
-    return sendJson(res, 401, { error: 'Faça login no admin para postar no Facebook.' });
+    return sendJson(res, 401, {
+      error:
+        req.method === 'DELETE'
+          ? 'Faça login no admin para excluir a postagem do Facebook.'
+          : 'Faça login no admin para postar no Facebook.',
+    });
   }
 
   const pageId = cleanSecret(process.env.FACEBOOK_PAGE_ID);
@@ -199,7 +265,7 @@ module.exports = async function handler(req, res) {
   }
 
   const body = parseBody(req.body);
-  const postId = String(body.id || '').trim();
+  const postId = String(body.id || req.query?.id || '').trim();
   if (!postId) {
     return sendJson(res, 400, { error: 'Informe o id do post.' });
   }
@@ -213,6 +279,33 @@ module.exports = async function handler(req, res) {
     const post = Array.isArray(rows) ? rows[0] : rows;
     if (!post?.id) {
       return sendJson(res, 404, { error: 'Post não encontrado.' });
+    }
+
+    const graphVersion = cleanSecret(process.env.FACEBOOK_GRAPH_VERSION) || 'v21.0';
+
+    if (req.method === 'DELETE') {
+      const facebookPostId = String(post.facebook_post_id || '').trim();
+      if (!facebookPostId) {
+        return sendJson(res, 400, {
+          error: 'Este post não tem postagem registrada no Facebook.',
+          code: 'NOT_POSTED',
+        });
+      }
+
+      const fbResult = await deleteFromFacebook({
+        facebookPostId,
+        pageToken,
+        graphVersion,
+      });
+
+      await clearFacebookFields(post.id);
+
+      return sendJson(res, 200, {
+        ok: true,
+        id: post.id,
+        deleted_facebook_post_id: facebookPostId,
+        already_gone: Boolean(fbResult.already_gone),
+      });
     }
 
     if (post.status !== 'published') {
@@ -240,7 +333,6 @@ module.exports = async function handler(req, res) {
       return sendJson(res, 400, { error: 'A mensagem do post não pode ficar vazia.' });
     }
 
-    const graphVersion = cleanSecret(process.env.FACEBOOK_GRAPH_VERSION) || 'v21.0';
     const fbResult = await publishToFacebook({
       pageId,
       pageToken,

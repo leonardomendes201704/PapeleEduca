@@ -26,6 +26,7 @@ let slugManual = false;
 let pendingCover = null;
 let pendingOg = null;
 let facebookModalPost = null;
+let facebookDeleteModalPost = null;
 
 function blogPublicUrl(slug) {
   const origin = window.location.origin || 'https://papele-educa.vercel.app';
@@ -260,6 +261,12 @@ function renderPosts() {
                 data-blog-facebook="${escapeHtml(p.id)}"
                 ${p.status !== 'published' ? 'disabled title="Publique o post antes de compartilhar no Facebook"' : ''}
               >${p.facebook_post_id ? 'Repostar FB' : 'Postar no Facebook'}</button>
+              ${p.facebook_post_id ? `
+              <button
+                type="button"
+                class="btn-ghost btn-sm btn-facebook-delete"
+                data-blog-facebook-delete="${escapeHtml(p.id)}"
+              >Excluir postagem</button>` : ''}
               <button type="button" class="btn-sm btn-danger" data-blog-delete="${escapeHtml(p.id)}">Excluir</button>
             </td>
           </tr>
@@ -279,6 +286,12 @@ function renderPosts() {
     btn.addEventListener('click', () => {
       const post = posts.find((p) => p.id === btn.dataset.blogFacebook);
       if (post) openFacebookModal(post);
+    });
+  });
+  list.querySelectorAll('[data-blog-facebook-delete]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const post = posts.find((p) => p.id === btn.dataset.blogFacebookDelete);
+      if (post) openFacebookDeleteModal(post);
     });
   });
   list.querySelectorAll('[data-blog-delete]').forEach((btn) => {
@@ -411,6 +424,104 @@ async function submitFacebookPost(event) {
   } catch (error) {
     if (statusEl) {
       statusEl.textContent = error.message || 'Falha ao postar no Facebook.';
+      statusEl.classList.add('error');
+    }
+    if (confirmBtn) confirmBtn.disabled = false;
+  }
+}
+
+function closeFacebookDeleteModal() {
+  facebookDeleteModalPost = null;
+  const modal = $('blog-facebook-delete-modal');
+  if (modal?.open) modal.close();
+}
+
+function openFacebookDeleteModal(post) {
+  if (!post?.facebook_post_id) {
+    alert('Este post não tem postagem registrada no Facebook.');
+    return;
+  }
+
+  facebookDeleteModalPost = post;
+  const modal = $('blog-facebook-delete-modal');
+  const titleEl = $('blog-facebook-delete-post-title');
+  const idEl = $('blog-facebook-delete-post-id');
+  const statusEl = $('blog-facebook-delete-form-status');
+  const confirmBtn = $('blog-facebook-delete-confirm-btn');
+
+  if (!modal) return;
+
+  if (idEl) idEl.value = post.id;
+  if (titleEl) titleEl.textContent = post.title || '';
+  if (statusEl) {
+    statusEl.textContent = '';
+    statusEl.className = 'form-status';
+  }
+  if (confirmBtn) {
+    confirmBtn.disabled = false;
+    confirmBtn.textContent = 'Excluir postagem';
+  }
+
+  if (typeof modal.showModal === 'function') modal.showModal();
+  else modal.setAttribute('open', '');
+}
+
+async function submitFacebookDelete(event) {
+  event.preventDefault();
+  const statusEl = $('blog-facebook-delete-form-status');
+  const confirmBtn = $('blog-facebook-delete-confirm-btn');
+  const post =
+    facebookDeleteModalPost ||
+    posts.find((p) => p.id === $('blog-facebook-delete-post-id')?.value);
+
+  if (!post) {
+    if (statusEl) {
+      statusEl.textContent = 'Post não encontrado.';
+      statusEl.classList.add('error');
+    }
+    return;
+  }
+
+  if (statusEl) {
+    statusEl.textContent = 'Excluindo postagem no Facebook...';
+    statusEl.className = 'form-status';
+  }
+  if (confirmBtn) confirmBtn.disabled = true;
+
+  try {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    if (!session?.access_token) {
+      throw new Error('Sessão expirada. Faça login novamente.');
+    }
+
+    const response = await fetch(`/api/blog/facebook-post?id=${encodeURIComponent(post.id)}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify({ id: post.id }),
+    });
+
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(payload.error || `HTTP ${response.status}`);
+    }
+
+    if (statusEl) {
+      statusEl.textContent = payload.already_gone
+        ? 'Postagem já não existia no Facebook. Registro local limpo.'
+        : 'Postagem excluída do Facebook.';
+      statusEl.className = 'form-status';
+    }
+
+    await loadPosts();
+    setTimeout(() => closeFacebookDeleteModal(), 900);
+  } catch (error) {
+    if (statusEl) {
+      statusEl.textContent = error.message || 'Falha ao excluir a postagem do Facebook.';
       statusEl.classList.add('error');
     }
     if (confirmBtn) confirmBtn.disabled = false;
@@ -783,6 +894,13 @@ function bindEvents() {
   $('blog-facebook-modal')?.addEventListener('cancel', (event) => {
     event.preventDefault();
     closeFacebookModal();
+  });
+  $('blog-facebook-delete-form')?.addEventListener('submit', submitFacebookDelete);
+  $('blog-facebook-delete-cancel-btn')?.addEventListener('click', closeFacebookDeleteModal);
+  $('blog-facebook-delete-modal-close')?.addEventListener('click', closeFacebookDeleteModal);
+  $('blog-facebook-delete-modal')?.addEventListener('cancel', (event) => {
+    event.preventDefault();
+    closeFacebookDeleteModal();
   });
   $('blog-tag-name')?.addEventListener('input', () => {
     if (!$('blog-tag-id').value) $('blog-tag-slug').value = slugify($('blog-tag-name').value);

@@ -1501,6 +1501,11 @@ textarea { resize: vertical; }
   color: #0b5fcc !important;
 }
 
+.btn-facebook-delete {
+  color: #b42318 !important;
+  border-color: #f0c2bd !important;
+}
+
 .btn-facebook:disabled {
   opacity: 0.45;
   cursor: not-allowed;
@@ -1609,7 +1614,8 @@ textarea { resize: vertical; }
 #blog-post-modal,
 #blog-cat-modal,
 #blog-tag-modal,
-#blog-facebook-modal {
+#blog-facebook-modal,
+#blog-facebook-delete-modal {
   zoom: 1;
 }
 

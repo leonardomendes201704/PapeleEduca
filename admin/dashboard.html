@@ -946,6 +946,34 @@
               </div>
             </form>
           </dialog>
+
+          <!-- Facebook delete confirmation modal -->
+          <dialog id="blog-facebook-delete-modal" class="admin-modal">
+            <form id="blog-facebook-delete-form" class="admin-modal-panel blog-facebook-form" method="dialog">
+              <div class="admin-modal-header">
+                <div>
+                  <h2>Excluir postagem do Facebook</h2>
+                  <p class="muted">Remove a publicação da Página. O post do blog no site permanece.</p>
+                </div>
+                <button type="button" class="admin-modal-close" id="blog-facebook-delete-modal-close" aria-label="Fechar">×</button>
+              </div>
+              <div class="admin-modal-body">
+                <input type="hidden" id="blog-facebook-delete-post-id" />
+                <div class="blog-facebook-summary">
+                  <p class="blog-facebook-summary-label">Post</p>
+                  <p class="blog-facebook-summary-title" id="blog-facebook-delete-post-title"></p>
+                </div>
+                <p class="muted">
+                  Esta ação apaga a postagem na Página PapelêEduca. Não exclui o artigo do blog.
+                </p>
+                <p id="blog-facebook-delete-form-status" class="form-status"></p>
+              </div>
+              <div class="admin-modal-footer">
+                <button type="button" class="btn-ghost" id="blog-facebook-delete-cancel-btn">Cancelar</button>
+                <button type="submit" class="btn-danger" id="blog-facebook-delete-confirm-btn">Excluir postagem</button>
+              </div>
+            </form>
+          </dialog>
         </section>
 
         <!-- Configurações -->
