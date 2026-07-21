@@ -1316,6 +1316,10 @@ textarea { resize: vertical; }
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
+  .overview-kpi-grid.blog-kpi-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
   .product-row { grid-template-columns: 64px 1fr; }
   .product-row > .product-actions-row:last-child {
     grid-column: 1 / -1;
@@ -1357,6 +1361,10 @@ textarea { resize: vertical; }
 
   .overview-kpi-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .overview-kpi-grid.blog-kpi-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
   }
 }
 
@@ -1421,9 +1429,9 @@ textarea { resize: vertical; }
 
 #blog-posts-list .table-actions,
 .blog-posts-table .table-actions {
-  display: inline-flex;
-  flex-direction: row;
-  flex-wrap: nowrap;
+  display: inline-flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
   align-items: center;
   justify-content: flex-end;
   gap: 8px;
@@ -1446,6 +1454,15 @@ textarea { resize: vertical; }
 /* Scale Blog CMS content only — shell (sidebar/header) stays full size */
 .admin-view[data-view="blog"] {
   zoom: 0.65;
+  width: calc(100% / 0.65);
+  max-width: none;
+  transform-origin: top left;
+}
+
+.overview-kpi-grid.blog-kpi-grid {
+  width: 100%;
+  margin-bottom: 18px;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
 }
 
 /* Scale metrics view content to 75% */
