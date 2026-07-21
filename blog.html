@@ -213,10 +213,9 @@
       margin-top: 30px;
       background: rgba(255,255,255,0.72);
       border: 1px solid rgba(216, 210, 198, 0.72);
-      border-radius: 36px;
+      border-radius: 23px;
       box-shadow: var(--shadow);
-      padding: 28px;
-      zoom: 0.65;
+      padding: 18px;
     }
 
     .blog-infinite-sentinel {
@@ -227,21 +226,21 @@
 
     .blog-load-status {
       text-align: center;
-      margin-top: 18px;
+      margin-top: 12px;
       color: var(--muted);
-      font-size: 0.95rem;
+      font-size: 0.62rem;
       min-height: 1.4em;
     }
 
     .section-head {
       text-align: center;
-      margin-bottom: 22px;
+      margin-bottom: 14px;
     }
 
     .section-head h1 {
-      font-size: clamp(1.9rem, 3.6vw, 3rem);
+      font-size: clamp(1.24rem, 2.34vw, 1.95rem);
       letter-spacing: -0.03em;
-      margin-bottom: 8px;
+      margin-bottom: 5px;
     }
 
     .section-head p {
@@ -249,77 +248,80 @@
       margin: 0 auto;
       max-width: 56ch;
       line-height: 1.6;
+      font-size: 0.85rem;
     }
 
     .empty-state {
       text-align: center;
-      padding: 48px 20px;
+      padding: 31px 13px;
       color: var(--muted);
       line-height: 1.6;
+      font-size: 0.85rem;
     }
 
     .post-grid {
       display: grid;
       grid-template-columns: 1fr;
-      gap: 22px;
+      gap: 14px;
     }
 
     .post-card {
       display: grid;
-      grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.2fr);
+      grid-template-columns: minmax(0, 0.72fr) minmax(0, 1.28fr);
       gap: 0;
       overflow: hidden;
       background: linear-gradient(180deg, #fff, #fcfaf6);
       border: 1px solid var(--line);
-      border-radius: 28px;
+      border-radius: 18px;
       transition: transform 180ms ease, box-shadow 180ms ease;
     }
 
     .post-card:hover,
     .post-card:focus-within {
-      transform: translateY(-3px);
-      box-shadow: 0 16px 36px rgba(35, 41, 50, 0.1);
+      transform: translateY(-2px);
+      box-shadow: 0 10px 24px rgba(35, 41, 50, 0.1);
     }
 
     .post-card-media {
-      min-height: 240px;
+      min-height: 0;
+      height: 156px;
       background: #e8e2d6;
     }
 
     .post-card-media img {
       width: 100%;
-      height: 100%;
+      height: 156px;
       object-fit: cover;
     }
 
     .post-card-body {
-      padding: 24px 26px;
+      padding: 16px 17px;
       display: flex;
       flex-direction: column;
       justify-content: center;
-      gap: 10px;
+      gap: 6px;
     }
 
     .post-card-tag {
       display: inline-flex;
       align-self: flex-start;
-      padding: 6px 12px;
+      padding: 4px 8px;
       border-radius: 999px;
       background: rgba(47, 183, 176, 0.12);
       color: #1f8f8a;
-      font-size: 0.8rem;
+      font-size: 0.52rem;
       font-weight: 800;
     }
 
     .post-card-meta {
       color: var(--muted);
-      font-size: 0.9rem;
+      font-size: 0.58rem;
       font-weight: 600;
     }
 
     .post-card h2 {
       margin: 0;
-      font-size: clamp(1.25rem, 2.4vw, 1.7rem);
+      font-size: clamp(0.81rem, 1.56vw, 1.1rem);
       letter-spacing: -0.02em;
       line-height: 1.25;
     }
@@ -327,13 +329,15 @@
     .post-card p {
       margin: 0;
       color: var(--muted);
-      line-height: 1.6;
+      line-height: 1.5;
+      font-size: 0.72rem;
     }
 
     .post-card-link {
-      margin-top: 8px;
+      margin-top: 4px;
       color: #1f8f8a;
       font-weight: 800;
+      font-size: 0.72rem;
     }
 
     .footer {
@@ -375,17 +379,19 @@
         grid-template-columns: 1fr;
       }
 
-      .post-card-media {
-        min-height: 200px;
-        aspect-ratio: 16 / 9;
+      .post-card-media,
+      .post-card-media img {
+        height: 130px;
+        min-height: 0;
+        aspect-ratio: auto;
       }
     }
 
     @media (max-width: 640px) {
       .page { width: min(100% - 20px, var(--max)); padding-top: 10px; }
-      .section { border-radius: 28px; padding: 18px; }
+      .section { border-radius: 18px; padding: 14px; }
       .footer-top { justify-content: center; text-align: center; }
-      .post-card-body { padding: 18px; }
+      .post-card-body { padding: 14px; }
     }
   </style>
 </head>
