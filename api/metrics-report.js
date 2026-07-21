@@ -621,18 +621,26 @@ module.exports = async function handler(req, res) {
     const now = new Date();
     const brNow = getBrazilDateParts(now);
     const configuredTime = normalizeTime(settings.metrics_email_time);
-    const alreadySentToday =
-      settings.metrics_email_last_sent_at &&
-      getBrazilDateParts(new Date(settings.metrics_email_last_sent_at)).dateKey === brNow.dateKey;
+    const configuredMinutes = timeToMinutes(configuredTime);
+
+    // Só bloqueia o cron se já houve envio HOJE no horário agendado ou depois.
+    // Assim o "Enviar agora" (teste antes das 18:00) não cancela o automático.
+    let alreadySentForSchedule = false;
+    if (settings.metrics_email_last_sent_at) {
+      const lastSentBRT = getBrazilDateParts(new Date(settings.metrics_email_last_sent_at));
+      alreadySentForSchedule =
+        lastSentBRT.dateKey === brNow.dateKey &&
+        timeToMinutes(lastSentBRT.time) >= configuredMinutes;
+    }
 
     if (!force) {
       if (!settings.metrics_email_enabled) {
         return sendJson(res, 200, { ok: true, skipped: true, reason: 'disabled' });
       }
-      if (alreadySentToday) {
+      if (alreadySentForSchedule) {
         return sendJson(res, 200, { ok: true, skipped: true, reason: 'already_sent_today' });
       }
-      if (timeToMinutes(brNow.time) < timeToMinutes(configuredTime)) {
+      if (timeToMinutes(brNow.time) < configuredMinutes) {
         return sendJson(res, 200, {
           ok: true,
           skipped: true,
