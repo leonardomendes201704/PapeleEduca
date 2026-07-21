@@ -65,9 +65,6 @@ function hasFacebookClickId() {
 }
 
 function resolveTrafficSource(metadata = {}) {
-  const explicit = String(metadata.source || '').trim().toLowerCase();
-  if (explicit && explicit !== 'site') return explicit;
-
   const campaign = getCampaignParams();
   const utmSource = String(campaign.utm_source || '').trim().toLowerCase();
   if (utmSource) return utmSource;
@@ -76,6 +73,10 @@ function resolveTrafficSource(metadata = {}) {
 
   const referrer = metadata.referrer || document.referrer || '';
   if (isFacebookReferrer(referrer)) return 'facebook';
+
+  const explicit = String(metadata.source || '').trim().toLowerCase();
+  const pageContexts = new Set(['site', 'home', 'product_page', 'related', 'blog', 'listing', '']);
+  if (explicit && !pageContexts.has(explicit)) return explicit;
 
   return 'site';
 }

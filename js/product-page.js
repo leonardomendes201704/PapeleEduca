@@ -243,7 +243,7 @@ function renderProduct(product) {
   if (buyNowButton) {
     buyNowButton.addEventListener('click', () => {
       void trackProductBuyClick(product.id, {
-        source: 'product_page',
+        page_context: 'product_page',
         pathname: window.location.pathname,
       });
     });

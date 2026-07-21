@@ -52,22 +52,39 @@ function isFacebookReferrer(referrer) {
   );
 }
 
-function resolveTrafficSource(metadata = {}) {
-  const explicit = String(metadata.source || '').trim().toLowerCase();
-  if (explicit && explicit !== 'site') return explicit;
+function hasFacebookClickId() {
+  try {
+    return new URLSearchParams(window.location.search).has('fbclid');
+  } catch {
+    return false;
+  }
+}
 
+/** Page/context labels are not traffic sources and must not override UTM. */
+const PAGE_CONTEXT_SOURCES = new Set([
+  'site',
+  'home',
+  'product_page',
+  'related',
+  'blog',
+  'listing',
+  'catalog',
+  'free',
+  '',
+]);
+
+function resolveTrafficSource(metadata = {}) {
   const campaign = getCampaignParams();
   const utmSource = String(campaign.utm_source || '').trim().toLowerCase();
   if (utmSource) return utmSource;
 
-  try {
-    if (new URLSearchParams(window.location.search).has('fbclid')) return 'facebook';
-  } catch {
-    // ignore
-  }
+  if (hasFacebookClickId()) return 'facebook';
 
   const referrer = metadata.referrer || document.referrer || '';
   if (isFacebookReferrer(referrer)) return 'facebook';
+
+  const explicit = String(metadata.source || '').trim().toLowerCase();
+  if (explicit && !PAGE_CONTEXT_SOURCES.has(explicit)) return explicit;
 
   return 'site';
 }
@@ -91,6 +108,7 @@ function getRequestPayload(productId, eventType, metadata = {}) {
       language: navigator.language || null,
       ...metadata,
       ...campaign,
+      ...(hasFacebookClickId() ? { fbclid: true } : {}),
     },
   };
 }
@@ -131,8 +149,10 @@ export function trackProductViewOnce(productId, metadata = {}) {
     return Promise.resolve(false);
   }
 
-  safeStorage(sessionStorage, storageKey, '1');
-  return trackProductEvent(productId, 'view', metadata);
+  return trackProductEvent(productId, 'view', metadata).then((ok) => {
+    if (ok) safeStorage(sessionStorage, storageKey, '1');
+    return ok;
+  });
 }
 
 export function bindProductCardTracking(container, source = 'site') {
