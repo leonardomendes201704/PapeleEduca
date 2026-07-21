@@ -226,13 +226,18 @@ async function loadBlogPostMetrics() {
     return { listingViews: 0, views: 0, reads: 0, facebookViews: 0 };
   }
 
-  const [metricsRes, listingRes] = await Promise.all([
+  const [metricsRes, listingRes, fbViewsRes] = await Promise.all([
     supabase
       .from('blog_post_metrics_report')
       .select('id,title,slug,status,cover_url,category,views,facebook_views,read_completes,read_rate,last_event_at')
       .order('views', { ascending: false })
       .order('read_completes', { ascending: false }),
     supabase.from('blog_listing_metrics_report').select('views').maybeSingle(),
+    supabase
+      .from('blog_post_events')
+      .select('blog_post_id')
+      .eq('event_type', 'view')
+      .eq('source', 'facebook'),
   ]);
 
   const listingViews = Number(listingRes.data?.views || 0);
@@ -253,6 +258,18 @@ async function loadBlogPostMetrics() {
     allRows = (fallback.data || []).map((row) => ({ ...row, facebook_views: 0 }));
   }
 
+  const fbCounts = {};
+  for (const row of fbViewsRes.data || []) {
+    const id = row.blog_post_id;
+    if (!id) continue;
+    fbCounts[id] = (fbCounts[id] || 0) + 1;
+  }
+
+  allRows = allRows.map((row) => ({
+    ...row,
+    facebook_views: fbCounts[row.id] != null ? fbCounts[row.id] : Number(row.facebook_views || 0),
+  }));
+
   const totals = allRows.reduce((acc, item) => {
     acc.views += Number(item.views || 0);
     acc.reads += Number(item.read_completes || 0);
@@ -261,7 +278,10 @@ async function loadBlogPostMetrics() {
   }, { views: 0, reads: 0, facebookViews: 0 });
 
   const rows = allRows.filter(
-    (item) => Number(item.views || 0) > 0 || Number(item.read_completes || 0) > 0,
+    (item) =>
+      Number(item.views || 0) > 0 ||
+      Number(item.read_completes || 0) > 0 ||
+      Number(item.facebook_views || 0) > 0,
   );
   blogMetricsListEl.innerHTML = renderBlogTable(rows);
   return {

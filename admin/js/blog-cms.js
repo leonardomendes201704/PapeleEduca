@@ -161,7 +161,7 @@ async function loadTags() {
 }
 
 async function loadPosts() {
-  const [postsRes, metricsRes] = await Promise.all([
+  const [postsRes, metricsRes, fbViewsRes] = await Promise.all([
     supabase
       .from('blog_posts')
       .select('*, blog_categories(name, slug), blog_post_tags(tag_id, blog_tags(name, slug))')
@@ -169,6 +169,11 @@ async function loadPosts() {
     supabase
       .from('blog_post_metrics_report')
       .select('id,views,read_completes,read_rate,facebook_views'),
+    supabase
+      .from('blog_post_events')
+      .select('blog_post_id')
+      .eq('event_type', 'view')
+      .eq('source', 'facebook'),
   ]);
   if (postsRes.error) throw postsRes.error;
   posts = postsRes.data || [];
@@ -187,7 +192,37 @@ async function loadPosts() {
     }
   }
 
-  postMetricsById = Object.fromEntries(metricsRows.map((row) => [row.id, row]));
+  const fbCounts = {};
+  for (const row of fbViewsRes.data || []) {
+    const id = row.blog_post_id;
+    if (!id) continue;
+    fbCounts[id] = (fbCounts[id] || 0) + 1;
+  }
+
+  postMetricsById = Object.fromEntries(
+    metricsRows.map((row) => {
+      const fromEvents = fbCounts[row.id];
+      const fromView = Number(row.facebook_views || 0);
+      return [
+        row.id,
+        {
+          ...row,
+          // Prefer live event count when available (view may be outdated)
+          facebook_views: fromEvents != null ? fromEvents : fromView,
+        },
+      ];
+    }),
+  );
+
+  // Include posts that only appear in FB events
+  for (const [id, count] of Object.entries(fbCounts)) {
+    if (!postMetricsById[id]) {
+      postMetricsById[id] = { id, views: 0, read_completes: 0, read_rate: 0, facebook_views: count };
+    } else if (!Number(postMetricsById[id].facebook_views)) {
+      postMetricsById[id].facebook_views = count;
+    }
+  }
+
   renderPosts();
   updateKpis();
 }

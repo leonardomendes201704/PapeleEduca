@@ -151,8 +151,12 @@ function trackBlogViewOnce(blogPostId) {
   // does not hide a later Facebook / UTM landing.
   const key = `${VIEW_PREFIX}${blogPostId}_${source}`;
   if (safeStorage(sessionStorage, key)) return Promise.resolve(false);
-  safeStorage(sessionStorage, key, '1');
-  return sendBlogEvent(blogPostId, 'view').catch(() => false);
+  return sendBlogEvent(blogPostId, 'view')
+    .then((ok) => {
+      if (ok) safeStorage(sessionStorage, key, '1');
+      return ok;
+    })
+    .catch(() => false);
 }
 
 function trackBlogReadOnce(blogPostId, metadata = {}) {
@@ -160,8 +164,12 @@ function trackBlogReadOnce(blogPostId, metadata = {}) {
   const source = resolveTrafficSource(metadata);
   const key = `${READ_PREFIX}${blogPostId}_${source}`;
   if (safeStorage(sessionStorage, key)) return Promise.resolve(false);
-  safeStorage(sessionStorage, key, '1');
-  return sendBlogEvent(blogPostId, 'read_complete', metadata).catch(() => false);
+  return sendBlogEvent(blogPostId, 'read_complete', metadata)
+    .then((ok) => {
+      if (ok) safeStorage(sessionStorage, key, '1');
+      return ok;
+    })
+    .catch(() => false);
 }
 
 function getScrollProgress() {
