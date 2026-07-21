@@ -1,7 +1,10 @@
 import { supabase } from './supabase-client.js';
+import { trackBlogListingViewOnce } from './blog-metrics.js';
 
 const grid = document.getElementById('blog-posts-grid');
 const note = document.getElementById('blog-list-note');
+
+void trackBlogListingViewOnce();
 
 function escapeHtml(value) {
   return String(value ?? '').replace(/[&<>"']/g, (char) => ({

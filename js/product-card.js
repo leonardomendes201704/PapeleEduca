@@ -48,7 +48,7 @@ function renderStars() {
 
 export function renderProductCard(product, index = 0, options = {}) {
   const images = normalizeImages(product.images);
-  const firstImage = images[0]?.url || './images/hero.png';
+  const firstImage = images[0]?.url || options.imageFallback || './images/hero.png';
   const tag = getProductTag(product);
   const price = isPromoActive(product) && product.promo_price ? product.promo_price : product.price;
   const formattedPrice = currency.format(Number(price || 0));

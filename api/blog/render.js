@@ -104,7 +104,7 @@ function renderPage(post, siteOrigin) {
       <a class="btn" href="/index.html#categorias">Explorar materiais</a>
     </header>
 
-    <article class="article">
+    <article class="article" data-blog-post-id="${escapeHtml(post.id)}">
       ${post.cover_url ? `<div class="article-cover"><img src="${escapeHtml(post.cover_url)}" alt="" /></div>` : ''}
       <div class="article-body">
         <nav class="breadcrumb"><a href="/blog.html">Blog</a> / <span>${escapeHtml(category)}</span></nav>
@@ -121,6 +121,8 @@ function renderPage(post, siteOrigin) {
     </article>
   </main>
   <script type="module" src="/js/blog-nav.js"></script>
+  <script type="module" src="/js/blog-metrics.js"></script>
+  <script type="module" src="/js/blog-product-recs.js"></script>
 </body>
 </html>`;
 }

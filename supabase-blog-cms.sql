@@ -187,11 +187,12 @@ on storage.objects for delete
 using (bucket_id = 'blog-images' and public.is_admin(auth.uid()));
 
 -- Seed category + first post (idempotent by slug)
+-- Categorias completas: rode também supabase-blog-categories-seed.sql (12 categorias).
 insert into public.blog_categories (name, slug, description, sort_order)
 values (
   'Educação Infantil',
   'educacao-infantil',
-  'Conteúdos sobre a primeira infância e práticas pedagógicas.',
+  'Práticas, rotinas e reflexões sobre a primeira infância e o trabalho com bebês e crianças pequenas.',
   1
 )
 on conflict (slug) do nothing;

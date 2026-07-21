@@ -852,7 +852,7 @@ textarea { resize: vertical; }
 
 .metrics-columns {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: 18px;
 }
 
@@ -1378,6 +1378,20 @@ textarea { resize: vertical; }
 .status-chip.status-draft { background: #fff4e5; color: #9a5b12; }
 .status-chip.status-scheduled { background: #eef0ff; color: #3d4bb8; }
 .status-chip.status-archived { background: #f1f1f1; color: #666; }
+
+/* Scale Blog CMS content only — shell (sidebar/header) stays full size */
+.admin-view[data-view="blog"] {
+  zoom: 0.65;
+}
+
+/* Reset dialog zoom so modal isn't double-scaled under the view zoom */
+.admin-view[data-view="blog"] .admin-modal,
+#blog-post-modal,
+#blog-cat-modal,
+#blog-tag-modal {
+  zoom: 1;
+}
+
 .blog-post-modal {
   width: min(1120px, calc(100vw - 24px));
   max-width: none;

@@ -18,12 +18,18 @@ const STATUS_LABELS = {
 
 let bound = false;
 let posts = [];
+let postMetricsById = {};
 let categories = [];
 let tags = [];
 let mediaItems = [];
 let slugManual = false;
 let pendingCover = null;
 let pendingOg = null;
+
+function formatRate(value) {
+  const n = Number(value || 0);
+  return `${Number.isFinite(n) ? n : 0}%`;
+}
 
 function $(id) {
   return document.getElementById(id);
@@ -132,12 +138,20 @@ async function loadTags() {
 }
 
 async function loadPosts() {
-  const { data, error } = await supabase
-    .from('blog_posts')
-    .select('*, blog_categories(name, slug), blog_post_tags(tag_id, blog_tags(name, slug))')
-    .order('updated_at', { ascending: false });
-  if (error) throw error;
-  posts = data || [];
+  const [postsRes, metricsRes] = await Promise.all([
+    supabase
+      .from('blog_posts')
+      .select('*, blog_categories(name, slug), blog_post_tags(tag_id, blog_tags(name, slug))')
+      .order('updated_at', { ascending: false }),
+    supabase
+      .from('blog_post_metrics_report')
+      .select('id,views,read_completes,read_rate'),
+  ]);
+  if (postsRes.error) throw postsRes.error;
+  posts = postsRes.data || [];
+  postMetricsById = Object.fromEntries(
+    (metricsRes.data || []).map((row) => [row.id, row]),
+  );
   renderPosts();
   updateKpis();
 }
@@ -161,6 +175,16 @@ function updateKpis() {
   if ($('blog-count-published')) $('blog-count-published').textContent = published;
   if ($('blog-count-draft')) $('blog-count-draft').textContent = draft;
   if ($('blog-count-scheduled')) $('blog-count-scheduled').textContent = scheduled;
+}
+
+async function loadListingViews() {
+  const { data } = await supabase
+    .from('blog_listing_metrics_report')
+    .select('views')
+    .maybeSingle();
+  if ($('blog-count-listing-views')) {
+    $('blog-count-listing-views').textContent = Number(data?.views || 0);
+  }
 }
 
 function fillCategorySelects() {
@@ -194,12 +218,17 @@ function renderPosts() {
           <th>Título</th>
           <th>Status</th>
           <th>Categoria</th>
+          <th>Views</th>
+          <th>Leituras</th>
+          <th>Taxa</th>
           <th>Publicação</th>
           <th></th>
         </tr>
       </thead>
       <tbody>
-        ${filtered.map((p) => `
+        ${filtered.map((p) => {
+          const metrics = postMetricsById[p.id] || {};
+          return `
           <tr>
             <td>
               <strong>${escapeHtml(p.title)}</strong>
@@ -207,13 +236,17 @@ function renderPosts() {
             </td>
             <td><span class="status-chip status-${escapeHtml(p.status)}">${escapeHtml(STATUS_LABELS[p.status] || p.status)}</span></td>
             <td>${escapeHtml(p.blog_categories?.name || '—')}</td>
+            <td>${Number(metrics.views || 0)}</td>
+            <td>${Number(metrics.read_completes || 0)}</td>
+            <td>${formatRate(metrics.read_rate)}</td>
             <td>${p.published_at ? escapeHtml(new Date(p.published_at).toLocaleString('pt-BR')) : '—'}</td>
             <td class="table-actions">
               <button type="button" class="btn-ghost" data-blog-edit="${escapeHtml(p.id)}">Editar</button>
               <button type="button" class="btn-ghost" data-blog-delete="${escapeHtml(p.id)}">Excluir</button>
             </td>
           </tr>
-        `).join('')}
+        `;
+        }).join('')}
       </tbody>
     </table>
   `;
@@ -716,7 +749,7 @@ export async function initBlogCms() {
   await initBlogSettings();
 
   try {
-    await Promise.all([loadCategories(), loadTags(), loadPosts(), loadMedia()]);
+    await Promise.all([loadCategories(), loadTags(), loadPosts(), loadMedia(), loadListingViews()]);
   } catch (error) {
     const list = $('blog-posts-list');
     if (list) {

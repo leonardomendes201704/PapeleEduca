@@ -27,6 +27,7 @@ const heroBuyClicksEl = document.getElementById('metric-hero-buy-clicks');
 const heroRateEl = document.getElementById('metric-hero-rate');
 const metricsListEl = document.getElementById('metrics-list');
 const freeMetricsListEl = document.getElementById('free-metrics-list');
+const blogMetricsListEl = document.getElementById('blog-metrics-list');
 
 function renderProductTable(rows) {
   if (!rows.length) {
@@ -169,6 +170,74 @@ async function loadFreeMaterialMetrics() {
   return totals;
 }
 
+function renderBlogTable(rows) {
+  if (!rows.length) {
+    return '<p class="metric-empty">Ainda não há visualizações do blog.</p>';
+  }
+
+  const topRows = rows.slice(0, 5);
+  return `
+    <div class="corp-table-wrap">
+      <table class="corp-table">
+        <thead>
+          <tr>
+            <th scope="col" class="col-rank">#</th>
+            <th scope="col" class="col-product">Post</th>
+            <th scope="col" class="col-metric">Views</th>
+            <th scope="col" class="col-metric">Leituras</th>
+            <th scope="col" class="col-metric">Taxa</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${topRows.map((item, index) => `
+            <tr>
+              <td class="col-rank"><span class="rank-badge">${index + 1}</span></td>
+              <td class="col-product">
+                <div class="corp-product">
+                  <img src="${escapeHtml(item.cover_url || '../images/hero.png')}" alt="" loading="lazy" />
+                  <div class="corp-product-copy">
+                    <span class="corp-product-name" title="${escapeHtml(item.title)}">${escapeHtml(item.title)}</span>
+                    <span class="corp-product-meta">${escapeHtml(item.category || 'Sem categoria')}</span>
+                  </div>
+                </div>
+              </td>
+              <td class="col-metric">${item.views || 0}</td>
+              <td class="col-metric">${item.read_completes || 0}</td>
+              <td class="col-metric col-metric--accent">${formatPercent(Number(item.read_rate || 0) / 100)}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+async function loadBlogPostMetrics() {
+  if (!blogMetricsListEl) return;
+
+  const [metricsRes, listingRes] = await Promise.all([
+    supabase
+      .from('blog_post_metrics_report')
+      .select('id,title,slug,status,cover_url,category,views,read_completes,read_rate,last_event_at')
+      .order('views', { ascending: false })
+      .order('read_completes', { ascending: false }),
+    supabase.from('blog_listing_metrics_report').select('views').maybeSingle(),
+  ]);
+
+  const listingEl = document.getElementById('blog-listing-views-value');
+  if (listingEl) listingEl.textContent = Number(listingRes.data?.views || 0);
+
+  if (metricsRes.error) {
+    blogMetricsListEl.innerHTML = `<p class="metric-empty">Erro ao carregar métricas: ${escapeHtml(metricsRes.error.message)}</p>`;
+    return;
+  }
+
+  const rows = (metricsRes.data || []).filter(
+    (item) => Number(item.views || 0) > 0 || Number(item.read_completes || 0) > 0,
+  );
+  blogMetricsListEl.innerHTML = renderBlogTable(rows);
+}
+
 function updateHeroKpis(productTotals, freeTotals) {
   const views = productTotals.views;
   const buyClicks = productTotals.buyClicks;
@@ -185,6 +254,7 @@ export async function initMetrics() {
   const [productTotals, freeTotals] = await Promise.all([
     loadProductMetrics(),
     loadFreeMaterialMetrics(),
+    loadBlogPostMetrics(),
   ]);
   updateHeroKpis(productTotals, freeTotals);
 }
