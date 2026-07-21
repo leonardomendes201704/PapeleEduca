@@ -1580,7 +1580,8 @@ textarea { resize: vertical; }
 }
 
 /* Scale Blog CMS content only — shell (sidebar/header) stays full size */
-.admin-view[data-view="blog"] {
+.admin-view[data-view="blog"],
+.admin-view[data-view="produtos"] {
   zoom: 0.65;
   width: 100%;
   max-width: 100%;
@@ -1611,11 +1612,13 @@ textarea { resize: vertical; }
 
 /* Reset dialog zoom so modal isn't double-scaled under the view zoom */
 .admin-view[data-view="blog"] .admin-modal,
+.admin-view[data-view="produtos"] .admin-modal,
 #blog-post-modal,
 #blog-cat-modal,
 #blog-tag-modal,
 #blog-facebook-modal,
 #blog-facebook-delete-modal,
+#product-modal,
 #product-facebook-modal,
 #product-facebook-delete-modal {
   zoom: 1;
