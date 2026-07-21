@@ -56,6 +56,15 @@ function siteOrigin(req) {
   return `${proto}://${host}`;
 }
 
+function buildFacebookShareLink(origin, slug) {
+  const url = new URL(`${origin.replace(/\/$/, '')}/blog/${encodeURIComponent(slug)}`);
+  url.searchParams.set('utm_source', 'facebook');
+  url.searchParams.set('utm_medium', 'social');
+  url.searchParams.set('utm_campaign', 'blog');
+  url.searchParams.set('utm_content', String(slug || ''));
+  return url.toString();
+}
+
 function defaultMessage(post) {
   const title = String(post.title || '').trim();
   const excerpt = String(post.excerpt || post.seo_description || '').trim();
@@ -327,7 +336,7 @@ module.exports = async function handler(req, res) {
     }
 
     const origin = siteOrigin(req);
-    const link = `${origin}/blog/${encodeURIComponent(post.slug)}`;
+    const link = buildFacebookShareLink(origin, post.slug);
     const message = String(body.message || defaultMessage(post)).trim();
     if (!message) {
       return sendJson(res, 400, { error: 'A mensagem do post não pode ficar vazia.' });

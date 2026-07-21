@@ -40,6 +40,12 @@ on public.blog_post_events (blog_post_id, created_at desc);
 create index if not exists blog_post_events_type_created_idx
 on public.blog_post_events (event_type, created_at desc);
 
+create index if not exists blog_post_events_source_idx
+on public.blog_post_events (source);
+
+create index if not exists blog_post_events_utm_source_idx
+on public.blog_post_events ((metadata->>'utm_source'));
+
 create or replace view public.blog_post_metrics_report as
 select
   p.id,
@@ -51,8 +57,22 @@ select
   c.name as category,
   coalesce(count(*) filter (where e.event_type = 'view'), 0)::int as views,
   coalesce(count(distinct e.session_id) filter (where e.event_type = 'view'), 0)::int as unique_views,
+  coalesce(count(*) filter (
+    where e.event_type = 'view'
+      and (
+        e.source = 'facebook'
+        or lower(coalesce(e.metadata->>'utm_source', '')) = 'facebook'
+      )
+  ), 0)::int as facebook_views,
   coalesce(count(*) filter (where e.event_type = 'read_complete'), 0)::int as read_completes,
   coalesce(count(distinct e.session_id) filter (where e.event_type = 'read_complete'), 0)::int as unique_reads,
+  coalesce(count(*) filter (
+    where e.event_type = 'read_complete'
+      and (
+        e.source = 'facebook'
+        or lower(coalesce(e.metadata->>'utm_source', '')) = 'facebook'
+      )
+  ), 0)::int as facebook_reads,
   case
     when coalesce(count(*) filter (where e.event_type = 'view'), 0) > 0
       then round(

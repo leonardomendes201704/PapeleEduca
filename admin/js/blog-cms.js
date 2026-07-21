@@ -33,6 +33,15 @@ function blogPublicUrl(slug) {
   return `${origin.replace(/\/$/, '')}/blog/${encodeURIComponent(slug)}`;
 }
 
+function blogFacebookShareUrl(slug) {
+  const url = new URL(blogPublicUrl(slug));
+  url.searchParams.set('utm_source', 'facebook');
+  url.searchParams.set('utm_medium', 'social');
+  url.searchParams.set('utm_campaign', 'blog');
+  url.searchParams.set('utm_content', String(slug || ''));
+  return url.toString();
+}
+
 function defaultFacebookMessage(post) {
   const title = String(post?.title || '').trim();
   const excerpt = String(post?.excerpt || post?.seo_description || '').trim();
@@ -159,7 +168,7 @@ async function loadPosts() {
       .order('updated_at', { ascending: false }),
     supabase
       .from('blog_post_metrics_report')
-      .select('id,views,read_completes,read_rate'),
+      .select('id,views,read_completes,read_rate,facebook_views'),
   ]);
   if (postsRes.error) throw postsRes.error;
   posts = postsRes.data || [];
@@ -233,6 +242,7 @@ function renderPosts() {
           <th class="col-center">Status</th>
           <th class="col-center">Categoria</th>
           <th class="col-center">Views</th>
+          <th class="col-center">FB</th>
           <th class="col-center">Leituras</th>
           <th class="col-center">Taxa</th>
           <th class="col-center">Publicação</th>
@@ -250,6 +260,7 @@ function renderPosts() {
             <td class="col-center"><span class="status-chip status-${escapeHtml(p.status)}">${escapeHtml(STATUS_LABELS[p.status] || p.status)}</span></td>
             <td class="col-center">${escapeHtml(p.blog_categories?.name || '—')}</td>
             <td class="col-center">${Number(metrics.views || 0)}</td>
+            <td class="col-center">${Number(metrics.facebook_views || 0)}</td>
             <td class="col-center">${Number(metrics.read_completes || 0)}</td>
             <td class="col-center">${formatRate(metrics.read_rate)}</td>
             <td class="col-center">${p.published_at ? escapeHtml(new Date(p.published_at).toLocaleString('pt-BR')) : '—'}</td>
@@ -331,7 +342,7 @@ function openFacebookModal(post) {
 
   if (!modal || !messageEl) return;
 
-  const url = blogPublicUrl(post.slug);
+  const url = blogFacebookShareUrl(post.slug);
   if (idEl) idEl.value = post.id;
   if (titleEl) titleEl.textContent = post.title || '';
   if (linkEl) {

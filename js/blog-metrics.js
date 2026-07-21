@@ -7,6 +7,7 @@ const READ_PREFIX = 'pe_blog_read_';
 const LISTING_VIEW_KEY = 'pe_blog_listing_viewed';
 const MIN_READ_MS = 20_000;
 const SCROLL_THRESHOLD = 0.9;
+const CAMPAIGN_KEYS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content'];
 
 function safeStorage(storage, key, value) {
   try {
@@ -34,8 +35,44 @@ function getSessionId() {
   return getOrCreateId(sessionStorage, SESSION_KEY);
 }
 
+function getCampaignParams() {
+  const params = new URLSearchParams(window.location.search);
+  return CAMPAIGN_KEYS.reduce((acc, key) => {
+    const value = params.get(key);
+    if (value) acc[key] = value;
+    return acc;
+  }, {});
+}
+
+function isFacebookReferrer(referrer) {
+  const ref = String(referrer || '').toLowerCase();
+  return (
+    ref.includes('facebook.com') ||
+    ref.includes('fb.com') ||
+    ref.includes('fb.me') ||
+    ref.includes('l.facebook.com') ||
+    ref.includes('m.facebook.com') ||
+    ref.includes('lm.facebook.com')
+  );
+}
+
+function resolveTrafficSource(metadata = {}) {
+  const explicit = String(metadata.source || '').trim().toLowerCase();
+  if (explicit && explicit !== 'site') return explicit;
+
+  const campaign = getCampaignParams();
+  const utmSource = String(campaign.utm_source || '').trim().toLowerCase();
+  if (utmSource) return utmSource;
+
+  const referrer = metadata.referrer || document.referrer || '';
+  if (isFacebookReferrer(referrer)) return 'facebook';
+
+  return 'site';
+}
+
 function commonMeta(metadata = {}) {
   return {
+    ...getCampaignParams(),
     viewport: {
       width: window.innerWidth,
       height: window.innerHeight,
@@ -63,29 +100,34 @@ async function postEvent(table, payload) {
 async function sendBlogEvent(blogPostId, eventType, metadata = {}) {
   if (!blogPostId || !eventType) return false;
 
+  const referrer = metadata.referrer || document.referrer || null;
+  const source = resolveTrafficSource({ ...metadata, referrer });
+
   return postEvent('blog_post_events', {
     blog_post_id: blogPostId,
     event_type: eventType,
     visitor_id: getVisitorId(),
     session_id: getSessionId(),
-    source: metadata.source || 'site',
+    source,
     pathname: metadata.pathname || window.location.pathname,
-    referrer: metadata.referrer || document.referrer || null,
-    metadata: commonMeta(metadata),
+    referrer,
+    metadata: commonMeta({ ...metadata, referrer }),
   });
 }
 
 export function trackBlogListingViewOnce(metadata = {}) {
   if (safeStorage(sessionStorage, LISTING_VIEW_KEY)) return Promise.resolve(false);
   safeStorage(sessionStorage, LISTING_VIEW_KEY, '1');
+  const referrer = metadata.referrer || document.referrer || null;
+  const source = resolveTrafficSource({ ...metadata, referrer });
   return postEvent('blog_listing_events', {
     event_type: 'view',
     visitor_id: getVisitorId(),
     session_id: getSessionId(),
-    source: metadata.source || 'site',
+    source,
     pathname: metadata.pathname || window.location.pathname,
-    referrer: metadata.referrer || document.referrer || null,
-    metadata: commonMeta(metadata),
+    referrer,
+    metadata: commonMeta({ ...metadata, referrer }),
   }).catch(() => false);
 }
 

@@ -27,6 +27,7 @@ const heroBuyClicksEl = document.getElementById('metric-hero-buy-clicks');
 const heroRateEl = document.getElementById('metric-hero-rate');
 const heroBlogListingEl = document.getElementById('metric-hero-blog-listing');
 const heroBlogViewsEl = document.getElementById('metric-hero-blog-views');
+const heroBlogFacebookEl = document.getElementById('metric-hero-blog-facebook');
 const heroBlogReadsEl = document.getElementById('metric-hero-blog-reads');
 const heroBlogRateEl = document.getElementById('metric-hero-blog-rate');
 const metricsListEl = document.getElementById('metrics-list');
@@ -188,6 +189,7 @@ function renderBlogTable(rows) {
             <th scope="col" class="col-rank">#</th>
             <th scope="col" class="col-product">Post</th>
             <th scope="col" class="col-metric">Views</th>
+            <th scope="col" class="col-metric">FB</th>
             <th scope="col" class="col-metric">Leituras</th>
             <th scope="col" class="col-metric">Taxa</th>
           </tr>
@@ -206,6 +208,7 @@ function renderBlogTable(rows) {
                 </div>
               </td>
               <td class="col-metric">${item.views || 0}</td>
+              <td class="col-metric">${item.facebook_views || 0}</td>
               <td class="col-metric">${item.read_completes || 0}</td>
               <td class="col-metric col-metric--accent">${formatPercent(Number(item.read_rate || 0) / 100)}</td>
             </tr>
@@ -218,13 +221,13 @@ function renderBlogTable(rows) {
 
 async function loadBlogPostMetrics() {
   if (!blogMetricsListEl) {
-    return { listingViews: 0, views: 0, reads: 0 };
+    return { listingViews: 0, views: 0, reads: 0, facebookViews: 0 };
   }
 
   const [metricsRes, listingRes] = await Promise.all([
     supabase
       .from('blog_post_metrics_report')
-      .select('id,title,slug,status,cover_url,category,views,read_completes,read_rate,last_event_at')
+      .select('id,title,slug,status,cover_url,category,views,facebook_views,read_completes,read_rate,last_event_at')
       .order('views', { ascending: false })
       .order('read_completes', { ascending: false }),
     supabase.from('blog_listing_metrics_report').select('views').maybeSingle(),
@@ -236,21 +239,27 @@ async function loadBlogPostMetrics() {
 
   if (metricsRes.error) {
     blogMetricsListEl.innerHTML = `<p class="metric-empty">Erro ao carregar métricas: ${escapeHtml(metricsRes.error.message)}</p>`;
-    return { listingViews, views: 0, reads: 0 };
+    return { listingViews, views: 0, reads: 0, facebookViews: 0 };
   }
 
   const allRows = metricsRes.data || [];
   const totals = allRows.reduce((acc, item) => {
     acc.views += Number(item.views || 0);
     acc.reads += Number(item.read_completes || 0);
+    acc.facebookViews += Number(item.facebook_views || 0);
     return acc;
-  }, { views: 0, reads: 0 });
+  }, { views: 0, reads: 0, facebookViews: 0 });
 
   const rows = allRows.filter(
     (item) => Number(item.views || 0) > 0 || Number(item.read_completes || 0) > 0,
   );
   blogMetricsListEl.innerHTML = renderBlogTable(rows);
-  return { listingViews, views: totals.views, reads: totals.reads };
+  return {
+    listingViews,
+    views: totals.views,
+    reads: totals.reads,
+    facebookViews: totals.facebookViews,
+  };
 }
 
 function updateHeroKpis(productTotals, freeTotals, blogTotals = {}) {
@@ -268,6 +277,7 @@ function updateHeroKpis(productTotals, freeTotals, blogTotals = {}) {
   if (heroRateEl) heroRateEl.textContent = formatPercent(rate);
   if (heroBlogListingEl) heroBlogListingEl.textContent = Number(blogTotals.listingViews || 0);
   if (heroBlogViewsEl) heroBlogViewsEl.textContent = blogViews;
+  if (heroBlogFacebookEl) heroBlogFacebookEl.textContent = Number(blogTotals.facebookViews || 0);
   if (heroBlogReadsEl) heroBlogReadsEl.textContent = blogReads;
   if (heroBlogRateEl) heroBlogRateEl.textContent = formatPercent(blogRate);
 }
