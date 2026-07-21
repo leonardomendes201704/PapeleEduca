@@ -412,29 +412,10 @@
         <p>Ideias, dicas e inspirações para tornar o aprendizado mais leve, criativo e significativo.</p>
       </div>
 
-      <div class="post-grid">
-        <a class="post-card" href="./blog/brincar-interagir-aprender-bncc.html">
-          <div class="post-card-media">
-            <img
-              src="./images/blog-brincar-bncc.png"
-              alt="Ilustração de crianças em atividade lúdica com blocos, desenho e livro"
-              width="800"
-              height="450"
-            />
-          </div>
-          <div class="post-card-body">
-            <span class="post-card-tag">Educação Infantil</span>
-            <span class="post-card-meta"><time datetime="2026-07-21">21 de julho de 2026</time> · 6 min</span>
-            <h2>Brincar e interagir: o que a BNCC e a UNICEF dizem sobre aprender na primeira infância</h2>
-            <p>
-              Interações e brincadeiras são eixos da BNCC. A UNICEF reforça a aprendizagem pelo brincar
-              como parte central da educação na primeira infância. Entenda o que dizem as fontes oficiais
-              e como traduzir isso na prática.
-            </p>
-            <span class="post-card-link">Ler matéria →</span>
-          </div>
-        </a>
+      <div id="blog-posts-grid" class="post-grid" aria-live="polite">
+        <p class="empty-state">Carregando posts...</p>
       </div>
+      <p id="blog-list-note" class="muted" style="text-align:center;margin-top:18px;"></p>
     </section>
 
     <footer class="footer" id="sobre">
@@ -449,6 +430,7 @@
   </main>
   <script type="module" src="./js/social-links.js"></script>
   <script type="module" src="./js/blog-nav.js"></script>
+  <script type="module" src="./js/blog-list.js"></script>
   <a
     class="whatsapp-float"
     href="https://wa.me/5513997291237?text=Ol%C3%A1%21%20Vim%20pelo%20site%20Papel%C3%AA%20Educa%20e%20gostaria%20de%20mais%20informa%C3%A7%C3%B5es."

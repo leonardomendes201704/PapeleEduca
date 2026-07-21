@@ -1,6 +1,6 @@
 import { supabase } from './supabase-client.js';
 
-const ASSET_VERSION = 'blog-menu-1';
+const ASSET_VERSION = 'blog-cms-1';
 
 function loadModule(path) {
   return import(`${path}?v=${ASSET_VERSION}`);
@@ -97,9 +97,7 @@ async function initView(routeKey) {
       await loadModule('./metrics-admin.js').then((m) => m.initMetrics());
       break;
     case 'blog':
-      if (initialized.has(routeKey)) return;
-      initialized.add(routeKey);
-      await loadModule('./blog-admin.js').then((m) => m.initBlogSettings());
+      await loadModule('./blog-cms.js').then((m) => m.initBlogCms());
       break;
     case 'configuracoes':
       if (initialized.has(routeKey)) return;

@@ -4,6 +4,17 @@
       "source": "/admin",
       "destination": "/admin/",
       "permanent": false
+    },
+    {
+      "source": "/blog/brincar-interagir-aprender-bncc.html",
+      "destination": "/blog/brincar-interagir-aprender-bncc",
+      "permanent": false
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/blog/:slug",
+      "destination": "/api/blog/render?slug=:slug"
     }
   ]
 }

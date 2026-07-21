@@ -421,3 +421,5 @@ left join public.free_material_events e
 group by fm.id;
 
 grant select on public.free_material_metrics_report to authenticated;
+
+-- Blog CMS tables/policies live in supabase-blog-cms.sql (run separately).

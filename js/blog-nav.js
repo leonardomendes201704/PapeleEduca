@@ -16,7 +16,12 @@ function setBlogNavVisible(enabled) {
 
 function shouldGateBlogPage() {
   const path = window.location.pathname.replace(/\\/g, '/').toLowerCase();
-  return path.endsWith('/blog.html') || path.includes('/blog/');
+  return (
+    path.endsWith('/blog.html')
+    || path.endsWith('/blog')
+    || path.includes('/blog/')
+    || path.includes('/api/blog/render')
+  );
 }
 
 function redirectHome() {
