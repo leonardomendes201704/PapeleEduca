@@ -41,6 +41,8 @@ create table if not exists public.blog_posts (
   reading_time_min integer not null default 0,
   featured boolean not null default false,
   category_id uuid references public.blog_categories(id) on delete set null,
+  facebook_post_id text not null default '',
+  facebook_posted_at timestamptz,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );

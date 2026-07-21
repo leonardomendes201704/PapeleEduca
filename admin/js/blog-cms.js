@@ -25,6 +25,19 @@ let mediaItems = [];
 let slugManual = false;
 let pendingCover = null;
 let pendingOg = null;
+let facebookModalPost = null;
+
+function blogPublicUrl(slug) {
+  const origin = window.location.origin || 'https://papele-educa.vercel.app';
+  return `${origin.replace(/\/$/, '')}/blog/${encodeURIComponent(slug)}`;
+}
+
+function defaultFacebookMessage(post) {
+  const title = String(post?.title || '').trim();
+  const excerpt = String(post?.excerpt || post?.seo_description || '').trim();
+  if (excerpt) return `${title}\n\n${excerpt}`;
+  return title;
+}
 
 function formatRate(value) {
   const n = Number(value || 0);
@@ -241,6 +254,12 @@ function renderPosts() {
             <td class="col-center">${p.published_at ? escapeHtml(new Date(p.published_at).toLocaleString('pt-BR')) : '—'}</td>
             <td class="table-actions">
               <button type="button" class="btn-ghost btn-sm" data-blog-edit="${escapeHtml(p.id)}">Editar</button>
+              <button
+                type="button"
+                class="btn-ghost btn-sm btn-facebook${p.facebook_post_id ? ' is-posted' : ''}"
+                data-blog-facebook="${escapeHtml(p.id)}"
+                ${p.status !== 'published' ? 'disabled title="Publique o post antes de compartilhar no Facebook"' : ''}
+              >${p.facebook_post_id ? 'Repostar FB' : 'Postar no Facebook'}</button>
               <button type="button" class="btn-sm btn-danger" data-blog-delete="${escapeHtml(p.id)}">Excluir</button>
             </td>
           </tr>
@@ -256,6 +275,12 @@ function renderPosts() {
       if (post) openPostModal(post);
     });
   });
+  list.querySelectorAll('[data-blog-facebook]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const post = posts.find((p) => p.id === btn.dataset.blogFacebook);
+      if (post) openFacebookModal(post);
+    });
+  });
   list.querySelectorAll('[data-blog-delete]').forEach((btn) => {
     btn.addEventListener('click', async () => {
       if (!window.confirm('Excluir este post permanentemente?')) return;
@@ -267,6 +292,129 @@ function renderPosts() {
       await loadPosts();
     });
   });
+}
+
+function closeFacebookModal() {
+  facebookModalPost = null;
+  const modal = $('blog-facebook-modal');
+  if (modal?.open) modal.close();
+}
+
+function openFacebookModal(post) {
+  if (!post || post.status !== 'published') {
+    alert('Só é possível postar no Facebook posts publicados.');
+    return;
+  }
+
+  facebookModalPost = post;
+  const modal = $('blog-facebook-modal');
+  const titleEl = $('blog-facebook-post-title');
+  const linkEl = $('blog-facebook-post-link');
+  const messageEl = $('blog-facebook-message');
+  const alreadyEl = $('blog-facebook-already');
+  const statusEl = $('blog-facebook-form-status');
+  const idEl = $('blog-facebook-post-id');
+  const confirmBtn = $('blog-facebook-confirm-btn');
+
+  if (!modal || !messageEl) return;
+
+  const url = blogPublicUrl(post.slug);
+  if (idEl) idEl.value = post.id;
+  if (titleEl) titleEl.textContent = post.title || '';
+  if (linkEl) {
+    linkEl.href = url;
+    linkEl.textContent = url;
+  }
+  messageEl.value = defaultFacebookMessage(post);
+  if (statusEl) {
+    statusEl.textContent = '';
+    statusEl.className = 'form-status';
+  }
+  if (alreadyEl) {
+    alreadyEl.hidden = !post.facebook_post_id;
+  }
+  if (confirmBtn) {
+    confirmBtn.disabled = false;
+    confirmBtn.textContent = post.facebook_post_id ? 'Confirmar e repostar' : 'Confirmar e postar';
+  }
+
+  if (typeof modal.showModal === 'function') modal.showModal();
+  else modal.setAttribute('open', '');
+}
+
+async function submitFacebookPost(event) {
+  event.preventDefault();
+  const statusEl = $('blog-facebook-form-status');
+  const confirmBtn = $('blog-facebook-confirm-btn');
+  const messageEl = $('blog-facebook-message');
+  const post = facebookModalPost || posts.find((p) => p.id === $('blog-facebook-post-id')?.value);
+
+  if (!post) {
+    if (statusEl) {
+      statusEl.textContent = 'Post não encontrado.';
+      statusEl.classList.add('error');
+    }
+    return;
+  }
+
+  const message = String(messageEl?.value || '').trim();
+  if (!message) {
+    if (statusEl) {
+      statusEl.textContent = 'Escreva uma mensagem para o post.';
+      statusEl.classList.add('error');
+    }
+    return;
+  }
+
+  if (statusEl) {
+    statusEl.textContent = 'Publicando na página do Facebook...';
+    statusEl.className = 'form-status';
+  }
+  if (confirmBtn) confirmBtn.disabled = true;
+
+  try {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    if (!session?.access_token) {
+      throw new Error('Sessão expirada. Faça login novamente.');
+    }
+
+    const response = await fetch('/api/blog/facebook-post', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify({
+        id: post.id,
+        message,
+        force: Boolean(post.facebook_post_id),
+      }),
+    });
+
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(payload.error || `HTTP ${response.status}`);
+    }
+
+    if (statusEl) {
+      const fbLink = payload.facebook_url
+        ? ` <a href="${escapeHtml(payload.facebook_url)}" target="_blank" rel="noopener noreferrer">Ver no Facebook</a>`
+        : '';
+      statusEl.innerHTML = `Publicado com sucesso.${fbLink}`;
+      statusEl.className = 'form-status';
+    }
+
+    await loadPosts();
+    setTimeout(() => closeFacebookModal(), 900);
+  } catch (error) {
+    if (statusEl) {
+      statusEl.textContent = error.message || 'Falha ao postar no Facebook.';
+      statusEl.classList.add('error');
+    }
+    if (confirmBtn) confirmBtn.disabled = false;
+  }
 }
 
 function renderCategories() {
@@ -629,6 +777,13 @@ function bindEvents() {
   $('blog-tag-new-btn')?.addEventListener('click', () => openTagModal());
   $('blog-tag-cancel-btn')?.addEventListener('click', () => $('blog-tag-modal')?.close());
   $('blog-tag-modal-close')?.addEventListener('click', () => $('blog-tag-modal')?.close());
+  $('blog-facebook-form')?.addEventListener('submit', submitFacebookPost);
+  $('blog-facebook-cancel-btn')?.addEventListener('click', closeFacebookModal);
+  $('blog-facebook-modal-close')?.addEventListener('click', closeFacebookModal);
+  $('blog-facebook-modal')?.addEventListener('cancel', (event) => {
+    event.preventDefault();
+    closeFacebookModal();
+  });
   $('blog-tag-name')?.addEventListener('input', () => {
     if (!$('blog-tag-id').value) $('blog-tag-slug').value = slugify($('blog-tag-name').value);
   });

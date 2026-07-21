@@ -45,6 +45,18 @@ where id = 'USER_UUID_HERE';
 
 > No plano Hobby não é permitido `0 * * * *` (cron horário). Por isso usamos 24 expressões diárias (`0 0` … `0 23`).
 
+### Postar no Facebook (manual, pelo admin)
+
+Publicação **manual** pela tabela de posts do CMS (botão **Postar no Facebook**). Não há postagem automática.
+
+1. No SQL Editor do Supabase, execute [`supabase-blog-facebook.sql`](./supabase-blog-facebook.sql).
+2. Crie um app em [Meta for Developers](https://developers.facebook.com/) e obtenha um **Page Access Token** com as permissões `pages_manage_posts`, `pages_read_engagement` e `pages_show_list`.
+3. Na Vercel, configure:
+   - `FACEBOOK_PAGE_ID` — ID numérico da Página
+   - `FACEBOOK_PAGE_ACCESS_TOKEN` — token da Página (longa duração)
+   - `SITE_URL` (opcional) — ex.: `https://papele-educa.vercel.app`
+4. Redeploy. No admin → Blog → Posts, use **Postar no Facebook** (só em posts publicados).
+
 ## 5. Public products
 
 Only rows with `status = 'published'` are visible to the public site when it is connected to Supabase.

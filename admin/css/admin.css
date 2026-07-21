@@ -1492,6 +1492,30 @@ textarea { resize: vertical; }
 .status-chip.status-scheduled { background: #eef0ff; color: #3d4bb8; }
 .status-chip.status-archived { background: #f1f1f1; color: #666; }
 
+.btn-facebook {
+  color: #1877f2 !important;
+  border-color: #c5d8f8 !important;
+}
+
+.btn-facebook.is-posted {
+  color: #0b5fcc !important;
+}
+
+.btn-facebook:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+#blog-facebook-modal .admin-modal-card {
+  max-width: 520px;
+}
+
+#blog-facebook-message {
+  width: 100%;
+  min-height: 120px;
+  resize: vertical;
+}
+
 /* Scale Blog CMS content only — shell (sidebar/header) stays full size */
 .admin-view[data-view="blog"] {
   zoom: 0.65;
