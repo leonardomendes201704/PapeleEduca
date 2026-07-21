@@ -55,6 +55,11 @@ button { font: inherit; }
 }
 
 .auth-brand { width: 200px; margin-bottom: 20px; }
+.auth-brand img {
+  width: 100%;
+  height: auto;
+  max-width: 200px;
+}
 
 .auth-card h1 {
   margin: 0;
@@ -445,10 +450,112 @@ label {
 }
 
 .product-form,
-.social-links-form {
+.social-links-form,
+.blog-settings-form {
   display: grid;
   gap: 14px;
   margin-top: 16px;
+}
+
+.setting-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 18px 18px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: #fff;
+}
+
+.setting-toggle-copy {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.setting-toggle-copy strong {
+  font-size: 1rem;
+}
+
+.setting-toggle-state {
+  font-size: 0.9rem;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.setting-toggle-state[data-state="on"] {
+  color: #1f8f8a;
+}
+
+.setting-toggle-state[data-state="off"] {
+  color: #a35b2a;
+}
+
+.setting-help {
+  margin: 0;
+  line-height: 1.55;
+}
+
+.switch {
+  position: relative;
+  display: inline-flex;
+  width: 52px;
+  height: 30px;
+  flex: 0 0 auto;
+  cursor: pointer;
+}
+
+.switch input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.switch-slider {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: #c9c2b6;
+  transition: background 180ms ease;
+}
+
+.switch-slider::before {
+  content: "";
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  left: 3px;
+  top: 3px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(35, 41, 50, 0.18);
+  transition: transform 180ms ease;
+}
+
+.switch input:checked + .switch-slider {
+  background: linear-gradient(90deg, #27b4ae, #20a8bb);
+}
+
+.switch input:checked + .switch-slider::before {
+  transform: translateX(22px);
+}
+
+.switch input:focus-visible + .switch-slider {
+  box-shadow: 0 0 0 3px rgba(47, 183, 176, 0.22);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 input, textarea, select {

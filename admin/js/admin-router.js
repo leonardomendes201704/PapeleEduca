@@ -1,6 +1,6 @@
 import { supabase } from './supabase-client.js';
 
-const ASSET_VERSION = '803e9ab';
+const ASSET_VERSION = 'blog-menu-1';
 
 function loadModule(path) {
   return import(`${path}?v=${ASSET_VERSION}`);
@@ -26,6 +26,11 @@ const ROUTES = {
     hash: '#/metricas',
     title: 'Desempenho do site',
     breadcrumb: 'Métricas / Visão geral',
+  },
+  blog: {
+    hash: '#/blog',
+    title: 'Blog',
+    breadcrumb: 'Painel / Blog',
   },
   configuracoes: {
     hash: '#/configuracoes',
@@ -91,6 +96,11 @@ async function initView(routeKey) {
     case 'metricas':
       await loadModule('./metrics-admin.js').then((m) => m.initMetrics());
       break;
+    case 'blog':
+      if (initialized.has(routeKey)) return;
+      initialized.add(routeKey);
+      await loadModule('./blog-admin.js').then((m) => m.initBlogSettings());
+      break;
     case 'configuracoes':
       if (initialized.has(routeKey)) return;
       initialized.add(routeKey);
@@ -121,7 +131,7 @@ async function navigate(routeKey, { replace = false } = {}) {
 async function requireAdmin() {
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) {
-    window.location.href = './';
+    window.location.href = '/admin/';
     return null;
   }
   return session;
@@ -139,7 +149,7 @@ async function ensureAdminRole() {
 
   if (error || !data || data.role !== 'admin') {
     await supabase.auth.signOut();
-    window.location.href = './';
+    window.location.href = '/admin/';
     return false;
   }
 
@@ -165,7 +175,7 @@ function bindShellEvents() {
 
   document.getElementById('logout-btn')?.addEventListener('click', async () => {
     await supabase.auth.signOut();
-    window.location.href = './';
+    window.location.href = '/admin/';
   });
 
   document.getElementById('sidebar-toggle')?.addEventListener('click', () => {

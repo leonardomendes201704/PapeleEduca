@@ -92,12 +92,16 @@ create table if not exists public.site_settings (
   id integer primary key default 1 check (id = 1),
   instagram_url text not null default '',
   facebook_url text not null default '',
+  blog_menu_enabled boolean not null default true,
   updated_at timestamptz not null default now()
 );
 
-insert into public.site_settings (id, instagram_url, facebook_url)
-values (1, '', '')
+insert into public.site_settings (id, instagram_url, facebook_url, blog_menu_enabled)
+values (1, '', '', true)
 on conflict (id) do nothing;
+
+alter table public.site_settings
+  add column if not exists blog_menu_enabled boolean not null default true;
 
 alter table public.site_settings enable row level security;
 grant select on public.site_settings to anon, authenticated;

@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Brincar e interagir: o que a BNCC e a UNICEF dizem sobre aprender na primeira infância | Papelê Educa</title>
+  <meta name="description" content="Matéria original sobre os eixos da Educação Infantil na BNCC e as evidências da UNICEF sobre aprendizagem pelo brincar, com referências confiáveis." />
+  <link rel="canonical" href="https://papele-educa.vercel.app/blog/brincar-interagir-aprender-bncc.html" />
+
+  <!-- Open Graph / redes sociais e mensageiros -->
+  <meta property="og:type" content="article" />
+  <meta property="og:site_name" content="Papelê Educa" />
+  <meta property="og:locale" content="pt_BR" />
+  <meta property="og:url" content="https://papele-educa.vercel.app/blog/brincar-interagir-aprender-bncc.html" />
+  <meta property="og:title" content="Brincar e interagir: o que a BNCC e a UNICEF dizem sobre aprender na primeira infância" />
+  <meta property="og:description" content="Interações e brincadeiras são eixos da BNCC. A UNICEF reforça a aprendizagem pelo brincar como parte central da educação na primeira infância." />
+  <meta property="og:image" content="https://papele-educa.vercel.app/images/blog-brincar-bncc-og.jpg" />
+  <meta property="og:image:secure_url" content="https://papele-educa.vercel.app/images/blog-brincar-bncc-og.jpg" />
+  <meta property="og:image:type" content="image/jpeg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="Ilustração de crianças em atividade lúdica com blocos, desenho e livro" />
+  <meta property="article:published_time" content="2026-07-21T08:00:00-03:00" />
+  <meta property="article:section" content="Educação Infantil" />
+
+  <!-- Twitter / X -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Brincar e interagir: o que a BNCC e a UNICEF dizem sobre aprender na primeira infância" />
+  <meta name="twitter:description" content="Interações e brincadeiras são eixos da BNCC. A UNICEF reforça a aprendizagem pelo brincar como parte central da educação na primeira infância." />
+  <meta name="twitter:image" content="https://papele-educa.vercel.app/images/blog-brincar-bncc-og.jpg" />
+  <meta name="twitter:image:alt" content="Ilustração de crianças em atividade lúdica com blocos, desenho e livro" />
+  <style>
+    :root {
+      --bg: #f6f3ec;
+      --surface: #ffffff;
+      --surface-2: #f2efe7;
+      --text: #263238;
+      --muted: #6c7a86;
+      --line: #d8d2c6;
+      --accent: #2fb7b0;
+      --accent-2: #f4a53b;
+      --accent-3: #7c6ae6;
+      --shadow: 0 14px 40px rgba(35, 41, 50, 0.08);
+      --radius: 28px;
+      --radius-sm: 18px;
+      --max: 1180px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(244, 165, 59, 0.16), transparent 22%),
+        radial-gradient(circle at top right, rgba(47, 183, 176, 0.14), transparent 20%),
+        linear-gradient(180deg, #f8f4ec 0%, #fbfaf7 34%, #f7f4ef 100%);
+    }
+
+    img { max-width: 100%; display: block; }
+    a { color: inherit; text-decoration: none; }
+
+    .page {
+      width: min(var(--max), calc(100% - 32px));
+      margin: 0 auto;
+      padding: 18px 0 40px;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 12px;
+      z-index: 10;
+      background: rgba(255, 255, 255, 0.82);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(216, 210, 198, 0.7);
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 18px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+      flex: 0 0 auto;
+    }
+
+    .brand-mark {
+      height: 90px;
+      width: auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex: 0 0 auto;
+    }
+
+    .brand-mark img {
+      display: block;
+      width: auto;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .nav {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 22px;
+      font-weight: 600;
+      color: #40505c;
+      margin-left: auto;
+    }
+
+    .nav a {
+      padding: 6px 2px;
+      border-bottom: 3px solid transparent;
+      transition: transform 180ms ease, color 180ms ease, border-color 180ms ease, opacity 180ms ease;
+      transform-origin: center;
+    }
+
+    .nav a:hover,
+    .nav a:focus-visible {
+      color: #1f9f9b;
+      transform: translateY(-2px) scale(1.06);
+    }
+
+    .nav a.active { border-bottom-color: var(--accent-2); }
+    .nav a.active:hover,
+    .nav a.active:focus-visible { border-bottom-color: var(--accent-2); }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 14px 22px;
+      border: 0;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #27b4ae, #20a8bb);
+      color: #fff;
+      font-weight: 700;
+      box-shadow: 0 10px 24px rgba(39, 180, 174, 0.22);
+      white-space: nowrap;
+      transition: transform 180ms ease, box-shadow 180ms ease, filter 180ms ease;
+    }
+
+    .btn:hover,
+    .btn:focus-visible {
+      transform: translateY(-3px) scale(1.05);
+      box-shadow: 0 16px 32px rgba(39, 180, 174, 0.3);
+      filter: brightness(1.03);
+    }
+
+    .btn-icon {
+      width: 18px;
+      height: 18px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex: 0 0 auto;
+    }
+
+    .btn-icon.right { width: 16px; height: 16px; }
+    .btn-icon svg { width: 100%; height: 100%; fill: currentColor; }
+
+    .whatsapp-float {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      z-index: 30;
+      width: 58px;
+      height: 58px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #28d366, #128c7e);
+      color: #fff;
+      box-shadow: 0 16px 30px rgba(18, 140, 126, 0.32);
+      transition: transform 180ms ease, box-shadow 180ms ease, filter 180ms ease;
+    }
+
+    .whatsapp-float:hover,
+    .whatsapp-float:focus-visible {
+      transform: translateY(-3px) scale(1.05);
+      box-shadow: 0 20px 36px rgba(18, 140, 126, 0.38);
+    }
+
+    .whatsapp-float img {
+      width: auto;
+      height: 30px;
+      display: block;
+    }
+
+    .article {
+      margin-top: 30px;
+      background: rgba(255,255,255,0.78);
+      border: 1px solid rgba(216, 210, 198, 0.72);
+      border-radius: 36px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .article-cover {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      background: #e8e2d6;
+    }
+
+    .article-cover img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .article-body {
+      padding: 28px 32px 36px;
+      max-width: 760px;
+      margin: 0 auto;
+    }
+
+    .breadcrumb {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 0.92rem;
+      font-weight: 600;
+      margin-bottom: 18px;
+    }
+
+    .breadcrumb a:hover,
+    .breadcrumb a:focus-visible {
+      color: #1f9f9b;
+    }
+
+    .article-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 16px;
+      color: var(--muted);
+      font-size: 0.92rem;
+      margin-bottom: 14px;
+    }
+
+    .article-meta span {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .article-tag {
+      display: inline-flex;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: rgba(47, 183, 176, 0.12);
+      color: #1f8f8a;
+      font-size: 0.82rem;
+      font-weight: 800;
+      margin-bottom: 12px;
+    }
+
+    .article-body h1 {
+      font-size: clamp(1.7rem, 3.4vw, 2.55rem);
+      letter-spacing: -0.03em;
+      line-height: 1.15;
+      margin: 0 0 16px;
+    }
+
+    .lead {
+      font-size: 1.12rem;
+      line-height: 1.65;
+      color: #44515c;
+      margin: 0 0 28px;
+    }
+
+    .article-body h2 {
+      font-size: 1.35rem;
+      margin: 32px 0 12px;
+      letter-spacing: -0.02em;
+    }
+
+    .article-body p {
+      margin: 0 0 16px;
+      line-height: 1.7;
+      color: #334049;
+    }
+
+    .article-body ul {
+      margin: 0 0 18px;
+      padding-left: 1.2rem;
+      color: #334049;
+      line-height: 1.7;
+    }
+
+    .article-body li { margin-bottom: 8px; }
+
+    .article-body strong { color: var(--text); }
+
+    .callout {
+      margin: 24px 0;
+      padding: 18px 20px;
+      border-left: 4px solid var(--accent);
+      background: rgba(47, 183, 176, 0.08);
+      border-radius: 0 18px 18px 0;
+      color: #334049;
+      line-height: 1.65;
+    }
+
+    .sources {
+      margin-top: 36px;
+      padding-top: 24px;
+      border-top: 1px solid var(--line);
+    }
+
+    .sources h2 {
+      margin-top: 0;
+      font-size: 1.15rem;
+    }
+
+    .sources ol {
+      margin: 0;
+      padding-left: 1.2rem;
+      color: var(--muted);
+      line-height: 1.65;
+      font-size: 0.95rem;
+    }
+
+    .sources a {
+      color: #1f8f8a;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+
+    .footer {
+      margin-top: 28px;
+      padding: 18px 8px 8px;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .footer-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .socials img {
+      height: 42px;
+      width: auto;
+    }
+
+    @media (max-width: 900px) {
+      .topbar {
+        flex-wrap: wrap;
+        border-radius: 24px;
+      }
+
+      .nav {
+        width: 100%;
+        justify-content: flex-start;
+        margin-left: 0;
+        gap: 16px;
+      }
+
+      .article-body { padding: 22px 20px 28px; }
+    }
+
+    @media (max-width: 640px) {
+      .page { width: min(100% - 20px, var(--max)); padding-top: 10px; }
+      .article { border-radius: 28px; }
+      .footer-top { justify-content: center; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="topbar">
+      <a class="brand" href="../index.html" aria-label="Papelê Educa">
+        <div class="brand-mark">
+          <img src="../images/logo-header.png" alt="Papelê Educa" />
+        </div>
+      </a>
+
+      <nav class="nav" aria-label="Navegação principal">
+        <a href="../index.html">Início</a>
+        <a href="../index.html#categorias">Materiais</a>
+        <a href="../index.html#materiais-gratuitos">Gratuitos</a>
+        <a class="active" href="../blog.html" data-nav-item="blog">Blog</a>
+        <a href="../index.html#contato">Contato</a>
+      </nav>
+
+      <a class="btn" href="../index.html#categorias">
+        <span class="btn-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+            <path d="M20.7 3.3a1 1 0 0 0-1.06-.24L4.6 8.81a1 1 0 0 0-.06 1.82l5.74 2.62 2.62 5.74a1 1 0 0 0 1.82-.06l5.75-15.04a1 1 0 0 0-.24-1.06Zm-7.26 13.5-1.8-3.93 3.93-3.93-2.13-2.13 5.1-2.02-2.02 5.1-2.13-2.13-3.93 3.93-3.93-1.8 10.91-4.19-4.1 10.17Z"/>
+          </svg>
+        </span>
+        <span class="btn-label">Explorar materiais</span>
+        <span class="btn-icon right" aria-hidden="true">
+          <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+            <path d="M13.2 5.3a1 1 0 0 1 1.4 0l5.8 5.8a1 1 0 0 1 0 1.4l-5.8 5.8a1 1 0 1 1-1.4-1.4l4.1-4.1H5a1 1 0 1 1 0-2h12.3l-4.1-4.1a1 1 0 0 1 0-1.4Z"/>
+          </svg>
+        </span>
+      </a>
+    </header>
+
+    <article class="article">
+      <div class="article-cover">
+        <img
+          src="../images/blog-brincar-bncc.png"
+          alt="Ilustração de crianças em atividade lúdica com blocos, desenho e livro"
+          width="1600"
+          height="900"
+        />
+      </div>
+
+      <div class="article-body">
+        <nav class="breadcrumb" aria-label="Navegação do artigo">
+          <a href="../blog.html">Blog</a>
+          <span aria-hidden="true">/</span>
+          <span>Primeira infância</span>
+        </nav>
+
+        <span class="article-tag">Educação Infantil</span>
+
+        <div class="article-meta">
+          <span><time datetime="2026-07-21">21 de julho de 2026</time></span>
+          <span>Leitura aproximada: 6 min</span>
+          <span>Papelê Educa</span>
+        </div>
+
+        <h1>Brincar e interagir: o que a BNCC e a UNICEF dizem sobre aprender na primeira infância</h1>
+
+        <p class="lead">
+          Brincar não é “passar o tempo” na Educação Infantil. Na Base Nacional Comum Curricular (BNCC),
+          interações e brincadeiras são os eixos que estruturam as práticas pedagógicas. Organizações
+          internacionais, como a UNICEF, reforçam o mesmo caminho: a aprendizagem pelo brincar é
+          parte central de uma educação pré-escolar de qualidade.
+        </p>
+
+        <h2>O que a BNCC estabelece</h2>
+        <p>
+          A BNCC é o documento normativo do Ministério da Educação que define as aprendizagens essenciais
+          da Educação Básica. Na Educação Infantil, ela parte de dois eixos estruturantes —
+          <strong>interações</strong> e <strong>brincadeiras</strong> — e assegura seis direitos de
+          aprendizagem e desenvolvimento:
+        </p>
+        <ul>
+          <li><strong>Conviver</strong> com outras crianças e adultos, em diferentes grupos e linguagens;</li>
+          <li><strong>Brincar</strong> de diversas formas, em diferentes espaços, tempos e com diferentes parceiros;</li>
+          <li><strong>Participar</strong> ativamente do planejamento e da vida cotidiana da escola;</li>
+          <li><strong>Explorar</strong> movimentos, sons, formas, texturas, histórias, natureza e cultura;</li>
+          <li><strong>Expressar</strong> necessidades, emoções, hipóteses e opiniões por diferentes linguagens;</li>
+          <li><strong>Conhecer-se</strong>, construindo identidade pessoal, social e cultural.</li>
+        </ul>
+        <p>
+          A partir desses direitos, a BNCC organiza o currículo em cinco <strong>campos de experiências</strong>:
+          O eu, o outro e o nós; Corpo, gestos e movimentos; Traços, sons, cores e formas;
+          Escuta, fala, pensamento e imaginação; e Espaços, tempos, quantidades, relações e transformações.
+          Os objetivos de aprendizagem e desenvolvimento nesses campos são descritos para três grupos etários:
+          bebês (0 a 1 ano e 6 meses), crianças bem pequenas (1 ano e 7 meses a 3 anos e 11 meses)
+          e crianças pequenas (4 anos a 5 anos e 11 meses).
+        </p>
+
+        <div class="callout">
+          Em outras palavras: o documento não trata o brincar como enfeite da rotina. Ele é o meio
+          privilegiado pelo qual a criança convive, explora, se expressa e constrói conhecimento.
+        </div>
+
+        <h2>O que a UNICEF reforça sobre a primeira infância</h2>
+        <p>
+          A UNICEF destaca a primeira infância — da concepção até os 6 anos — como uma janela decisiva
+          para saúde, aprendizado e bem-estar social e emocional. Experiências e serviços de qualidade
+          nessa fase ajudam a construir bases que influenciam o percurso escolar e a vida adulta.
+        </p>
+        <p>
+          Em publicação conjunta com a Lego Foundation, a UNICEF defende a
+          <strong>aprendizagem pelo brincar</strong> (<em>learning through play</em>) como elemento
+          central da pedagogia pré-escolar de qualidade. O material argumenta que práticas lúdicas e
+          centradas na criança apoiam o desenvolvimento integral e a formação de aprendizes ao longo da vida —
+          alinhando-se, no contexto brasileiro, ao que a BNCC já coloca como eixo da Educação Infantil.
+        </p>
+
+        <h2>Como traduzir isso na prática</h2>
+        <p>
+          Para educadores e famílias, a mensagem conjunta das fontes oficiais e internacionais é clara:
+          a qualidade não está só em “ocupar” a criança, mas em oferecer experiências intencionais,
+          afetivas e diversificadas. Alguns caminhos concretos:
+        </p>
+        <ul>
+          <li>
+            <strong>Planejar com intenção.</strong> Antes de propor uma atividade, pergunte quais direitos
+            e quais campos de experiência ela mobiliza. Uma mesma brincadeira pode integrar corpo,
+            linguagem e relações sociais.
+          </li>
+          <li>
+            <strong>Valorizar a participação infantil.</strong> Escolha de materiais, organização do espaço
+            e decisão sobre a brincadeira são parte do direito de participar — não detalhes secundários.
+          </li>
+          <li>
+            <strong>Diversificar linguagens.</strong> Desenho, música, movimento, faz de conta e exploração
+            de objetos ampliam o que a BNCC chama de produção cultural e de expressão.
+          </li>
+          <li>
+            <strong>Observar e documentar.</strong> Em vez de medir só o “produto final”, registre como a
+            criança interage, formula hipóteses e resolve problemas — sinais reais de aprendizagem.
+          </li>
+        </ul>
+
+        <h2>Por que isso importa para quem prepara materiais pedagógicos</h2>
+        <p>
+          Materiais bem pensados não substituem o brincar: eles o potencializam. Quando um recurso
+          convida à exploração, ao diálogo e à criação — e não apenas à execução mecânica de tarefas —
+          ele se aproxima do que a BNCC e a UNICEF descrevem como aprendizagem significativa na
+          primeira infância.
+        </p>
+        <p>
+          Na Papelê Educa, partimos desse entendimento: atividades e recursos pedem intencionalidade
+          pedagógica, respeito ao tempo da criança e espaço para descoberta. Brincar com propósito
+          não é contraditório; é exatamente o que as referências curriculares e as evidências
+          internacionais recomendam.
+        </p>
+
+        <aside class="sources" aria-labelledby="fontes-titulo">
+          <h2 id="fontes-titulo">Fontes consultadas</h2>
+          <ol>
+            <li>
+              Brasil. Ministério da Educação. <em>Base Nacional Comum Curricular</em>. Brasília: MEC, 2017/2018.
+              Disponível em:
+              <a href="http://basenacionalcomum.mec.gov.br/" target="_blank" rel="noopener noreferrer">basenacionalcomum.mec.gov.br</a>.
+            </li>
+            <li>
+              UNICEF Brasil. <em>Desenvolvimento Infantil</em>. Disponível em:
+              <a href="https://www.unicef.org/brazil/desenvolvimento-infantil" target="_blank" rel="noopener noreferrer">unicef.org/brazil/desenvolvimento-infantil</a>.
+            </li>
+            <li>
+              UNICEF; Lego Foundation. <em>Learning through Play</em>. 2018. Disponível em:
+              <a href="https://www.unicef.org/sites/default/files/2018-12/UNICEF-Lego-Foundation-Learning-through-Play.pdf" target="_blank" rel="noopener noreferrer">unicef.org (PDF)</a>.
+            </li>
+            <li>
+              Movimento pela Base. Materiais de apoio sobre campos de experiências e direitos de aprendizagem
+              na Educação Infantil. Disponível em:
+              <a href="https://movimentopelabase.org.br/" target="_blank" rel="noopener noreferrer">movimentopelabase.org.br</a>.
+            </li>
+          </ol>
+        </aside>
+      </div>
+    </article>
+
+    <footer class="footer" id="sobre">
+      <div class="footer-top">
+        <div class="socials" aria-label="Redes sociais">
+          <img src="../images/icones-redes.png" alt="Ícones de redes sociais" />
+        </div>
+      </div>
+      <p style="margin-top:14px;">© 2026 Papelê Educa. Todos os direitos reservados.</p>
+    </footer>
+  </main>
+
+  <script type="module" src="../js/social-links.js"></script>
+  <script type="module" src="../js/blog-nav.js"></script>
+  <a
+    class="whatsapp-float"
+    href="https://wa.me/5513997291237?text=Ol%C3%A1%21%20Vim%20pelo%20site%20Papel%C3%AA%20Educa%20e%20gostaria%20de%20mais%20informa%C3%A7%C3%B5es."
+    target="_blank"
+    rel="noopener noreferrer"
+    aria-label="Chamar no WhatsApp"
+    title="Falar no WhatsApp"
+  >
+    <img src="../images/whatsapp-svgrepo-com.svg" alt="" aria-hidden="true" />
+  </a>
+</body>
+</html>
