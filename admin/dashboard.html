@@ -8,7 +8,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/admin.css?v=metrics-align-1" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="css/admin.css?v=blog-ui-1" />
 </head>
 <body>
   <div class="admin-app">
@@ -574,24 +575,44 @@
           <div class="blog-tab-panel is-active" data-blog-panel="posts">
             <div class="overview-kpi-grid blog-kpi-grid">
               <article class="overview-kpi kpi-teal">
-                <div class="overview-kpi-top"><span class="overview-kpi-label">Total</span></div>
+                <div class="overview-kpi-top">
+                  <span class="overview-kpi-label">Total</span>
+                  <span class="overview-kpi-icon" aria-hidden="true"><i class="fa-solid fa-layer-group"></i></span>
+                </div>
                 <strong class="overview-kpi-value" id="blog-count-total">0</strong>
+                <div class="overview-kpi-wave" aria-hidden="true"></div>
               </article>
               <article class="overview-kpi kpi-teal">
-                <div class="overview-kpi-top"><span class="overview-kpi-label">Publicados</span></div>
+                <div class="overview-kpi-top">
+                  <span class="overview-kpi-label">Publicados</span>
+                  <span class="overview-kpi-icon" aria-hidden="true"><i class="fa-solid fa-circle-check"></i></span>
+                </div>
                 <strong class="overview-kpi-value" id="blog-count-published">0</strong>
+                <div class="overview-kpi-wave" aria-hidden="true"></div>
               </article>
-              <article class="overview-kpi kpi-teal">
-                <div class="overview-kpi-top"><span class="overview-kpi-label">Rascunhos</span></div>
+              <article class="overview-kpi kpi-gold">
+                <div class="overview-kpi-top">
+                  <span class="overview-kpi-label">Rascunhos</span>
+                  <span class="overview-kpi-icon" aria-hidden="true"><i class="fa-solid fa-pen-to-square"></i></span>
+                </div>
                 <strong class="overview-kpi-value" id="blog-count-draft">0</strong>
+                <div class="overview-kpi-wave" aria-hidden="true"></div>
               </article>
-              <article class="overview-kpi kpi-teal">
-                <div class="overview-kpi-top"><span class="overview-kpi-label">Agendados</span></div>
+              <article class="overview-kpi kpi-purple">
+                <div class="overview-kpi-top">
+                  <span class="overview-kpi-label">Agendados</span>
+                  <span class="overview-kpi-icon" aria-hidden="true"><i class="fa-solid fa-calendar-days"></i></span>
+                </div>
                 <strong class="overview-kpi-value" id="blog-count-scheduled">0</strong>
+                <div class="overview-kpi-wave" aria-hidden="true"></div>
               </article>
               <article class="overview-kpi kpi-orange">
-                <div class="overview-kpi-top"><span class="overview-kpi-label">Visitas /blog</span></div>
+                <div class="overview-kpi-top">
+                  <span class="overview-kpi-label">Visitas /blog</span>
+                  <span class="overview-kpi-icon" aria-hidden="true"><i class="fa-solid fa-eye"></i></span>
+                </div>
                 <strong class="overview-kpi-value" id="blog-count-listing-views">0</strong>
+                <div class="overview-kpi-wave" aria-hidden="true"></div>
               </article>
             </div>
 

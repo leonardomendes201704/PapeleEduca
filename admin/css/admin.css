@@ -392,6 +392,11 @@ button { font: inherit; }
   fill: currentColor;
 }
 
+.overview-kpi-icon i {
+  font-size: 0.92rem;
+  line-height: 1;
+}
+
 .overview-kpi.kpi-teal .overview-kpi-icon { background: rgba(47, 183, 176, 0.14); color: #1a5f5c; }
 .overview-kpi.kpi-orange .overview-kpi-icon { background: rgba(244, 165, 59, 0.16); color: #9a6b17; }
 .overview-kpi.kpi-purple .overview-kpi-icon { background: rgba(124, 106, 230, 0.14); color: #5a4bb8; }
@@ -1158,8 +1163,9 @@ textarea { resize: vertical; }
 .table-actions {
   display: flex;
   gap: 6px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   justify-content: flex-end;
+  align-items: center;
 }
 
 .chip-sm {
@@ -1178,8 +1184,19 @@ textarea { resize: vertical; }
   border-color: rgba(198, 74, 74, 0.25);
 }
 
+.btn-danger:not(.btn-ghost) {
+  background: #c64a4a;
+  color: #fff;
+  border-color: #c64a4a;
+}
+
 .btn-danger:hover {
   background: rgba(198, 74, 74, 0.08);
+}
+
+.btn-danger:not(.btn-ghost):hover {
+  background: #b03f3f;
+  color: #fff;
 }
 
 /* ── Modal ── */
@@ -1318,6 +1335,14 @@ textarea { resize: vertical; }
     flex-direction: column;
     align-items: stretch;
   }
+
+  #blog-posts-list .table-actions,
+  .blog-posts-table .table-actions {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    white-space: nowrap;
+  }
 }
 
 @media (max-width: 640px) {
@@ -1371,7 +1396,40 @@ textarea { resize: vertical; }
   gap: 12px;
   margin: 12px 0 16px;
 }
-.blog-kpi-grid { margin-bottom: 18px; }
+.blog-kpi-grid {
+  width: 100%;
+  margin-bottom: 18px;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+#blog-posts-list .blog-posts-table {
+  width: 100%;
+  table-layout: auto;
+}
+
+#blog-posts-list .col-center,
+.blog-posts-table .col-center {
+  text-align: center;
+  vertical-align: middle;
+}
+
+#blog-posts-list .col-actions,
+.blog-posts-table .col-actions {
+  width: 1%;
+  white-space: nowrap;
+}
+
+#blog-posts-list .table-actions,
+.blog-posts-table .table-actions {
+  display: inline-flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  white-space: nowrap;
+}
+
 .status-chip {
   display: inline-flex;
   padding: 4px 10px;
@@ -1610,7 +1668,7 @@ textarea { resize: vertical; }
   padding: 2px 6px;
   border-radius: 6px;
 }
-.table-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.table-actions { display: flex; gap: 8px; flex-wrap: nowrap; }
 
 /* Plain tables inside ranking-table (not corp-table metrics grids) */
 .ranking-table > table:not(.corp-table) {

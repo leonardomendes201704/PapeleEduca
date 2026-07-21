@@ -212,17 +212,17 @@ function renderPosts() {
   }
 
   list.innerHTML = `
-    <table>
+    <table class="blog-posts-table">
       <thead>
         <tr>
           <th>Título</th>
-          <th>Status</th>
-          <th>Categoria</th>
-          <th>Views</th>
-          <th>Leituras</th>
-          <th>Taxa</th>
-          <th>Publicação</th>
-          <th></th>
+          <th class="col-center">Status</th>
+          <th class="col-center">Categoria</th>
+          <th class="col-center">Views</th>
+          <th class="col-center">Leituras</th>
+          <th class="col-center">Taxa</th>
+          <th class="col-center">Publicação</th>
+          <th class="col-actions"></th>
         </tr>
       </thead>
       <tbody>
@@ -234,15 +234,15 @@ function renderPosts() {
               <strong>${escapeHtml(p.title)}</strong>
               <div class="muted">/${escapeHtml(p.slug)}</div>
             </td>
-            <td><span class="status-chip status-${escapeHtml(p.status)}">${escapeHtml(STATUS_LABELS[p.status] || p.status)}</span></td>
-            <td>${escapeHtml(p.blog_categories?.name || '—')}</td>
-            <td>${Number(metrics.views || 0)}</td>
-            <td>${Number(metrics.read_completes || 0)}</td>
-            <td>${formatRate(metrics.read_rate)}</td>
-            <td>${p.published_at ? escapeHtml(new Date(p.published_at).toLocaleString('pt-BR')) : '—'}</td>
+            <td class="col-center"><span class="status-chip status-${escapeHtml(p.status)}">${escapeHtml(STATUS_LABELS[p.status] || p.status)}</span></td>
+            <td class="col-center">${escapeHtml(p.blog_categories?.name || '—')}</td>
+            <td class="col-center">${Number(metrics.views || 0)}</td>
+            <td class="col-center">${Number(metrics.read_completes || 0)}</td>
+            <td class="col-center">${formatRate(metrics.read_rate)}</td>
+            <td class="col-center">${p.published_at ? escapeHtml(new Date(p.published_at).toLocaleString('pt-BR')) : '—'}</td>
             <td class="table-actions">
-              <button type="button" class="btn-ghost" data-blog-edit="${escapeHtml(p.id)}">Editar</button>
-              <button type="button" class="btn-ghost" data-blog-delete="${escapeHtml(p.id)}">Excluir</button>
+              <button type="button" class="btn-ghost btn-sm" data-blog-edit="${escapeHtml(p.id)}">Editar</button>
+              <button type="button" class="btn-sm btn-danger" data-blog-delete="${escapeHtml(p.id)}">Excluir</button>
             </td>
           </tr>
         `;
