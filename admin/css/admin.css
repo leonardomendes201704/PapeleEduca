@@ -1393,28 +1393,45 @@ textarea { resize: vertical; }
 }
 
 .blog-post-modal {
-  width: min(1120px, calc(100vw - 24px));
+  width: 80vw;
+  height: 90vh;
   max-width: none;
-  max-height: calc(100vh - 24px);
+  max-height: 90vh;
 }
 .blog-post-modal .blog-post-form,
 .blog-post-modal .admin-modal-panel {
   width: 100%;
-  max-height: calc(100vh - 24px);
+  height: 100%;
+  max-height: 90vh;
 }
 .blog-post-modal-body {
   padding: 18px 20px 22px;
-  zoom: 0.75;
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
 }
 .blog-post-modal .admin-modal-header,
 .blog-post-modal .admin-modal-footer {
-  zoom: 0.75;
+  flex-shrink: 0;
 }
 .blog-editor-layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 300px;
   gap: 18px;
   align-items: start;
+}
+.blog-post-modal .blog-editor-layout {
+  height: 100%;
+  min-height: 0;
+  align-items: stretch;
+}
+.blog-post-modal .blog-editor-sidebar {
+  overflow: auto;
+  max-height: 100%;
+}
+.blog-post-modal .blog-editor-surface,
+.blog-post-modal .blog-tiptap-content {
+  min-height: min(52vh, 560px);
 }
 .blog-editor-main,
 .blog-editor-sidebar {
