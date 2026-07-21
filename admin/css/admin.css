@@ -1463,16 +1463,6 @@ textarea { resize: vertical; }
   overflow-x: hidden;
 }
 
-.admin-content:has(.admin-view[data-view="blog"].is-active),
-.admin-content:has(.admin-view[data-view="blog"]:not([hidden])) {
-  overflow-x: hidden;
-}
-
-/* Fallback when :has is unavailable / active class differs */
-.admin-main {
-  overflow-x: hidden;
-}
-
 .overview-kpi-grid.blog-kpi-grid {
   width: 100%;
   max-width: 100%;
