@@ -1390,6 +1390,11 @@ textarea { resize: vertical; }
 }
 .blog-post-modal-body {
   padding: 18px 20px 22px;
+  zoom: 0.75;
+}
+.blog-post-modal .admin-modal-header,
+.blog-post-modal .admin-modal-footer {
+  zoom: 0.75;
 }
 .blog-editor-layout {
   display: grid;
