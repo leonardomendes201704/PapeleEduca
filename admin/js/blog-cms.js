@@ -172,9 +172,22 @@ async function loadPosts() {
   ]);
   if (postsRes.error) throw postsRes.error;
   posts = postsRes.data || [];
-  postMetricsById = Object.fromEntries(
-    (metricsRes.data || []).map((row) => [row.id, row]),
-  );
+
+  let metricsRows = metricsRes.data || [];
+  if (metricsRes.error) {
+    // Fallback when facebook_views is not in the view yet (SQL migration pending)
+    const fallback = await supabase
+      .from('blog_post_metrics_report')
+      .select('id,views,read_completes,read_rate');
+    if (fallback.error) {
+      console.warn('Falha ao carregar métricas do blog:', metricsRes.error.message || fallback.error.message);
+      metricsRows = [];
+    } else {
+      metricsRows = (fallback.data || []).map((row) => ({ ...row, facebook_views: 0 }));
+    }
+  }
+
+  postMetricsById = Object.fromEntries(metricsRows.map((row) => [row.id, row]));
   renderPosts();
   updateKpis();
 }

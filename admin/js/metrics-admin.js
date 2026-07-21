@@ -239,12 +239,20 @@ async function loadBlogPostMetrics() {
   const listingEl = document.getElementById('blog-listing-views-value');
   if (listingEl) listingEl.textContent = listingViews;
 
+  let allRows = metricsRes.data || [];
   if (metricsRes.error) {
-    blogMetricsListEl.innerHTML = `<p class="metric-empty">Erro ao carregar métricas: ${escapeHtml(metricsRes.error.message)}</p>`;
-    return { listingViews, views: 0, reads: 0, facebookViews: 0 };
+    const fallback = await supabase
+      .from('blog_post_metrics_report')
+      .select('id,title,slug,status,cover_url,category,views,read_completes,read_rate,last_event_at')
+      .order('views', { ascending: false })
+      .order('read_completes', { ascending: false });
+    if (fallback.error) {
+      blogMetricsListEl.innerHTML = `<p class="metric-empty">Erro ao carregar métricas: ${escapeHtml(metricsRes.error.message)}</p>`;
+      return { listingViews, views: 0, reads: 0, facebookViews: 0 };
+    }
+    allRows = (fallback.data || []).map((row) => ({ ...row, facebook_views: 0 }));
   }
 
-  const allRows = metricsRes.data || [];
   const totals = allRows.reduce((acc, item) => {
     acc.views += Number(item.views || 0);
     acc.reads += Number(item.read_completes || 0);
