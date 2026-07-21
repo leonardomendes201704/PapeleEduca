@@ -60,6 +60,12 @@ function resolveTrafficSource(metadata = {}) {
   const utmSource = String(campaign.utm_source || '').trim().toLowerCase();
   if (utmSource) return utmSource;
 
+  try {
+    if (new URLSearchParams(window.location.search).has('fbclid')) return 'facebook';
+  } catch {
+    // ignore
+  }
+
   const referrer = metadata.referrer || document.referrer || '';
   if (isFacebookReferrer(referrer)) return 'facebook';
 
@@ -68,6 +74,7 @@ function resolveTrafficSource(metadata = {}) {
 
 function getRequestPayload(productId, eventType, metadata = {}) {
   const referrer = metadata.referrer || document.referrer || null;
+  const campaign = getCampaignParams();
   return {
     product_id: productId,
     event_type: eventType,
@@ -77,13 +84,13 @@ function getRequestPayload(productId, eventType, metadata = {}) {
     pathname: metadata.pathname || window.location.pathname,
     referrer,
     metadata: {
-      ...getCampaignParams(),
       viewport: {
         width: window.innerWidth,
         height: window.innerHeight,
       },
       language: navigator.language || null,
       ...metadata,
+      ...campaign,
     },
   };
 }
@@ -118,7 +125,8 @@ export function trackProductEvent(productId, eventType, metadata = {}) {
 
 export function trackProductViewOnce(productId, metadata = {}) {
   if (!productId) return Promise.resolve(false);
-  const storageKey = `${VIEW_PREFIX}${productId}`;
+  const source = resolveTrafficSource(metadata);
+  const storageKey = `${VIEW_PREFIX}${productId}_${source}`;
   if (safeStorage(sessionStorage, storageKey)) {
     return Promise.resolve(false);
   }

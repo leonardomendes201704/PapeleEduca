@@ -56,6 +56,14 @@ function isFacebookReferrer(referrer) {
   );
 }
 
+function hasFacebookClickId() {
+  try {
+    return new URLSearchParams(window.location.search).has('fbclid');
+  } catch {
+    return false;
+  }
+}
+
 function resolveTrafficSource(metadata = {}) {
   const explicit = String(metadata.source || '').trim().toLowerCase();
   if (explicit && explicit !== 'site') return explicit;
@@ -63,6 +71,8 @@ function resolveTrafficSource(metadata = {}) {
   const campaign = getCampaignParams();
   const utmSource = String(campaign.utm_source || '').trim().toLowerCase();
   if (utmSource) return utmSource;
+
+  if (hasFacebookClickId()) return 'facebook';
 
   const referrer = metadata.referrer || document.referrer || '';
   if (isFacebookReferrer(referrer)) return 'facebook';
@@ -72,13 +82,15 @@ function resolveTrafficSource(metadata = {}) {
 
 function commonMeta(metadata = {}) {
   return {
-    ...getCampaignParams(),
     viewport: {
       width: window.innerWidth,
       height: window.innerHeight,
     },
     language: navigator.language || null,
     ...metadata,
+    // URL campaign params win over any metadata defaults
+    ...getCampaignParams(),
+    ...(hasFacebookClickId() ? { fbclid: true } : {}),
   };
 }
 
@@ -116,10 +128,11 @@ async function sendBlogEvent(blogPostId, eventType, metadata = {}) {
 }
 
 export function trackBlogListingViewOnce(metadata = {}) {
-  if (safeStorage(sessionStorage, LISTING_VIEW_KEY)) return Promise.resolve(false);
-  safeStorage(sessionStorage, LISTING_VIEW_KEY, '1');
   const referrer = metadata.referrer || document.referrer || null;
   const source = resolveTrafficSource({ ...metadata, referrer });
+  const listingKey = `${LISTING_VIEW_KEY}_${source}`;
+  if (safeStorage(sessionStorage, listingKey)) return Promise.resolve(false);
+  safeStorage(sessionStorage, listingKey, '1');
   return postEvent('blog_listing_events', {
     event_type: 'view',
     visitor_id: getVisitorId(),
@@ -133,7 +146,10 @@ export function trackBlogListingViewOnce(metadata = {}) {
 
 function trackBlogViewOnce(blogPostId) {
   if (!blogPostId) return Promise.resolve(false);
-  const key = `${VIEW_PREFIX}${blogPostId}`;
+  const source = resolveTrafficSource();
+  // Deduplicate per source so a prior site visit in the same tab
+  // does not hide a later Facebook / UTM landing.
+  const key = `${VIEW_PREFIX}${blogPostId}_${source}`;
   if (safeStorage(sessionStorage, key)) return Promise.resolve(false);
   safeStorage(sessionStorage, key, '1');
   return sendBlogEvent(blogPostId, 'view').catch(() => false);
@@ -141,7 +157,8 @@ function trackBlogViewOnce(blogPostId) {
 
 function trackBlogReadOnce(blogPostId, metadata = {}) {
   if (!blogPostId) return Promise.resolve(false);
-  const key = `${READ_PREFIX}${blogPostId}`;
+  const source = resolveTrafficSource(metadata);
+  const key = `${READ_PREFIX}${blogPostId}_${source}`;
   if (safeStorage(sessionStorage, key)) return Promise.resolve(false);
   safeStorage(sessionStorage, key, '1');
   return sendBlogEvent(blogPostId, 'read_complete', metadata).catch(() => false);
