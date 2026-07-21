@@ -281,6 +281,9 @@ select
   p.images,
   coalesce(count(*) filter (where e.event_type = 'view'), 0)::int as views,
   coalesce(count(distinct e.session_id) filter (where e.event_type = 'view'), 0)::int as unique_views,
+  coalesce(count(*) filter (where e.event_type = 'open'), 0)::int as opens,
+  coalesce(count(*) filter (where e.event_type = 'buy_click'), 0)::int as buy_clicks,
+  max(e.created_at) as last_event_at,
   coalesce(count(*) filter (
     where e.event_type = 'view'
       and (
@@ -288,16 +291,13 @@ select
         or lower(coalesce(e.metadata->>'utm_source', '')) = 'facebook'
       )
   ), 0)::int as facebook_views,
-  coalesce(count(*) filter (where e.event_type = 'open'), 0)::int as opens,
-  coalesce(count(*) filter (where e.event_type = 'buy_click'), 0)::int as buy_clicks,
   coalesce(count(*) filter (
     where e.event_type = 'buy_click'
       and (
         e.source = 'facebook'
         or lower(coalesce(e.metadata->>'utm_source', '')) = 'facebook'
       )
-  ), 0)::int as facebook_buy_clicks,
-  max(e.created_at) as last_event_at
+  ), 0)::int as facebook_buy_clicks
 from public.products p
 left join public.product_events e
   on e.product_id = p.id
