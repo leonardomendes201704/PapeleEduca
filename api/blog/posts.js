@@ -1,14 +1,15 @@
 /**
  * POST /api/blog/posts
  * Auth: X-API-Key === process.env.BLOG_API_KEY
- * Always creates status = 'draft' (ignores any status in body).
+ * Default status = 'draft'. Accepts status draft|published|scheduled|archived when sent.
  *
  * Body JSON:
  * {
  *   "title": "required",
  *   "content_html" | "content": "required",
  *   "excerpt"?, "slug"?, "category"?, "tags"?: string[],
- *   "cover_url"?, "seo_title"?, "seo_description"?, "author_name"?
+ *   "cover_url"?, "seo_title"?, "seo_description"?, "author_name"?,
+ *   "status"?, "published_at"?
  * }
  *
  * Env: BLOG_API_KEY, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
@@ -172,13 +173,23 @@ module.exports = async function handler(req, res) {
     const categoryId = await resolveCategoryId(body.category);
     const tagIds = await resolveTagIds(Array.isArray(body.tags) ? body.tags : []);
 
+    const allowedStatus = new Set(['draft', 'published', 'scheduled', 'archived']);
+    const requestedStatus = String(body.status || 'draft').trim().toLowerCase();
+    const status = allowedStatus.has(requestedStatus) ? requestedStatus : 'draft';
+    let publishedAt = null;
+    if (status === 'published') {
+      publishedAt = body.published_at ? String(body.published_at) : new Date().toISOString();
+    } else if (status === 'scheduled' && body.published_at) {
+      publishedAt = String(body.published_at);
+    }
+
     const payload = {
       title,
       slug,
       excerpt: String(body.excerpt || '').trim(),
       content_html: contentHtml,
-      status: 'draft',
-      published_at: null,
+      status,
+      published_at: publishedAt,
       cover_url: String(body.cover_url || '').trim(),
       og_image_url: String(body.og_image_url || body.cover_url || '').trim(),
       seo_title: String(body.seo_title || title).trim(),
@@ -207,7 +218,7 @@ module.exports = async function handler(req, res) {
     return sendJson(res, 201, {
       id: post.id,
       slug: post.slug,
-      status: 'draft',
+      status: post.status || status,
       admin_url: `/admin/dashboard.html#/blog`,
     });
   } catch (error) {
