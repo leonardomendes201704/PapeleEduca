@@ -1,6 +1,6 @@
 import { supabase } from './supabase-client.js';
 
-const ASSET_VERSION = 'metrics-75';
+const ASSET_VERSION = 'metrics-align-1';
 
 function loadModule(path) {
   return import(`${path}?v=${ASSET_VERSION}`);
