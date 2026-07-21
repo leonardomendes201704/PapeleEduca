@@ -1506,14 +1506,72 @@ textarea { resize: vertical; }
   cursor: not-allowed;
 }
 
-#blog-facebook-modal .admin-modal-card {
-  max-width: 520px;
+#blog-facebook-modal {
+  width: min(520px, calc(100vw - 32px));
+}
+
+.blog-facebook-form {
+  width: 100%;
+}
+
+.blog-facebook-form .admin-modal-body {
+  display: grid;
+  gap: 14px;
+}
+
+.blog-facebook-form label {
+  display: grid;
+  gap: 6px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.blog-facebook-summary {
+  display: grid;
+  gap: 6px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #fff;
+}
+
+.blog-facebook-summary-label {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.blog-facebook-summary-title {
+  margin: 0 0 8px;
+  font-size: 1rem;
+  font-weight: 800;
+  line-height: 1.35;
+  color: var(--text);
+}
+
+.blog-facebook-summary-link {
+  display: block;
+  word-break: break-all;
+  font-size: 0.92rem;
+  line-height: 1.4;
+  color: #1877f2;
 }
 
 #blog-facebook-message {
   width: 100%;
-  min-height: 120px;
+  min-height: 140px;
   resize: vertical;
+  box-sizing: border-box;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--text);
+  font: inherit;
+  line-height: 1.45;
 }
 
 /* Scale Blog CMS content only — shell (sidebar/header) stays full size */
@@ -1550,7 +1608,8 @@ textarea { resize: vertical; }
 .admin-view[data-view="blog"] .admin-modal,
 #blog-post-modal,
 #blog-cat-modal,
-#blog-tag-modal {
+#blog-tag-modal,
+#blog-facebook-modal {
   zoom: 1;
 }
 

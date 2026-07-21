@@ -915,28 +915,32 @@
 
           <!-- Facebook post confirmation modal -->
           <dialog id="blog-facebook-modal" class="admin-modal">
-            <form id="blog-facebook-form" class="admin-modal-card" method="dialog">
+            <form id="blog-facebook-form" class="admin-modal-panel blog-facebook-form" method="dialog">
               <div class="admin-modal-header">
-                <h2>Postar no Facebook</h2>
+                <div>
+                  <h2>Postar no Facebook</h2>
+                  <p class="muted">Revise a mensagem e confirme para publicar na Página.</p>
+                </div>
                 <button type="button" class="admin-modal-close" id="blog-facebook-modal-close" aria-label="Fechar">×</button>
               </div>
               <div class="admin-modal-body">
                 <input type="hidden" id="blog-facebook-post-id" />
-                <p class="muted" id="blog-facebook-post-title"></p>
-                <p class="muted">
-                  Link que será compartilhado:
-                  <a id="blog-facebook-post-link" href="#" target="_blank" rel="noopener noreferrer"></a>
-                </p>
+                <div class="blog-facebook-summary">
+                  <p class="blog-facebook-summary-label">Post</p>
+                  <p class="blog-facebook-summary-title" id="blog-facebook-post-title"></p>
+                  <p class="blog-facebook-summary-label">Link</p>
+                  <a class="blog-facebook-summary-link" id="blog-facebook-post-link" href="#" target="_blank" rel="noopener noreferrer"></a>
+                </div>
                 <p id="blog-facebook-already" class="form-status error" hidden>
                   Este post já foi publicado na página. Confirmar cria um novo post no Facebook.
                 </p>
                 <label>
                   Mensagem
-                  <textarea id="blog-facebook-message" rows="5" required></textarea>
+                  <textarea id="blog-facebook-message" rows="6" required></textarea>
                 </label>
                 <p id="blog-facebook-form-status" class="form-status"></p>
               </div>
-              <div class="admin-modal-footer form-actions">
+              <div class="admin-modal-footer">
                 <button type="button" class="btn-ghost" id="blog-facebook-cancel-btn">Cancelar</button>
                 <button type="submit" class="btn-primary" id="blog-facebook-confirm-btn">Confirmar e postar</button>
               </div>
