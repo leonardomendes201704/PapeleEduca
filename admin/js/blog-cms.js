@@ -34,6 +34,13 @@ function blogPublicUrl(slug) {
   return `${origin.replace(/\/$/, '')}/blog/${encodeURIComponent(slug)}`;
 }
 
+/** Opens the public post without counting views/reads (see blog-metrics.js ?preview=1). */
+function blogPreviewUrl(slug) {
+  const url = new URL(blogPublicUrl(slug));
+  url.searchParams.set('preview', '1');
+  return url.toString();
+}
+
 function blogFacebookShareUrl(slug) {
   const url = new URL(blogPublicUrl(slug));
   url.searchParams.set('utm_source', 'facebook');
@@ -314,6 +321,12 @@ function renderPosts() {
             <td class="col-center">${formatRate(metrics.read_rate)}</td>
             <td class="col-center">${p.published_at ? escapeHtml(new Date(p.published_at).toLocaleString('pt-BR')) : '—'}</td>
             <td class="table-actions">
+              <button
+                type="button"
+                class="btn-ghost btn-sm"
+                data-blog-view="${escapeHtml(p.id)}"
+                ${p.status !== 'published' ? 'disabled title="Publique o post antes de visualizar a página pública"' : 'title="Abre o post sem contabilizar visualização/leitura"'}
+              >Visualizar</button>
               <button type="button" class="btn-ghost btn-sm" data-blog-edit="${escapeHtml(p.id)}">Editar</button>
               <button
                 type="button"
@@ -336,6 +349,13 @@ function renderPosts() {
     </table>
   `;
 
+  list.querySelectorAll('[data-blog-view]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const post = posts.find((p) => p.id === btn.dataset.blogView);
+      if (!post?.slug || post.status !== 'published') return;
+      window.open(blogPreviewUrl(post.slug), '_blank', 'noopener,noreferrer');
+    });
+  });
   list.querySelectorAll('[data-blog-edit]').forEach((btn) => {
     btn.addEventListener('click', () => {
       const post = posts.find((p) => p.id === btn.dataset.blogEdit);

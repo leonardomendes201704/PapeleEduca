@@ -9,6 +9,16 @@ const MIN_READ_MS = 20_000;
 const SCROLL_THRESHOLD = 0.9;
 const CAMPAIGN_KEYS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content'];
 
+/** Admin preview (?preview=1) must not pollute views / read_completes. */
+function isPreviewMode() {
+  try {
+    const value = new URLSearchParams(window.location.search).get('preview');
+    return value === '1' || value === 'true';
+  } catch {
+    return false;
+  }
+}
+
 function safeStorage(storage, key, value) {
   try {
     if (value === undefined) return storage.getItem(key);
@@ -129,6 +139,7 @@ async function sendBlogEvent(blogPostId, eventType, metadata = {}) {
 }
 
 export function trackBlogListingViewOnce(metadata = {}) {
+  if (isPreviewMode()) return Promise.resolve(false);
   const referrer = metadata.referrer || document.referrer || null;
   const source = resolveTrafficSource({ ...metadata, referrer });
   const listingKey = `${LISTING_VIEW_KEY}_${source}`;
@@ -146,7 +157,7 @@ export function trackBlogListingViewOnce(metadata = {}) {
 }
 
 function trackBlogViewOnce(blogPostId) {
-  if (!blogPostId) return Promise.resolve(false);
+  if (!blogPostId || isPreviewMode()) return Promise.resolve(false);
   const source = resolveTrafficSource();
   // Deduplicate per source so a prior site visit in the same tab
   // does not hide a later Facebook / UTM landing.
@@ -161,7 +172,7 @@ function trackBlogViewOnce(blogPostId) {
 }
 
 function trackBlogReadOnce(blogPostId, metadata = {}) {
-  if (!blogPostId) return Promise.resolve(false);
+  if (!blogPostId || isPreviewMode()) return Promise.resolve(false);
   const source = resolveTrafficSource(metadata);
   const key = `${READ_PREFIX}${blogPostId}_${source}`;
   if (safeStorage(sessionStorage, key)) return Promise.resolve(false);
@@ -215,6 +226,8 @@ function initBlogReadTracking(blogPostId) {
 }
 
 function boot() {
+  if (isPreviewMode()) return;
+
   const article = document.querySelector('[data-blog-post-id]');
   const blogPostId = article?.getAttribute('data-blog-post-id');
   if (!blogPostId) return;
