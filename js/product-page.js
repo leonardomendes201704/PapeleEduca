@@ -71,53 +71,6 @@ function sanitizeExternalUrl(value) {
   }
 }
 
-function buildHotmartCheckoutUrl(buyUrl) {
-  if (!buyUrl) return '';
-
-  try {
-    const parsed = new URL(buyUrl);
-    const host = parsed.hostname.toLowerCase();
-    const isHotmart =
-      host === 'pay.hotmart.com'
-      || host === 'checkout.hotmart.com'
-      || host.endsWith('.hotmart.com');
-
-    if (!isHotmart) return '';
-    return parsed.toString();
-  } catch {
-    return '';
-  }
-}
-
-function openHotmartCheckoutPopup(checkoutUrl) {
-  const width = Math.min(560, window.screen.availWidth - 40);
-  const height = Math.min(820, window.screen.availHeight - 40);
-  const left = Math.max(0, Math.round((window.screen.availWidth - width) / 2));
-  const top = Math.max(0, Math.round((window.screen.availHeight - height) / 2));
-  const features = [
-    `width=${width}`,
-    `height=${height}`,
-    `left=${left}`,
-    `top=${top}`,
-    'scrollbars=yes',
-    'resizable=yes',
-    'toolbar=no',
-    'location=yes',
-    'menubar=no',
-    'status=no',
-  ].join(',');
-
-  const popup = window.open(checkoutUrl, 'hotmart_checkout', features);
-  if (popup) {
-    popup.focus();
-    return true;
-  }
-
-  // Bloqueador de pop-up: cai para nova aba.
-  window.open(checkoutUrl, '_blank', 'noopener,noreferrer');
-  return false;
-}
-
 function setActiveImage(index) {
   if (!galleryImages.length) return;
   activeImageIndex = (index + galleryImages.length) % galleryImages.length;
@@ -210,7 +163,6 @@ function renderProduct(product) {
   const promoPrice = product.promo_price ? currency.format(Number(product.promo_price)) : '';
   const price = currency.format(Number(currentPrice || 0));
   const buyUrl = sanitizeExternalUrl(product.hotmart_url);
-  const popupUrl = buildHotmartCheckoutUrl(buyUrl);
   const thumbs = galleryImages.length > 1
     ? galleryImages.map((image, index) => `
       <button type="button" class="thumb ${index === 0 ? 'active' : ''}" data-index="${index}" aria-label="Ver imagem ${index + 1}">
@@ -262,9 +214,6 @@ function renderProduct(product) {
           ${buyUrl
             ? `<a class="btn buy-now" href="${buyUrl}" data-product-id="${safeText(product.id)}" target="_blank" rel="noopener noreferrer">Comprar agora</a>`
             : `<span class="btn buy-now" style="opacity:.7; pointer-events:none;">Comprar agora</span>`}
-          ${popupUrl
-            ? `<a class="btn buy-now-widget" href="${popupUrl}" data-product-id="${safeText(product.id)}">Comprar em popup</a>`
-            : ''}
           <a class="btn secondary" href="./index.html#categorias">Voltar</a>
         </div>
       </article>
@@ -297,18 +246,6 @@ function renderProduct(product) {
         page_context: 'product_page',
         pathname: window.location.pathname,
       });
-    });
-  }
-
-  const buyPopupButton = root.querySelector('.buy-now-widget[data-product-id]');
-  if (buyPopupButton && popupUrl) {
-    buyPopupButton.addEventListener('click', (event) => {
-      event.preventDefault();
-      void trackProductBuyClick(product.id, {
-        page_context: 'product_page_popup',
-        pathname: window.location.pathname,
-      });
-      openHotmartCheckoutPopup(popupUrl);
     });
   }
 }
