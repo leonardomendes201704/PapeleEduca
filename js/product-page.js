@@ -71,6 +71,133 @@ function sanitizeExternalUrl(value) {
   }
 }
 
+function buildHotmartWidgetUrl(buyUrl) {
+  if (!buyUrl) return '';
+
+  try {
+    const parsed = new URL(buyUrl);
+    const host = parsed.hostname.toLowerCase();
+    const isHotmart =
+      host === 'pay.hotmart.com'
+      || host === 'checkout.hotmart.com'
+      || host.endsWith('.hotmart.com');
+
+    if (!isHotmart) return '';
+
+    parsed.searchParams.set('checkoutMode', '2');
+    return parsed.toString();
+  } catch {
+    return '';
+  }
+}
+
+let hotmartWidgetLoading = null;
+
+function waitFor(predicate, { timeout = 12000, interval = 100 } = {}) {
+  return new Promise((resolve, reject) => {
+    const startedAt = Date.now();
+
+    const tick = () => {
+      try {
+        if (predicate()) {
+          resolve();
+          return;
+        }
+      } catch {
+        // Keep waiting until timeout.
+      }
+
+      if (Date.now() - startedAt >= timeout) {
+        reject(new Error('Timeout ao preparar widget Hotmart'));
+        return;
+      }
+
+      window.setTimeout(tick, interval);
+    };
+
+    tick();
+  });
+}
+
+function isHotmartMobileCheckout() {
+  return window.screen.width <= 600
+    || /Android|webOS|iPhone|iPad|iPod|BlackBerry|Windows Phone/i.test(navigator.userAgent || '');
+}
+
+function ensureHotmartWidget() {
+  if (window.jQuery?.fn?.fancybox) return Promise.resolve();
+  if (hotmartWidgetLoading) return hotmartWidgetLoading;
+
+  hotmartWidgetLoading = new Promise((resolve, reject) => {
+    const finish = () => {
+      waitFor(() => Boolean(window.jQuery?.fn?.fancybox))
+        .then(() => {
+          window.__hotmartWidgetReady = true;
+          resolve();
+        })
+        .catch(reject);
+    };
+
+    const existingScript = document.querySelector('script[data-hotmart-widget]');
+    if (existingScript) {
+      // O widget carrega jQuery/Fancybox em cadeia; só esperar o ready final.
+      finish();
+      existingScript.addEventListener('error', () => reject(new Error('Falha ao carregar widget Hotmart')), { once: true });
+      return;
+    }
+
+    if (!document.querySelector('link[data-hotmart-widget-css]')) {
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.type = 'text/css';
+      link.href = 'https://static.hotmart.com/css/hotmart-fb.min.css';
+      link.setAttribute('data-hotmart-widget-css', 'true');
+      document.head.appendChild(link);
+    }
+
+    const script = document.createElement('script');
+    script.src = 'https://static.hotmart.com/checkout/widget.min.js';
+    script.async = true;
+    script.setAttribute('data-hotmart-widget', 'true');
+    script.addEventListener('load', finish, { once: true });
+    script.addEventListener('error', () => reject(new Error('Falha ao carregar widget Hotmart')), { once: true });
+    document.head.appendChild(script);
+  }).catch((error) => {
+    hotmartWidgetLoading = null;
+    throw error;
+  });
+
+  return hotmartWidgetLoading;
+}
+
+async function bindHotmartCheckoutButton(button) {
+  if (!(button instanceof HTMLAnchorElement)) return;
+
+  await ensureHotmartWidget();
+  await waitFor(() => Boolean(window.jQuery?.fn?.fancybox));
+
+  // Comportamento oficial do widget: no mobile, navega para o checkout.
+  if (isHotmartMobileCheckout()) {
+    button.setAttribute('onclick', 'return true');
+    return;
+  }
+
+  button.setAttribute('onclick', 'return false;');
+  window.jQuery(button).fancybox({
+    type: 'iframe',
+    toolbar: false,
+    smallBtn: true,
+    iframe: {
+      css: {
+        width: '600px',
+      },
+      attr: {
+        allowpaymentrequest: 'true',
+      },
+    },
+  });
+}
+
 function setActiveImage(index) {
   if (!galleryImages.length) return;
   activeImageIndex = (index + galleryImages.length) % galleryImages.length;
@@ -163,6 +290,7 @@ function renderProduct(product) {
   const promoPrice = product.promo_price ? currency.format(Number(product.promo_price)) : '';
   const price = currency.format(Number(currentPrice || 0));
   const buyUrl = sanitizeExternalUrl(product.hotmart_url);
+  const widgetUrl = buildHotmartWidgetUrl(buyUrl);
   const thumbs = galleryImages.length > 1
     ? galleryImages.map((image, index) => `
       <button type="button" class="thumb ${index === 0 ? 'active' : ''}" data-index="${index}" aria-label="Ver imagem ${index + 1}">
@@ -214,6 +342,9 @@ function renderProduct(product) {
           ${buyUrl
             ? `<a class="btn buy-now" href="${buyUrl}" data-product-id="${safeText(product.id)}" target="_blank" rel="noopener noreferrer">Comprar agora</a>`
             : `<span class="btn buy-now" style="opacity:.7; pointer-events:none;">Comprar agora</span>`}
+          ${widgetUrl
+            ? `<a class="btn buy-now-widget hotmart-fb" href="${widgetUrl}" data-product-id="${safeText(product.id)}" onclick="return false;">Comprar na página</a>`
+            : ''}
           <a class="btn secondary" href="./index.html#categorias">Voltar</a>
         </div>
       </article>
@@ -246,6 +377,22 @@ function renderProduct(product) {
         page_context: 'product_page',
         pathname: window.location.pathname,
       });
+    });
+  }
+
+  const buyWidgetButton = root.querySelector('.buy-now-widget[data-product-id]');
+  if (buyWidgetButton && widgetUrl) {
+    buyWidgetButton.addEventListener('click', () => {
+      void trackProductBuyClick(product.id, {
+        page_context: 'product_page_widget',
+        pathname: window.location.pathname,
+      });
+    });
+
+    void bindHotmartCheckoutButton(buyWidgetButton).catch(() => {
+      buyWidgetButton.setAttribute('onclick', 'return true');
+      buyWidgetButton.setAttribute('target', '_blank');
+      buyWidgetButton.setAttribute('rel', 'noopener noreferrer');
     });
   }
 }
