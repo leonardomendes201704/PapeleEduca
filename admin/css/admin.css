@@ -1949,6 +1949,7 @@ textarea { resize: vertical; }
   --gia-ready-bg: #e6f7ed;
   --gia-ready-fg: #1a7a45;
   --gia-surface: #f8f9fb;
+  zoom: 0.75;
 }
 
 .gerar-ia {
@@ -2407,6 +2408,9 @@ textarea { resize: vertical; }
 }
 
 .gerar-ia-approve {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   text-align: center;
 }
 
@@ -2434,9 +2438,11 @@ textarea { resize: vertical; }
   margin: 14px 0 0;
   color: var(--muted);
   font-size: 0.88rem;
-  display: inline-flex;
+  display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
+  width: 100%;
 }
 
 @media (max-width: 980px) {
