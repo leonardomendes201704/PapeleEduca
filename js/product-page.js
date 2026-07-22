@@ -314,7 +314,7 @@ async function loadProduct() {
   document.title = `Papelê Educa - ${data.title}`;
   renderProduct(data);
   void trackProductViewOnce(data.id, {
-    source: 'product_page',
+    page_context: 'product_page',
     pathname: window.location.pathname,
   });
   await loadRelatedProducts(data.id);

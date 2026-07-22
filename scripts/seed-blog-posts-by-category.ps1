@@ -294,7 +294,7 @@ foreach ($p in $posts) {
     Write-Warning "Capa ainda não pública: $coverUrl (seguindo mesmo assim)"
   }
 
-  $body = @{
+  $bodyObj = @{
     title = $p.title
     slug = $p.slug
     excerpt = $p.excerpt
@@ -306,29 +306,18 @@ foreach ($p in $posts) {
     seo_title = $p.title
     seo_description = $p.excerpt
     author_name = 'Papelê Educa'
-  } | ConvertTo-Json -Depth 5
+    status = 'published'
+  }
+  $body = $bodyObj | ConvertTo-Json -Depth 5
 
   $resp = Invoke-RestMethod -Uri "$base/api/blog/posts" -Method POST -Headers @{
     'Content-Type' = 'application/json; charset=utf-8'
     'X-API-Key' = $apiKey
   } -Body ([System.Text.Encoding]::UTF8.GetBytes($body))
 
-  Write-Host "API criou draft id=$($resp.id) slug=$($resp.slug)"
-
-  $now = (Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ssZ')
-  $patch = "status=eq.draft&id=eq.$($resp.id)"
-  # Prefer publish by id
-  $patchBody = @{ status = 'published'; published_at = $now } | ConvertTo-Json
-  $patchUrl = "$supabaseUrl/rest/v1/blog_posts?id=eq.$($resp.id)"
-  Invoke-RestMethod -Uri $patchUrl -Method PATCH -Headers @{
-    apikey = $serviceKey
-    Authorization = "Bearer $serviceKey"
-    'Content-Type' = 'application/json'
-    Prefer = 'return=representation'
-  } -Body $patchBody | Out-Null
-
-  Write-Host "Publicado: $base/blog/$($resp.slug)"
-  $created += [pscustomobject]@{ category = $p.category; slug = $resp.slug; id = $resp.id }
+  Write-Host "Criado status=$($resp.status) id=$($resp.id) slug=$($resp.slug)"
+  Write-Host "URL: $base/blog/$($resp.slug)"
+  $created += [pscustomobject]@{ category = $p.category; slug = $resp.slug; id = $resp.id; status = $resp.status }
 }
 
 Write-Host "`nConcluído: $($created.Count) posts"
