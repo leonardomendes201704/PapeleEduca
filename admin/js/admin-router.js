@@ -1,6 +1,6 @@
 import { supabase } from './supabase-client.js';
 
-const ASSET_VERSION = 'blog-ui-4';
+const ASSET_VERSION = 'facebook-feedback-1';
 
 function loadModule(path) {
   return import(`${path}?v=${ASSET_VERSION}`);

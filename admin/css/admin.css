@@ -1620,8 +1620,95 @@ textarea { resize: vertical; }
 #blog-facebook-delete-modal,
 #product-modal,
 #product-facebook-modal,
-#product-facebook-delete-modal {
+#product-facebook-delete-modal,
+#admin-busy-modal,
+#admin-result-modal {
   zoom: 1;
+}
+
+/* Busy overlay + result feedback (Facebook post, etc.) */
+.admin-busy-modal {
+  border: none;
+  padding: 0;
+  background: transparent;
+  max-width: none;
+  max-height: none;
+}
+
+.admin-busy-modal::backdrop {
+  background: rgba(17, 24, 39, 0.55);
+  backdrop-filter: blur(2px);
+}
+
+.admin-busy-panel {
+  display: grid;
+  justify-items: center;
+  gap: 16px;
+  min-width: min(280px, calc(100vw - 48px));
+  padding: 28px 32px;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.22);
+  text-align: center;
+}
+
+.admin-busy-panel p {
+  margin: 0;
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.admin-spinner {
+  width: 42px;
+  height: 42px;
+  border: 3px solid #dbe7f8;
+  border-top-color: #1877f2;
+  border-radius: 50%;
+  animation: admin-spin 0.75s linear infinite;
+}
+
+@keyframes admin-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.admin-result-modal {
+  width: min(440px, calc(100vw - 32px));
+}
+
+.admin-result-panel.is-success .admin-result-eyebrow {
+  color: #176965;
+}
+
+.admin-result-panel.is-error .admin-result-eyebrow {
+  color: #b42318;
+}
+
+.admin-result-eyebrow {
+  margin: 0 0 4px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.admin-result-message {
+  margin: 0;
+  line-height: 1.5;
+  color: var(--text);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.admin-result-link-wrap {
+  margin: 12px 0 0;
+}
+
+.admin-result-link-wrap a {
+  color: #1877f2;
+  font-weight: 700;
 }
 
 .blog-post-modal {

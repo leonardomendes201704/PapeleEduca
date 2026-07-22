@@ -8,6 +8,7 @@ import {
   insertEditorImage,
 } from './blog-editor.js';
 import { initBlogSettings } from './blog-admin.js';
+import { showBusyOverlay, hideBusyOverlay, showResultModal } from './admin-feedback.js';
 
 const STATUS_LABELS = {
   draft: 'Rascunho',
@@ -422,10 +423,11 @@ async function submitFacebookPost(event) {
   const post = facebookModalPost || posts.find((p) => p.id === $('blog-facebook-post-id')?.value);
 
   if (!post) {
-    if (statusEl) {
-      statusEl.textContent = 'Post não encontrado.';
-      statusEl.classList.add('error');
-    }
+    showResultModal({
+      type: 'error',
+      title: 'Post não encontrado',
+      message: 'Recarregue a lista e tente novamente.',
+    });
     return;
   }
 
@@ -439,10 +441,11 @@ async function submitFacebookPost(event) {
   }
 
   if (statusEl) {
-    statusEl.textContent = 'Publicando na página do Facebook...';
+    statusEl.textContent = '';
     statusEl.className = 'form-status';
   }
   if (confirmBtn) confirmBtn.disabled = true;
+  showBusyOverlay('Publicando no Facebook...');
 
   try {
     const {
@@ -470,22 +473,24 @@ async function submitFacebookPost(event) {
       throw new Error(payload.error || `HTTP ${response.status}`);
     }
 
-    if (statusEl) {
-      const fbLink = payload.facebook_url
-        ? ` <a href="${escapeHtml(payload.facebook_url)}" target="_blank" rel="noopener noreferrer">Ver no Facebook</a>`
-        : '';
-      statusEl.innerHTML = `Publicado com sucesso.${fbLink}`;
-      statusEl.className = 'form-status';
-    }
-
     await loadPosts();
-    setTimeout(() => closeFacebookModal(), 900);
+    hideBusyOverlay();
+    closeFacebookModal();
+    showResultModal({
+      type: 'success',
+      title: 'Postagem publicada',
+      message: 'O conteúdo foi publicado na Página do Facebook.',
+      linkHref: payload.facebook_url || '',
+      linkLabel: 'Ver no Facebook',
+    });
   } catch (error) {
-    if (statusEl) {
-      statusEl.textContent = error.message || 'Falha ao postar no Facebook.';
-      statusEl.classList.add('error');
-    }
+    hideBusyOverlay();
     if (confirmBtn) confirmBtn.disabled = false;
+    showResultModal({
+      type: 'error',
+      title: 'Falha ao postar',
+      message: error.message || 'Não foi possível publicar no Facebook.',
+    });
   }
 }
 

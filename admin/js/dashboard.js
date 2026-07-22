@@ -1,5 +1,6 @@
 import { supabase } from './supabase-client.js';
 import { STORAGE_BUCKET } from './config.js';
+import { showBusyOverlay, hideBusyOverlay, showResultModal } from './admin-feedback.js';
 
 const form = document.getElementById('product-form');
 const modal = document.getElementById('product-modal');
@@ -380,10 +381,11 @@ async function submitProductFacebookPost(event) {
     currentProducts.find((item) => item.id === $('product-facebook-id')?.value);
 
   if (!product) {
-    if (statusElFb) {
-      statusElFb.textContent = 'Produto não encontrado.';
-      statusElFb.classList.add('error');
-    }
+    showResultModal({
+      type: 'error',
+      title: 'Produto não encontrado',
+      message: 'Recarregue a lista e tente novamente.',
+    });
     return;
   }
 
@@ -397,10 +399,11 @@ async function submitProductFacebookPost(event) {
   }
 
   if (statusElFb) {
-    statusElFb.textContent = 'Publicando na página do Facebook...';
+    statusElFb.textContent = '';
     statusElFb.className = 'form-status';
   }
   if (confirmBtn) confirmBtn.disabled = true;
+  showBusyOverlay('Publicando no Facebook...');
 
   try {
     const {
@@ -428,22 +431,24 @@ async function submitProductFacebookPost(event) {
       throw new Error(payload.error || `HTTP ${response.status}`);
     }
 
-    if (statusElFb) {
-      const fbLink = payload.facebook_url
-        ? ` <a href="${escapeHtml(payload.facebook_url)}" target="_blank" rel="noopener noreferrer">Ver no Facebook</a>`
-        : '';
-      statusElFb.innerHTML = `Publicado com sucesso.${fbLink}`;
-      statusElFb.className = 'form-status';
-    }
-
     await loadProducts();
-    setTimeout(() => closeProductFacebookModal(), 900);
+    hideBusyOverlay();
+    closeProductFacebookModal();
+    showResultModal({
+      type: 'success',
+      title: 'Postagem publicada',
+      message: 'O produto foi publicado na Página do Facebook.',
+      linkHref: payload.facebook_url || '',
+      linkLabel: 'Ver no Facebook',
+    });
   } catch (error) {
-    if (statusElFb) {
-      statusElFb.textContent = error.message || 'Falha ao postar no Facebook.';
-      statusElFb.classList.add('error');
-    }
+    hideBusyOverlay();
     if (confirmBtn) confirmBtn.disabled = false;
+    showResultModal({
+      type: 'error',
+      title: 'Falha ao postar',
+      message: error.message || 'Não foi possível publicar no Facebook.',
+    });
   }
 }
 
@@ -565,17 +570,69 @@ async function uploadFiles(files) {
 export async function loadProducts() {
   if (!listEl) return;
 
-  const { data, error } = await supabase
-    .from('products')
-    .select('*')
-    .order('created_at', { ascending: false });
+  const [productsRes, metricsRes, fbViewsRes] = await Promise.all([
+    supabase
+      .from('products')
+      .select('*')
+      .order('created_at', { ascending: false }),
+    supabase
+      .from('product_metrics_report')
+      .select('id,views,facebook_views'),
+    supabase
+      .from('product_events')
+      .select('product_id')
+      .eq('event_type', 'view')
+      .eq('source', 'facebook'),
+  ]);
 
-  if (error) {
-    listEl.innerHTML = `<p class="metric-empty">Erro ao carregar produtos: ${escapeHtml(error.message)}</p>`;
+  if (productsRes.error) {
+    listEl.innerHTML = `<p class="metric-empty">Erro ao carregar produtos: ${escapeHtml(productsRes.error.message)}</p>`;
     return;
   }
 
-  currentProducts = data || [];
+  let metricsRows = metricsRes.data || [];
+  if (metricsRes.error) {
+    const fallback = await supabase
+      .from('product_metrics_report')
+      .select('id,views');
+    if (fallback.error) {
+      console.warn('Falha ao carregar métricas de produtos:', metricsRes.error.message);
+      metricsRows = [];
+    } else {
+      metricsRows = (fallback.data || []).map((row) => ({ ...row, facebook_views: 0 }));
+    }
+  }
+
+  const fbCounts = {};
+  for (const row of fbViewsRes.data || []) {
+    const id = row.product_id;
+    if (!id) continue;
+    fbCounts[id] = (fbCounts[id] || 0) + 1;
+  }
+
+  productMetricsById = Object.fromEntries(
+    metricsRows.map((row) => {
+      const fromEvents = fbCounts[row.id];
+      const fromView = Number(row.facebook_views || 0);
+      return [
+        row.id,
+        {
+          ...row,
+          facebook_views: fromEvents != null ? fromEvents : fromView,
+        },
+      ];
+    }),
+  );
+
+  for (const [id, count] of Object.entries(fbCounts)) {
+    if (!productMetricsById[id]) {
+      productMetricsById[id] = { id, views: 0, facebook_views: count };
+    } else if (!Number(productMetricsById[id].facebook_views)) {
+      productMetricsById[id].facebook_views = count;
+    }
+  }
+
+  currentProducts = productsRes.data || [];
   if (totalEl) totalEl.textContent = currentProducts.length;
   if (publishedEl) publishedEl.textContent = currentProducts.filter((item) => item.status === 'published').length;
   if (draftEl) draftEl.textContent = currentProducts.filter((item) => item.status === 'draft').length;
