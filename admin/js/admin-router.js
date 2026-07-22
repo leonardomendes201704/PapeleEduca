@@ -1,6 +1,6 @@
 import { supabase } from './supabase-client.js';
 
-const ASSET_VERSION = 'facebook-feedback-1';
+const ASSET_VERSION = 'gerar-ia-1';
 
 function loadModule(path) {
   return import(`${path}?v=${ASSET_VERSION}`);
@@ -32,6 +32,11 @@ const ROUTES = {
     title: 'Blog',
     breadcrumb: 'Painel / Blog',
   },
+  'gerar-ia': {
+    hash: '#/gerar-ia',
+    title: 'Gerar com IA',
+    breadcrumb: 'Painel / Gerar com IA',
+  },
   configuracoes: {
     hash: '#/configuracoes',
     title: 'Configurações',
@@ -44,7 +49,7 @@ const initialized = new Set();
 
 function parseRoute() {
   const hash = window.location.hash || `#/${DEFAULT_ROUTE}`;
-  const match = hash.match(/^#\/(\w+)/);
+  const match = hash.match(/^#\/([\w-]+)/);
   const key = match?.[1];
   return ROUTES[key] ? key : DEFAULT_ROUTE;
 }
@@ -98,6 +103,11 @@ async function initView(routeKey) {
       break;
     case 'blog':
       await loadModule('./blog-cms.js').then((m) => m.initBlogCms());
+      break;
+    case 'gerar-ia':
+      if (initialized.has(routeKey)) return;
+      initialized.add(routeKey);
+      await loadModule('./gerar-ia-admin.js').then((m) => m.initGerarIa());
       break;
     case 'configuracoes':
       if (initialized.has(routeKey)) return;

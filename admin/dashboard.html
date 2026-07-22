@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
-  <link rel="stylesheet" href="css/admin.css?v=blog-post-content-75" />
+  <link rel="stylesheet" href="css/admin.css?v=gerar-ia-1" />
 </head>
 <body>
   <div class="admin-app">
@@ -42,6 +42,10 @@
         <a class="sidebar-link" href="#/blog" data-route="blog">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H9l-4 3v-3H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Zm2 4v2h10V8H7Zm0 4v2h7v-2H7Z"/></svg>
           Blog
+        </a>
+        <a class="sidebar-link" href="#/gerar-ia" data-route="gerar-ia">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5 13.2 7H18l-3.8 2.8L15.4 15 12 12.4 8.6 15l1.2-5.2L6 7h4.8L12 2.5Zm-6.5 14.2 1.1 2.3 2.3 1.1-2.3 1.1-1.1 2.3-1.1-2.3-2.3-1.1 2.3-1.1 1.1-2.3Zm11.2.8.7 1.5 1.5.7-1.5.7-.7 1.5-.7-1.5-1.5-.7 1.5-.7.7-1.5Z"/></svg>
+          Gerar com IA
         </a>
         <a class="sidebar-link" href="#/configuracoes" data-route="configuracoes">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8.5A3.5 3.5 0 1 0 12 15.5 3.5 3.5 0 0 0 12 8.5ZM19.4 13a7.9 7.9 0 0 0 .1-2l2-1.5-2-3.5-2.3 1a8 8 0 0 0-1.7-1L15 2h-4l-.5 2.5a8 8 0 0 0-1.7 1l-2.3-1-2 3.5 2 1.5a7.9 7.9 0 0 0 0 2l-2 1.5 2 3.5 2.3-1a8 8 0 0 0 1.7 1L11 22h4l.5-2.5a8 8 0 0 0 1.7-1l2.3 1 2-3.5-2-1.5Z"/></svg>
@@ -1046,6 +1050,133 @@
               </div>
             </form>
           </dialog>
+        </section>
+
+        <!-- Gerar com IA -->
+        <section class="admin-view" data-view="gerar-ia">
+          <div class="gerar-ia">
+            <header class="gerar-ia-hero">
+              <span class="gerar-ia-badge"><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i> IA criando conteúdo para você</span>
+              <h2 class="gerar-ia-title">Crie conteúdos incríveis com apenas um tema</h2>
+              <p class="gerar-ia-subtitle">Nossa IA pesquisa, escreve e formata posts prontos para diferentes plataformas. Você apenas aprova e publica.</p>
+            </header>
+
+            <form id="gerar-ia-form" class="gerar-ia-input-card" autocomplete="off">
+              <div class="gerar-ia-input-icon" aria-hidden="true">
+                <i class="fa-solid fa-pen"></i>
+              </div>
+              <label class="gerar-ia-input-field">
+                <span>Digite o título ou assunto do seu conteúdo</span>
+                <input
+                  id="gerar-ia-topic"
+                  type="text"
+                  required
+                  maxlength="160"
+                  placeholder="Ex.: Tendências de Marketing Digital para 2025"
+                />
+              </label>
+              <button id="gerar-ia-submit" class="gerar-ia-btn-generate" type="submit">
+                <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i>
+                <span>Gerar com IA</span>
+              </button>
+            </form>
+
+            <ol id="gerar-ia-steps" class="gerar-ia-steps" hidden aria-live="polite">
+              <li class="gerar-ia-step" data-step="1">
+                <span class="gerar-ia-step-icon" aria-hidden="true"><i class="fa-solid fa-globe"></i></span>
+                <span class="gerar-ia-step-label">Pesquisando na web</span>
+              </li>
+              <li class="gerar-ia-step" data-step="2">
+                <span class="gerar-ia-step-icon" aria-hidden="true"><i class="fa-solid fa-pen-to-square"></i></span>
+                <span class="gerar-ia-step-label">Criando conteúdo</span>
+              </li>
+              <li class="gerar-ia-step" data-step="3">
+                <span class="gerar-ia-step-icon" aria-hidden="true"><i class="fa-solid fa-circle-check"></i></span>
+                <span class="gerar-ia-step-label">Formatando para cada plataforma</span>
+              </li>
+            </ol>
+
+            <div id="gerar-ia-results" class="gerar-ia-results" hidden>
+              <div class="gerar-ia-cards">
+                <article class="gerar-ia-card" data-platform="blog">
+                  <div class="gerar-ia-card-head">
+                    <div class="gerar-ia-card-platform">
+                      <i class="fa-regular fa-file-lines" aria-hidden="true"></i>
+                      <span>Post para Blog</span>
+                    </div>
+                    <span class="gerar-ia-ready">Pronto</span>
+                  </div>
+                  <div class="gerar-ia-card-body">
+                    <h3 id="gerar-ia-blog-title" class="gerar-ia-blog-title"></h3>
+                    <div id="gerar-ia-blog-excerpt" class="gerar-ia-blog-excerpt"></div>
+                  </div>
+                  <button type="button" class="gerar-ia-card-link" id="gerar-ia-blog-expand">Ver o post completo →</button>
+                  <div id="gerar-ia-blog-full" class="gerar-ia-expand-panel" hidden></div>
+                </article>
+
+                <article class="gerar-ia-card" data-platform="facebook">
+                  <div class="gerar-ia-card-head">
+                    <div class="gerar-ia-card-platform">
+                      <i class="fa-brands fa-facebook" aria-hidden="true"></i>
+                      <span>Post para Facebook</span>
+                    </div>
+                    <span class="gerar-ia-ready">Pronto</span>
+                  </div>
+                  <div class="gerar-ia-fb-preview">
+                    <div class="gerar-ia-fb-header">
+                      <span class="gerar-ia-fb-avatar" aria-hidden="true"></span>
+                      <div>
+                        <strong>Sua Empresa</strong>
+                        <span>Agora mesmo</span>
+                      </div>
+                    </div>
+                    <p id="gerar-ia-fb-text" class="gerar-ia-fb-text"></p>
+                    <div class="gerar-ia-fb-image" aria-hidden="true">
+                      <strong id="gerar-ia-fb-image-title"></strong>
+                      <svg class="gerar-ia-fb-chart" viewBox="0 0 200 60" preserveAspectRatio="none">
+                        <polyline points="0,50 30,42 60,45 90,28 120,32 150,18 180,22 200,10" fill="none" stroke="currentColor" stroke-width="3"/>
+                      </svg>
+                    </div>
+                    <div class="gerar-ia-fb-actions" aria-hidden="true">
+                      <span><i class="fa-regular fa-thumbs-up"></i> Curtir</span>
+                      <span><i class="fa-regular fa-comment"></i> Comentar</span>
+                      <span><i class="fa-solid fa-share"></i> Compartilhar</span>
+                    </div>
+                  </div>
+                </article>
+
+                <article class="gerar-ia-card" data-platform="instagram">
+                  <div class="gerar-ia-card-head">
+                    <div class="gerar-ia-card-platform">
+                      <i class="fa-brands fa-instagram" aria-hidden="true"></i>
+                      <span>Carrossel para Instagram</span>
+                    </div>
+                    <span class="gerar-ia-ready">Pronto</span>
+                  </div>
+                  <div class="gerar-ia-ig-carousel-wrap">
+                    <div id="gerar-ia-ig-track" class="gerar-ia-ig-track"></div>
+                    <button type="button" class="gerar-ia-ig-next" id="gerar-ia-ig-next" aria-label="Próximo slide">
+                      <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+                    </button>
+                  </div>
+                  <div id="gerar-ia-ig-dots" class="gerar-ia-ig-dots" aria-hidden="true"></div>
+                  <button type="button" class="gerar-ia-card-link" id="gerar-ia-ig-expand">Ver todas as páginas do carrossel →</button>
+                  <div id="gerar-ia-ig-full" class="gerar-ia-expand-panel" hidden></div>
+                </article>
+              </div>
+
+              <div class="gerar-ia-approve">
+                <button type="button" class="gerar-ia-btn-approve" id="gerar-ia-approve">
+                  <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+                  Aprovar e agendar publicações
+                </button>
+                <p class="gerar-ia-approve-note">
+                  <i class="fa-solid fa-lock" aria-hidden="true"></i>
+                  Você poderá revisar tudo antes da publicação final
+                </p>
+              </div>
+            </div>
+          </div>
         </section>
 
         <!-- Configurações -->
