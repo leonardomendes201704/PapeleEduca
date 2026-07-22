@@ -1613,7 +1613,6 @@ textarea { resize: vertical; }
 /* Reset dialog zoom so modal isn't double-scaled under the view zoom */
 .admin-view[data-view="blog"] .admin-modal,
 .admin-view[data-view="produtos"] .admin-modal,
-#blog-post-modal,
 #blog-cat-modal,
 #blog-tag-modal,
 #blog-facebook-modal,
@@ -1711,10 +1710,12 @@ textarea { resize: vertical; }
   font-weight: 700;
 }
 
-.blog-post-modal {
-  width: 80vw;
+/* Blog editor lives under .admin-view zoom 0.65 — counteract so 90vw/90vh match the real viewport */
+#blog-post-modal.blog-post-modal {
+  zoom: calc(1 / 0.65);
+  width: 90vw;
   height: 90vh;
-  max-width: none;
+  max-width: 90vw;
   max-height: 90vh;
 }
 .blog-post-modal .blog-post-form,
