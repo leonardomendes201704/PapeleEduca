@@ -28,6 +28,62 @@ let pendingCover = null;
 let pendingOg = null;
 let facebookModalPost = null;
 let facebookDeleteModalPost = null;
+let postsSort = { key: '', dir: 'asc' };
+
+const POST_SORT_KEYS = {
+  title: (p) => String(p.title || '').toLowerCase(),
+  status: (p) => String(STATUS_LABELS[p.status] || p.status || '').toLowerCase(),
+  category: (p) => String(p.blog_categories?.name || '').toLowerCase(),
+  views: (p) => Number(postMetricsById[p.id]?.views || 0),
+  facebook: (p) => Number(postMetricsById[p.id]?.facebook_views || 0),
+  reads: (p) => Number(postMetricsById[p.id]?.read_completes || 0),
+  rate: (p) => Number(postMetricsById[p.id]?.read_rate || 0),
+  published_at: (p) => {
+    const t = p.published_at ? Date.parse(p.published_at) : NaN;
+    return Number.isFinite(t) ? t : 0;
+  },
+};
+
+function sortPosts(list) {
+  if (!postsSort.key || !POST_SORT_KEYS[postsSort.key]) return list;
+  const getter = POST_SORT_KEYS[postsSort.key];
+  const dir = postsSort.dir === 'desc' ? -1 : 1;
+  return [...list].sort((a, b) => {
+    const va = getter(a);
+    const vb = getter(b);
+    if (typeof va === 'number' && typeof vb === 'number') {
+      return (va - vb) * dir;
+    }
+    return String(va).localeCompare(String(vb), 'pt-BR', { sensitivity: 'base' }) * dir;
+  });
+}
+
+function sortAria(key) {
+  if (postsSort.key !== key) return '';
+  return ` aria-sort="${postsSort.dir === 'desc' ? 'descending' : 'ascending'}"`;
+}
+
+function bindPostsSortHeaders(list) {
+  list.querySelectorAll('th.sortable[data-sort]').forEach((th) => {
+    th.tabIndex = 0;
+    const activate = () => {
+      const key = th.dataset.sort;
+      if (postsSort.key === key) {
+        postsSort.dir = postsSort.dir === 'asc' ? 'desc' : 'asc';
+      } else {
+        postsSort = { key, dir: key === 'title' || key === 'status' || key === 'category' ? 'asc' : 'desc' };
+      }
+      renderPosts();
+    };
+    th.addEventListener('click', activate);
+    th.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        activate();
+      }
+    });
+  });
+}
 
 function blogPublicUrl(slug) {
   const origin = window.location.origin || 'https://papele-educa.vercel.app';
@@ -279,11 +335,21 @@ function renderPosts() {
   if (!list) return;
   const statusFilter = $('blog-filter-status')?.value || '';
   const categoryFilter = $('blog-filter-category')?.value || '';
-  const filtered = posts.filter((p) => {
+  const searchQuery = ($('blog-filter-search')?.value || '').trim().toLowerCase();
+  const filtered = sortPosts(posts.filter((p) => {
     if (statusFilter && p.status !== statusFilter) return false;
     if (categoryFilter && p.category_id !== categoryFilter) return false;
+    if (searchQuery) {
+      const haystack = [
+        p.title,
+        p.slug,
+        p.blog_categories?.name,
+        STATUS_LABELS[p.status] || p.status,
+      ].join(' ').toLowerCase();
+      if (!haystack.includes(searchQuery)) return false;
+    }
     return true;
-  });
+  }));
 
   if (!filtered.length) {
     list.innerHTML = '<p class="metric-empty">Nenhum post encontrado.</p>';
@@ -294,14 +360,14 @@ function renderPosts() {
     <table class="blog-posts-table">
       <thead>
         <tr>
-          <th>Título</th>
-          <th class="col-center">Status</th>
-          <th class="col-center">Categoria</th>
-          <th class="col-center">Views</th>
-          <th class="col-center">FB</th>
-          <th class="col-center">Leituras</th>
-          <th class="col-center">Taxa</th>
-          <th class="col-center">Publicação</th>
+          <th class="sortable" data-sort="title"${sortAria('title')} title="Ordenar por título">Título</th>
+          <th class="col-center sortable" data-sort="status"${sortAria('status')} title="Ordenar por status">Status</th>
+          <th class="col-center sortable" data-sort="category"${sortAria('category')} title="Ordenar por categoria">Categoria</th>
+          <th class="col-center sortable" data-sort="views"${sortAria('views')} title="Ordenar por views">Views</th>
+          <th class="col-center sortable" data-sort="facebook"${sortAria('facebook')} title="Ordenar por Facebook">FB</th>
+          <th class="col-center sortable" data-sort="reads"${sortAria('reads')} title="Ordenar por leituras">Leituras</th>
+          <th class="col-center sortable" data-sort="rate"${sortAria('rate')} title="Ordenar por taxa">Taxa</th>
+          <th class="col-center sortable" data-sort="published_at"${sortAria('published_at')} title="Ordenar por publicação">Publicação</th>
           <th class="col-actions"></th>
         </tr>
       </thead>
@@ -348,6 +414,8 @@ function renderPosts() {
       </tbody>
     </table>
   `;
+
+  bindPostsSortHeaders(list);
 
   list.querySelectorAll('[data-blog-view]').forEach((btn) => {
     btn.addEventListener('click', () => {
@@ -835,6 +903,7 @@ function bindEvents() {
 
   $('blog-filter-status')?.addEventListener('change', renderPosts);
   $('blog-filter-category')?.addEventListener('change', renderPosts);
+  $('blog-filter-search')?.addEventListener('input', renderPosts);
 
   $('blog-post-new-btn')?.addEventListener('click', () => openPostModal());
   $('blog-post-cancel-btn')?.addEventListener('click', closePostModal);
