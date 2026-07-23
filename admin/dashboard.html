@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
-  <link rel="stylesheet" href="css/admin.css?v=gerar-ia-2" />
+  <link rel="stylesheet" href="css/admin.css?v=blog-chart-1" />
 </head>
 <body>
   <div class="admin-app">
@@ -691,6 +691,17 @@
                 <div class="overview-kpi-wave" aria-hidden="true"></div>
               </article>
             </div>
+
+            <article class="panel blog-metrics-chart-panel">
+              <div class="panel-head">
+                <h2>Desempenho — últimos 7 dias</h2>
+                <p class="muted">Views, tráfego do Facebook e leituras completas por dia.</p>
+              </div>
+              <div class="blog-metrics-chart-wrap">
+                <canvas id="blog-metrics-chart" role="img" aria-label="Gráfico de Views, FB e Leituras do blog nos últimos 7 dias"></canvas>
+              </div>
+              <p id="blog-metrics-chart-status" class="form-status blog-metrics-chart-status" hidden></p>
+            </article>
 
             <article class="panel">
               <div class="panel-head panel-head-row">

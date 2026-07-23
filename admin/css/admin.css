@@ -1494,6 +1494,30 @@ textarea { resize: vertical; }
   grid-template-columns: repeat(5, minmax(0, 1fr));
 }
 
+.blog-metrics-chart-panel {
+  width: 100%;
+  margin-bottom: 18px;
+}
+
+.blog-metrics-chart-wrap {
+  position: relative;
+  width: 100%;
+  height: min(320px, 42vw);
+  min-height: 220px;
+  padding: 4px 20px 20px;
+  box-sizing: border-box;
+}
+
+.blog-metrics-chart-wrap canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.blog-metrics-chart-status {
+  padding: 0 20px 16px;
+}
+
 #blog-posts-list .blog-posts-table {
   width: 100%;
   table-layout: auto;

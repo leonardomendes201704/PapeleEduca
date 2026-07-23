@@ -29,6 +29,8 @@ let pendingOg = null;
 let facebookModalPost = null;
 let facebookDeleteModalPost = null;
 let postsSort = { key: '', dir: 'asc' };
+let blogMetricsChart = null;
+let chartJsPromise = null;
 
 const POST_SORT_KEYS = {
   title: (p) => String(p.title || '').toLowerCase(),
@@ -319,6 +321,184 @@ async function loadListingViews() {
     .maybeSingle();
   if ($('blog-count-listing-views')) {
     $('blog-count-listing-views').textContent = Number(data?.views || 0);
+  }
+}
+
+const BRT = 'America/Sao_Paulo';
+
+function brtDayKey(isoString) {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: BRT }).format(new Date(isoString));
+}
+
+function last7DayKeys() {
+  const keys = [];
+  const formatter = new Intl.DateTimeFormat('en-CA', { timeZone: BRT });
+  for (let offset = 6; offset >= 0; offset -= 1) {
+    const date = new Date();
+    date.setDate(date.getDate() - offset);
+    keys.push(formatter.format(date));
+  }
+  return keys;
+}
+
+function formatDayLabel(dayKey) {
+  const date = new Date(`${dayKey}T12:00:00-03:00`);
+  return new Intl.DateTimeFormat('pt-BR', {
+    weekday: 'short',
+    day: '2-digit',
+    month: '2-digit',
+    timeZone: BRT,
+  }).format(date);
+}
+
+function isFacebookEvent(row) {
+  if (String(row.source || '').toLowerCase() === 'facebook') return true;
+  const utm = row.metadata?.utm_source;
+  return String(utm || '').toLowerCase() === 'facebook';
+}
+
+function ensureChartJs() {
+  if (window.Chart) return Promise.resolve(window.Chart);
+  if (!chartJsPromise) {
+    chartJsPromise = new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js';
+      script.async = true;
+      script.onload = () => resolve(window.Chart);
+      script.onerror = () => reject(new Error('Não foi possível carregar Chart.js.'));
+      document.head.appendChild(script);
+    });
+  }
+  return chartJsPromise;
+}
+
+async function loadBlogMetricsChart() {
+  const canvas = $('blog-metrics-chart');
+  const statusEl = $('blog-metrics-chart-status');
+  if (!canvas) return;
+
+  const dayKeys = last7DayKeys();
+  const sinceIso = new Date(`${dayKeys[0]}T00:00:00-03:00`).toISOString();
+
+  const { data, error } = await supabase
+    .from('blog_post_events')
+    .select('event_type, source, metadata, created_at')
+    .gte('created_at', sinceIso);
+
+  if (error) {
+    if (statusEl) {
+      statusEl.hidden = false;
+      statusEl.textContent = `Erro ao carregar gráfico: ${error.message}`;
+      statusEl.classList.add('error');
+    }
+    return;
+  }
+
+  const buckets = Object.fromEntries(
+    dayKeys.map((key) => [key, { views: 0, fb: 0, reads: 0 }]),
+  );
+
+  for (const row of data || []) {
+    const key = brtDayKey(row.created_at);
+    const bucket = buckets[key];
+    if (!bucket) continue;
+    if (row.event_type === 'view') {
+      bucket.views += 1;
+      if (isFacebookEvent(row)) bucket.fb += 1;
+    } else if (row.event_type === 'read_complete') {
+      bucket.reads += 1;
+    }
+  }
+
+  try {
+    const Chart = await ensureChartJs();
+    const labels = dayKeys.map(formatDayLabel);
+    const viewsData = dayKeys.map((key) => buckets[key].views);
+    const fbData = dayKeys.map((key) => buckets[key].fb);
+    const readsData = dayKeys.map((key) => buckets[key].reads);
+
+    if (blogMetricsChart) {
+      blogMetricsChart.destroy();
+      blogMetricsChart = null;
+    }
+
+    blogMetricsChart = new Chart(canvas, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [
+          {
+            label: 'Views',
+            data: viewsData,
+            borderColor: '#2fb7b0',
+            backgroundColor: 'rgba(47, 183, 176, 0.14)',
+            tension: 0.35,
+            fill: true,
+            pointRadius: 4,
+            pointHoverRadius: 6,
+          },
+          {
+            label: 'FB',
+            data: fbData,
+            borderColor: '#7c6ae6',
+            backgroundColor: 'rgba(124, 106, 230, 0.1)',
+            tension: 0.35,
+            fill: false,
+            pointRadius: 4,
+            pointHoverRadius: 6,
+          },
+          {
+            label: 'Leituras',
+            data: readsData,
+            borderColor: '#f4a53b',
+            backgroundColor: 'rgba(244, 165, 59, 0.1)',
+            tension: 0.35,
+            fill: false,
+            pointRadius: 4,
+            pointHoverRadius: 6,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: {
+            position: 'top',
+            align: 'end',
+            labels: { boxWidth: 12, usePointStyle: true, pointStyle: 'circle' },
+          },
+          tooltip: {
+            callbacks: {
+              title: (items) => items[0]?.label || '',
+            },
+          },
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: { precision: 0 },
+            grid: { color: 'rgba(0, 0, 0, 0.06)' },
+          },
+          x: {
+            grid: { display: false },
+          },
+        },
+      },
+    });
+
+    if (statusEl) {
+      statusEl.hidden = true;
+      statusEl.textContent = '';
+      statusEl.classList.remove('error');
+    }
+  } catch (chartError) {
+    if (statusEl) {
+      statusEl.hidden = false;
+      statusEl.textContent = chartError.message || 'Erro ao renderizar o gráfico.';
+      statusEl.classList.add('error');
+    }
   }
 }
 
@@ -1174,7 +1354,14 @@ export async function initBlogCms() {
   await initBlogSettings();
 
   try {
-    await Promise.all([loadCategories(), loadTags(), loadPosts(), loadMedia(), loadListingViews()]);
+    await Promise.all([
+      loadCategories(),
+      loadTags(),
+      loadPosts(),
+      loadMedia(),
+      loadListingViews(),
+      loadBlogMetricsChart(),
+    ]);
   } catch (error) {
     const list = $('blog-posts-list');
     if (list) {
