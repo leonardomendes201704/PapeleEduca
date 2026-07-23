@@ -372,6 +372,38 @@ function ensureChartJs() {
   return chartJsPromise;
 }
 
+/** CSS zoom on ancestors breaks Chart.js hit-testing; remap pointer coords. */
+function getCumulativeZoom(element) {
+  let zoom = 1;
+  let node = element;
+  while (node) {
+    const value = window.getComputedStyle(node).zoom;
+    if (value && value !== 'normal') {
+      const parsed = Number.parseFloat(value);
+      if (Number.isFinite(parsed) && parsed > 0) zoom *= parsed;
+    }
+    node = node.parentElement;
+  }
+  return zoom;
+}
+
+const chartZoomFixPlugin = {
+  id: 'chartZoomFix',
+  beforeEvent(chart, args) {
+    const event = args.event;
+    if (!event?.native) return;
+    if (!event.type.startsWith('mouse') && !event.type.startsWith('pointer')) return;
+
+    const zoom = getCumulativeZoom(chart.canvas);
+    if (zoom === 1) return;
+
+    const rect = chart.canvas.getBoundingClientRect();
+    const native = event.native;
+    event.x = (native.clientX - rect.left) / zoom;
+    event.y = (native.clientY - rect.top) / zoom;
+  },
+};
+
 async function loadBlogMetricsChart() {
   const canvas = $('blog-metrics-chart');
   const statusEl = $('blog-metrics-chart-status');
@@ -424,6 +456,7 @@ async function loadBlogMetricsChart() {
 
     blogMetricsChart = new Chart(canvas, {
       type: 'line',
+      plugins: [chartZoomFixPlugin],
       data: {
         labels,
         datasets: [
@@ -486,6 +519,10 @@ async function loadBlogMetricsChart() {
           },
         },
       },
+    });
+
+    requestAnimationFrame(() => {
+      blogMetricsChart?.resize();
     });
 
     if (statusEl) {
