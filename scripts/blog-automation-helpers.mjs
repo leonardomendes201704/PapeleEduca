@@ -5,6 +5,7 @@
  * Usage:
  *   node scripts/blog-automation-helpers.mjs next-category
  *   node scripts/blog-automation-helpers.mjs recent-titles
+ *   node scripts/blog-automation-helpers.mjs list-covers
  *   node scripts/blog-automation-helpers.mjs publish --stdin   # JSON on stdin
  *
  * Env:
@@ -12,7 +13,12 @@
  *   BLOG_API_BASE (default https://papele-educa.vercel.app)
  *   SUPABASE_URL / SUPABASE_ANON_KEY optional overrides
  */
-import { createInterface } from 'node:readline';
+import { readdirSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const IMAGES_DIR = join(__dirname, '..', 'images');
 
 const BASE = (process.env.BLOG_API_BASE || 'https://papele-educa.vercel.app').replace(/\/$/, '');
 const SUPABASE_URL = (process.env.SUPABASE_URL || 'https://ykauyuccbxumtqnxeqna.supabase.co').replace(/\/$/, '');
@@ -43,6 +49,36 @@ const FALLBACK_COVERS = [
 
 function coverUrlForFile(file) {
   return `${BASE}/images/${file}`;
+}
+
+function listAvailableCoverFiles() {
+  try {
+    return readdirSync(IMAGES_DIR)
+      .filter((name) => /^blog-.*\.(png|jpe?g|webp)$/i.test(name))
+      .sort();
+  } catch {
+    const known = new Set([
+      ...CATEGORY_ORDER.map((c) => c.cover),
+      ...FALLBACK_COVERS,
+    ]);
+    return [...known].sort();
+  }
+}
+
+export function listAvailableCovers() {
+  return listAvailableCoverFiles().map((file) => ({
+    file,
+    url: coverUrlForFile(file),
+  }));
+}
+
+function countCoverUsage(posts) {
+  const counts = Object.create(null);
+  for (const post of posts) {
+    const file = String(post.cover_url || '').split('/').pop();
+    if (file) counts[file] = (counts[file] || 0) + 1;
+  }
+  return counts;
 }
 
 function resolveCoverUrl({ categorySlug, categoryName, coverUrl, avoidUrl } = {}) {
@@ -79,7 +115,7 @@ async function supabaseSelect(path) {
 
 export async function listRecentTitles(limit = 80) {
   const rows = await supabaseSelect(
-    `blog_posts?select=title,slug,category_id,published_at,status&order=created_at.desc&limit=${limit}`,
+    `blog_posts?select=title,slug,category_id,cover_url,published_at,status&order=created_at.desc&limit=${limit}`,
   );
   return rows || [];
 }
@@ -105,6 +141,19 @@ export async function pickNextCategory() {
     }
   }
 
+  const recentPosts = posts.slice(0, 40);
+  const recentCoverUrls = [...new Set(
+    recentPosts.map((p) => String(p.cover_url || '').trim()).filter(Boolean),
+  )];
+  const recentCoverFiles = recentCoverUrls.map((url) => url.split('/').pop());
+  const coverUsage = countCoverUsage(posts);
+  const availableCovers = listAvailableCovers().map(({ file, url }) => ({
+    file,
+    url,
+    usedInLast200Posts: coverUsage[file] || 0,
+    usedRecently: recentCoverFiles.includes(file),
+  }));
+
   const cover_url = resolveCoverUrl({
     categorySlug: best.slug,
     categoryName: best.name,
@@ -114,9 +163,15 @@ export async function pickNextCategory() {
     ...best,
     cover_url,
     cover_file: best.cover,
+    default_cover_url: cover_url,
     postsInCategory: bestCount,
-    recentTitles: posts.slice(0, 40).map((p) => p.title),
-    recentSlugs: posts.slice(0, 40).map((p) => p.slug),
+    recentTitles: recentPosts.map((p) => p.title),
+    recentSlugs: recentPosts.map((p) => p.slug),
+    recentCoverUrls,
+    recentCoverFiles,
+    availableCovers,
+    coverSelectionHint:
+      'Prefer generate a new cover for this post. If reusing, pick from availableCovers where usedRecently is false and the image matches the topic.',
   };
 }
 
@@ -171,7 +226,29 @@ async function main() {
   }
   if (cmd === 'recent-titles') {
     const rows = await listRecentTitles(60);
-    console.log(JSON.stringify(rows.map((r) => ({ title: r.title, slug: r.slug })), null, 2));
+    console.log(JSON.stringify(rows.map((r) => ({
+      title: r.title,
+      slug: r.slug,
+      cover_url: r.cover_url,
+    })), null, 2));
+    return;
+  }
+  if (cmd === 'list-covers') {
+    const posts = await listRecentTitles(200);
+    const coverUsage = countCoverUsage(posts);
+    const recentCoverFiles = new Set(
+      posts.slice(0, 15).map((p) => String(p.cover_url || '').split('/').pop()).filter(Boolean),
+    );
+    console.log(JSON.stringify(
+      listAvailableCovers().map(({ file, url }) => ({
+        file,
+        url,
+        usedInLast200Posts: coverUsage[file] || 0,
+        usedRecently: recentCoverFiles.has(file),
+      })),
+      null,
+      2,
+    ));
     return;
   }
   if (cmd === 'publish') {
