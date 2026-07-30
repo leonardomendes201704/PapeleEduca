@@ -15,6 +15,8 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
 
 const $ = (id) => document.getElementById(id);
 
+const ONLINE_WINDOW_MS = 2 * 60 * 1000;
+
 const state = {
   filter: 'draft',
   posts: [],
@@ -22,6 +24,7 @@ const state = {
   busy: false,
   tab: 'list',
   metricsLoaded: false,
+  onlinePoll: null,
 };
 
 let CapacitorApp = null;
@@ -75,6 +78,7 @@ function renderMetricKpis(kpis) {
   const el = $('metrics-kpis');
   if (!el) return;
   const items = [
+    { label: 'Visitantes online', value: kpis.online, live: true },
     { label: 'Vis. produtos', value: kpis.productViews },
     { label: 'Cliques compra', value: kpis.buyClicks },
     { label: 'Vis. posts', value: kpis.blogViews },
@@ -85,12 +89,73 @@ function renderMetricKpis(kpis) {
   el.innerHTML = items
     .map(
       (item) => `
-      <div class="metric-kpi">
+      <div class="metric-kpi${item.live ? ' metric-kpi--live' : ''}">
         <span class="label">${escapeHtml(item.label)}</span>
         <span class="value">${escapeHtml(String(item.value ?? 0))}</span>
       </div>`
     )
     .join('');
+}
+
+async function fetchOnlineCount() {
+  const since = new Date(Date.now() - ONLINE_WINDOW_MS).toISOString();
+  const { count, error } = await supabase
+    .from('site_presence')
+    .select('visitor_id', { count: 'exact', head: true })
+    .gte('last_seen_at', since);
+  if (error) {
+    // Table not created yet — show 0 without failing the whole screen.
+    if (/site_presence|does not exist|schema cache/i.test(error.message || '')) {
+      return 0;
+    }
+    throw error;
+  }
+  return Number(count || 0);
+}
+
+function stopOnlinePoll() {
+  if (state.onlinePoll) {
+    clearInterval(state.onlinePoll);
+    state.onlinePoll = null;
+  }
+}
+
+function startOnlinePoll() {
+  stopOnlinePoll();
+  state.onlinePoll = setInterval(() => {
+    if ($('screen-metrics')?.hidden) {
+      stopOnlinePoll();
+      return;
+    }
+    void fetchOnlineCount()
+      .then((online) => {
+        const live = document.querySelector('.metric-kpi--live .value');
+        if (live) live.textContent = String(online);
+      })
+      .catch(() => {});
+  }, 20_000);
+}
+
+function metricIcon(kind) {
+  const common = 'class="metric-ico" viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" focusable="false"';
+  if (kind === 'eye') {
+    return `<svg ${common} fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>`;
+  }
+  if (kind === 'cart') {
+    return `<svg ${common} fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M1 1h3l2.2 11.2a2 2 0 0 0 2 1.6h9.4a2 2 0 0 0 2-1.5L22 6H6"/></svg>`;
+  }
+  if (kind === 'facebook') {
+    return `<svg ${common} fill="currentColor"><path d="M14 8h2.5V5.5A16 16 0 0 0 13.2 5C10.6 5 9 6.6 9 9.4V12H6.5v3H9v8h3.5v-8H15l.5-3H12.5V9.7c0-.9.2-1.7 1.5-1.7z"/></svg>`;
+  }
+  if (kind === 'read') {
+    return `<svg ${common} fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5z"/></svg>`;
+  }
+  return '';
+}
+
+function metricStat(kind, value, label) {
+  const extra = kind === 'facebook' ? ' metric-stat--fb' : '';
+  return `<span class="metric-stat${extra}" title="${escapeHtml(label)}">${metricIcon(kind)}<span>${escapeHtml(String(value ?? 0))}</span></span>`;
 }
 
 function renderMetricRows(containerId, rows, mapper) {
@@ -103,14 +168,14 @@ function renderMetricRows(containerId, rows, mapper) {
   el.innerHTML = rows
     .slice(0, 8)
     .map((row) => {
-      const { name, sub, nums } = mapper(row);
+      const { name, category, statsHtml } = mapper(row);
       return `
         <div class="metric-row">
           <div>
             <div class="name">${escapeHtml(name)}</div>
-            <div class="sub">${escapeHtml(sub)}</div>
+            <div class="sub">${escapeHtml(category || '')}</div>
           </div>
-          <div class="nums">${escapeHtml(nums)}</div>
+          <div class="nums">${statsHtml}</div>
         </div>`;
     })
     .join('');
@@ -122,7 +187,7 @@ async function loadMetrics() {
   try {
     // Do not select facebook_views from report views — older Supabase schemas
     // omit that column; count Facebook from events instead (same as admin).
-    const [productsRes, blogRes, productFbRes, blogFbRes] = await Promise.all([
+    const [productsRes, blogRes, productFbRes, blogFbRes, online] = await Promise.all([
       supabase
         .from('product_metrics_report')
         .select('id,title,category,views,opens,buy_clicks')
@@ -143,6 +208,7 @@ async function loadMetrics() {
         .select('blog_post_id')
         .eq('event_type', 'view')
         .eq('source', 'facebook'),
+      fetchOnlineCount().catch(() => 0),
     ]);
 
     if (productsRes.error) throw productsRes.error;
@@ -177,6 +243,7 @@ async function loadMetrics() {
     const blogFacebook = posts.reduce((s, r) => s + Number(r.facebook_views || 0), 0);
 
     renderMetricKpis({
+      online,
       productViews,
       buyClicks,
       blogViews,
@@ -184,14 +251,19 @@ async function loadMetrics() {
       blogFacebook,
       blogRate: blogViews > 0 ? blogReads / blogViews : 0,
     });
+    startOnlinePoll();
 
     renderMetricRows(
       'metrics-products',
       products.filter((r) => Number(r.views || 0) > 0 || Number(r.buy_clicks || 0) > 0),
       (r) => ({
         name: r.title || 'Produto',
-        sub: `${r.category || 'Sem categoria'} · FB ${r.facebook_views || 0}`,
-        nums: `${r.views || 0} vis · ${r.buy_clicks || 0} compra`,
+        category: r.category || 'Sem categoria',
+        statsHtml: [
+          metricStat('eye', r.views || 0, 'Visualizações'),
+          metricStat('cart', r.buy_clicks || 0, 'Cliques de compra'),
+          metricStat('facebook', r.facebook_views || 0, 'Facebook'),
+        ].join(''),
       })
     );
 
@@ -200,8 +272,12 @@ async function loadMetrics() {
       posts.filter((r) => Number(r.views || 0) > 0 || Number(r.read_completes || 0) > 0),
       (r) => ({
         name: r.title || 'Post',
-        sub: `${r.category || 'Blog'} · FB ${r.facebook_views || 0}`,
-        nums: `${r.views || 0} vis · ${r.read_completes || 0} leit.`,
+        category: r.category || 'Blog',
+        statsHtml: [
+          metricStat('eye', r.views || 0, 'Visualizações'),
+          metricStat('read', r.read_completes || 0, 'Leituras'),
+          metricStat('facebook', r.facebook_views || 0, 'Facebook'),
+        ].join(''),
       })
     );
 
@@ -220,6 +296,7 @@ async function openTab(name) {
     await loadMetrics();
     return;
   }
+  stopOnlinePoll();
   showScreen('list');
   if (!state.posts.length) await loadPosts();
   else renderList();
@@ -758,6 +835,7 @@ async function init() {
   });
 
   async function doLogout() {
+    stopOnlinePoll();
     await supabase.auth.signOut();
     state.posts = [];
     state.current = null;

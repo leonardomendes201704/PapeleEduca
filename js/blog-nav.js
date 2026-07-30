@@ -1,4 +1,5 @@
 import { supabase } from './supabase-client.js';
+import './presence.js';
 
 const DEFAULT_ENABLED = true;
 

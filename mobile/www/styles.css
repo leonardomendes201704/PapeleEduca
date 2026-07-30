@@ -90,6 +90,27 @@ body {
   padding: 0.85rem 0.9rem;
   box-shadow: 0 4px 18px rgba(15, 61, 58, 0.06);
 }
+.metric-kpi--live {
+  grid-column: 1 / -1;
+  background: linear-gradient(135deg, #e7f6f5, #fff);
+  border: 1px solid rgba(47, 183, 176, 0.35);
+}
+.metric-kpi--live .label::before {
+  content: "";
+  display: inline-block;
+  width: 0.55rem;
+  height: 0.55rem;
+  margin-right: 0.4rem;
+  border-radius: 50%;
+  background: #2fb7b0;
+  box-shadow: 0 0 0 0 rgba(47, 183, 176, 0.55);
+  animation: pulse-dot 1.6s ease-out infinite;
+  vertical-align: 0.05em;
+}
+@keyframes pulse-dot {
+  70% { box-shadow: 0 0 0 8px rgba(47, 183, 176, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(47, 183, 176, 0); }
+}
 .metric-kpi .label {
   display: block;
   font-size: 0.75rem;
@@ -133,11 +154,28 @@ body {
   margin-top: 0.2rem;
 }
 .metric-row .nums {
-  text-align: right;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.28rem;
   font-weight: 700;
   font-size: 0.9rem;
   color: var(--accent-deep);
   white-space: nowrap;
+}
+.metric-stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.28rem;
+  line-height: 1;
+}
+.metric-stat .metric-ico {
+  flex: 0 0 auto;
+  opacity: 0.85;
+}
+.metric-stat--fb .metric-ico {
+  color: #1877f2;
+  opacity: 1;
 }
 
 .brand, .brand-sm {

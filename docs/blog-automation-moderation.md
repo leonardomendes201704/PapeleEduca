@@ -32,6 +32,12 @@ Setup:
 2. Na Vercel: `FCM_PROJECT_ID`, `FCM_SERVICE_ACCOUNT_JSON`, e `BLOG_NOTIFY_SECRET` (ou `CRON_SECRET`).
 3. Redeploy. Teste criando um rascunho no admin ou pela API.
 
+## Visitantes online (KPI no app)
+
+1. Rode [`supabase-site-presence.sql`](../supabase-site-presence.sql) no SQL Editor.
+2. O site envia heartbeat (`js/presence.js`, via `blog-nav.js`) a cada ~45s com a aba visível.
+3. O app conta linhas em `site_presence` com `last_seen_at` nos últimos **2 minutos**.
+
 ## Push de visitante único (produto / post)
 
 Após um `view` em `product_events` ou `blog_post_events`, o site chama `/api/metrics/notify-visit`.
