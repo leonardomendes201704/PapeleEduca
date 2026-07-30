@@ -308,3 +308,65 @@ h1 {
   grid-template-columns: 1fr 1fr;
   gap: 0.5rem;
 }
+.modal-actions-single { grid-template-columns: 1fr; }
+
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: grid;
+  place-items: center;
+  background: rgba(15, 61, 58, 0.55);
+  backdrop-filter: blur(2px);
+}
+.loading-overlay[hidden] { display: none !important; }
+.loading-card {
+  background: #fff;
+  border-radius: 18px;
+  padding: 1.35rem 1.5rem;
+  min-width: min(78vw, 240px);
+  display: grid;
+  justify-items: center;
+  gap: 0.85rem;
+  box-shadow: var(--shadow);
+}
+.loading-card p {
+  margin: 0;
+  font-weight: 700;
+  color: var(--bg-deep);
+}
+.spinner {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 3px solid #d9efed;
+  border-top-color: var(--accent);
+  animation: spin 0.75s linear infinite;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.result-card { text-align: center; justify-items: center; }
+.result-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1;
+}
+.result-icon.success {
+  background: #e3f7e8;
+  color: #1f7a3a;
+}
+.result-icon.error {
+  background: #fde8e8;
+  color: var(--danger);
+}
+.result-card #result-message {
+  margin: 0;
+  line-height: 1.45;
+}

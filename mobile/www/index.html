@@ -13,6 +13,24 @@
 <body>
   <div id="toast" class="toast" hidden></div>
 
+  <div id="loading-overlay" class="loading-overlay" hidden>
+    <div class="loading-card" role="status" aria-live="polite">
+      <div class="spinner" aria-hidden="true"></div>
+      <p id="loading-text">Aguarde…</p>
+    </div>
+  </div>
+
+  <div id="result-modal" class="modal" hidden>
+    <div class="modal-card result-card">
+      <div id="result-icon" class="result-icon" aria-hidden="true"></div>
+      <h2 id="result-title">Pronto</h2>
+      <p class="meta" id="result-message"></p>
+      <div class="modal-actions modal-actions-single">
+        <button type="button" class="btn btn-primary" id="result-ok">OK</button>
+      </div>
+    </div>
+  </div>
+
   <div id="fb-modal" class="modal" hidden>
     <div class="modal-card">
       <h2>Postar no Facebook</h2>

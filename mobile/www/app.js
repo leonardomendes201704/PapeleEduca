@@ -409,6 +409,39 @@ async function rejectPost() {
   }
 }
 
+function showLoading(text = 'Aguarde…') {
+  const overlay = $('loading-overlay');
+  const label = $('loading-text');
+  if (label) label.textContent = text;
+  if (overlay) overlay.hidden = false;
+}
+
+function hideLoading() {
+  const overlay = $('loading-overlay');
+  if (overlay) overlay.hidden = true;
+}
+
+function showResultModal({ type = 'success', title, message } = {}) {
+  const modal = $('result-modal');
+  const icon = $('result-icon');
+  const titleEl = $('result-title');
+  const messageEl = $('result-message');
+  if (!modal) return;
+  const ok = type !== 'error';
+  if (icon) {
+    icon.className = `result-icon ${ok ? 'success' : 'error'}`;
+    icon.textContent = ok ? '✓' : '!';
+  }
+  if (titleEl) titleEl.textContent = title || (ok ? 'Sucesso' : 'Erro');
+  if (messageEl) messageEl.textContent = message || '';
+  modal.hidden = false;
+}
+
+function closeResultModal() {
+  const modal = $('result-modal');
+  if (modal) modal.hidden = true;
+}
+
 function openFacebookModal(post) {
   const modal = $('fb-modal');
   const titleEl = $('fb-modal-title');
@@ -445,6 +478,7 @@ async function confirmFacebookPost() {
 
   await setBusy(true);
   if (errEl) errEl.hidden = true;
+  showLoading('Publicando no Facebook…');
   try {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) throw new Error('Sessão expirada. Entre novamente.');
@@ -463,9 +497,9 @@ async function confirmFacebookPost() {
           force: Boolean(post.facebook_post_id),
         }),
       });
-    } catch (networkErr) {
+    } catch {
       throw new Error(
-        'Sem conexão com o servidor (Failed to fetch). Verifique a internet e se o app está atualizado.'
+        'Sem conexão com o servidor. Verifique a internet e se o app está atualizado.'
       );
     }
     const payload = await response.json().catch(() => ({}));
@@ -476,14 +510,21 @@ async function confirmFacebookPost() {
       facebook_post_id: payload.facebook_post_id || post.facebook_post_id,
     };
     closeFacebookModal();
-    showToast(payload.already_posted ? 'Já estava no Facebook.' : 'Postado no Facebook.');
+    showResultModal({
+      type: 'success',
+      title: payload.already_posted ? 'Já estava no Facebook' : 'Publicado no Facebook',
+      message: payload.already_posted
+        ? 'Este post já tinha uma publicação registrada na Página.'
+        : 'A postagem foi enviada para a Página com sucesso.',
+    });
   } catch (err) {
-    if (errEl) {
-      errEl.textContent = err.message || 'Falha no Facebook.';
-      errEl.hidden = false;
-    }
-    showToast(err.message || 'Falha no Facebook.', { error: true });
+    showResultModal({
+      type: 'error',
+      title: 'Falha ao publicar',
+      message: err.message || 'Não foi possível postar no Facebook.',
+    });
   } finally {
+    hideLoading();
     await setBusy(false);
   }
 }
@@ -555,7 +596,11 @@ async function init() {
   $('fb-modal-cancel')?.addEventListener('click', () => closeFacebookModal());
   $('fb-modal-confirm')?.addEventListener('click', () => void confirmFacebookPost());
   $('fb-modal')?.addEventListener('click', (event) => {
-    if (event.target === $('fb-modal')) closeFacebookModal();
+    if (event.target === $('fb-modal') && !state.busy) closeFacebookModal();
+  });
+  $('result-ok')?.addEventListener('click', () => closeResultModal());
+  $('result-modal')?.addEventListener('click', (event) => {
+    if (event.target === $('result-modal')) closeResultModal();
   });
 
   document.querySelectorAll('.chip').forEach((chip) => {
