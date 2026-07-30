@@ -3,3 +3,16 @@ node_modules/
 
 .vercel
 .env*
+
+# Android / Capacitor build outputs
+mobile/android/.gradle/
+mobile/android/app/build/
+mobile/android/build/
+mobile/android/captures/
+mobile/android/local.properties
+mobile/android/app/google-services.json
+mobile/www/native-plugins.bundle.js
+dist/apk/*.apk
+
+# Keep keystore for sideload updates; ignore local SDK paths only
+!mobile/android/keystore/

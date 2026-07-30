@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="color-scheme" content="light" />
+  <title>Papelê Moderação</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,600;0,9..40,700;1,9..40,400&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div id="toast" class="toast" hidden></div>
+
+  <section id="screen-login" class="screen screen-login">
+    <div class="login-bg" aria-hidden="true"></div>
+    <div class="login-card">
+      <p class="brand">Papelê Educa</p>
+      <h1>Moderação do blog</h1>
+      <p class="lede">Revise rascunhos da automação, aprove ou rejeite, e poste no Facebook.</p>
+      <form id="login-form" class="login-form">
+        <label>
+          E-mail
+          <input id="login-email" type="email" autocomplete="username" required />
+        </label>
+        <label>
+          Senha
+          <input id="login-password" type="password" autocomplete="current-password" required />
+        </label>
+        <p id="login-error" class="form-error" hidden></p>
+        <button type="submit" class="btn btn-primary" id="login-submit">Entrar</button>
+      </form>
+    </div>
+  </section>
+
+  <section id="screen-list" class="screen" hidden>
+    <header class="topbar">
+      <div>
+        <p class="brand-sm">Papelê Educa</p>
+        <h1>Posts</h1>
+      </div>
+      <div class="topbar-actions">
+        <button type="button" class="btn btn-ghost" id="btn-refresh" title="Atualizar">↻</button>
+        <button type="button" class="btn btn-ghost" id="btn-logout">Sair</button>
+      </div>
+    </header>
+    <div class="filters">
+      <button type="button" class="chip active" data-filter="draft">Rascunhos</button>
+      <button type="button" class="chip" data-filter="published">Publicados</button>
+      <button type="button" class="chip" data-filter="all">Todos</button>
+    </div>
+    <div id="posts-list" class="posts-list"></div>
+    <p id="list-empty" class="empty" hidden>Nenhum post nesta lista.</p>
+  </section>
+
+  <section id="screen-detail" class="screen" hidden>
+    <header class="topbar">
+      <button type="button" class="btn btn-ghost" id="btn-back">← Voltar</button>
+      <span id="detail-status" class="badge">draft</span>
+    </header>
+    <article class="detail">
+      <img id="detail-cover" class="detail-cover" alt="" hidden />
+      <h1 id="detail-title"></h1>
+      <p id="detail-meta" class="meta"></p>
+      <iframe id="detail-preview" class="detail-preview" title="Pré-visualização do post" sandbox=""></iframe>
+    </article>
+    <footer id="action-bar" class="action-bar">
+      <button type="button" class="btn btn-danger" id="btn-reject">Rejeitar</button>
+      <button type="button" class="btn btn-secondary" id="btn-draft">Rascunho</button>
+      <button type="button" class="btn btn-primary" id="btn-approve">Aprovar</button>
+      <button type="button" class="btn btn-facebook" id="btn-facebook" hidden>Facebook</button>
+    </footer>
+  </section>
+
+  <script type="module" src="./native-plugins.bundle.js"></script>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>

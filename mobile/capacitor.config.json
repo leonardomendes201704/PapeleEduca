@@ -1,0 +1,13 @@
+{
+  "appId": "br.com.papeleeduca.moderation",
+  "appName": "Papelê Moderação",
+  "webDir": "www",
+  "android": {
+    "allowMixedContent": false
+  },
+  "plugins": {
+    "PushNotifications": {
+      "presentationOptions": ["badge", "sound", "alert"]
+    }
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "name": "papele-educa-moderation",
+  "private": true,
+  "version": "1.0.0",
+  "description": "App Android de moderação do blog Papelê Educa",
+  "scripts": {
+    "bundle:plugins": "esbuild www/native-plugins.js --bundle --format=esm --outfile=www/native-plugins.bundle.js",
+    "prebuild:apk": "npm run bundle:plugins",
+    "build:apk": "node scripts/build-apk.mjs",
+    "smoke": "node ../scripts/smoke-moderation.mjs",
+    "cap:sync": "npm run bundle:plugins && npx cap sync android",
+    "open:android": "npx cap open android"
+  },
+  "dependencies": {
+    "@capacitor/android": "^7.4.3",
+    "@capacitor/app": "^7.1.0",
+    "@capacitor/core": "^7.4.3",
+    "@capacitor/push-notifications": "^7.0.3",
+    "@capacitor/status-bar": "^7.0.3"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^7.4.3",
+    "esbuild": "^0.25.9"
+  }
+}

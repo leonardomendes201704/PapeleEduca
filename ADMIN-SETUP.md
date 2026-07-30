@@ -63,3 +63,12 @@ Publicação **manual** pela tabela de posts do CMS (botão **Postar no Facebook
 
 Only rows with `status = 'published'` are visible to the public site when it is connected to Supabase.
 
+## 6. App de moderação (Android)
+
+Posts da automação nascem como **rascunho**. O APK em [`mobile/`](./mobile/) lista, pré-visualiza (sem métricas), aprova, rejeita e posta no Facebook.
+
+1. Execute [`supabase-blog-push.sql`](./supabase-blog-push.sql).
+2. Configure o webhook e o FCM conforme [`docs/blog-automation-moderation.md`](./docs/blog-automation-moderation.md).
+3. Build local: `cd mobile && npm install && npm run build:apk` → APK em `dist/apk/`.
+4. Atualize as instruções da Cursor Automation para criar rascunho (helper já força `status: draft`).
+

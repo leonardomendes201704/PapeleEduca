@@ -1,6 +1,7 @@
 /**
- * Helpers for the Cursor Automation that publishes one blog post on a schedule.
- * Category cycling, default cover_url per category, and publish via API.
+ * Helpers for the Cursor Automation that creates one blog post on a schedule.
+ * Posts are created as draft for moderation (approve in the mobile app / admin).
+ * Category cycling, default cover_url per category, and create via API.
  *
  * Usage:
  *   node scripts/blog-automation-helpers.mjs next-category
@@ -286,12 +287,15 @@ export async function publishPost(payload, { skipCoverValidation = false } = {})
     }
   }
 
+  // Always draft — moderation app / admin must approve before going live.
+  // Payload status is ignored so automations cannot accidentally publish.
   const body = {
-    status: 'published',
     author_name: 'Papelê Educa',
     ...payload,
     cover_url,
     og_image_url,
+    status: 'draft',
+    published_at: null,
   };
 
   const res = await fetch(`${BASE}/api/blog/posts`, {
