@@ -32,5 +32,42 @@ for select
 to authenticated
 using (public.is_admin(auth.uid()));
 
+-- Historical unique visitors (distinct visitor_id across event tables + presence).
+create or replace function public.get_unique_visitor_count()
+returns integer
+language plpgsql
+stable
+security definer
+set search_path = public
+as $$
+declare
+  total integer := 0;
+begin
+  if auth.role() is distinct from 'service_role'
+     and not public.is_admin(auth.uid()) then
+    raise exception 'not allowed';
+  end if;
+
+  select count(*)::int into total
+  from (
+    select visitor_id from public.product_events where visitor_id <> ''
+    union
+    select visitor_id from public.blog_post_events where visitor_id <> ''
+    union
+    select visitor_id from public.blog_listing_events where visitor_id <> ''
+    union
+    select visitor_id from public.free_material_events where visitor_id <> ''
+    union
+    select visitor_id from public.site_presence where visitor_id <> ''
+  ) u;
+
+  return coalesce(total, 0);
+end;
+$$;
+
+revoke all on function public.get_unique_visitor_count() from public;
+grant execute on function public.get_unique_visitor_count() to authenticated;
+grant execute on function public.get_unique_visitor_count() to service_role;
+
 -- Optional cleanup helper (manual or cron): delete stale rows older than 7 days
 -- delete from public.site_presence where last_seen_at < now() - interval '7 days';

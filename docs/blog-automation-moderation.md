@@ -34,9 +34,10 @@ Setup:
 
 ## Visitantes online (KPI no app)
 
-1. Rode [`supabase-site-presence.sql`](../supabase-site-presence.sql) no SQL Editor.
+1. Rode [`supabase-site-presence.sql`](../supabase-site-presence.sql) no SQL Editor (inclui `get_unique_visitor_count`).
 2. O site envia heartbeat via `POST /api/metrics/presence` (`js/presence.js`) a cada ~45s com a aba visível.
-3. O app conta linhas em `site_presence` com `last_seen_at` nos últimos **2 minutos**.
+3. Online no app: `site_presence` com `last_seen_at` nos últimos **2 minutos**.
+4. Únicos no app: RPC `get_unique_visitor_count` (union de visitor_id em eventos + presença).
 
 ## Push de visitante único (produto / post)
 

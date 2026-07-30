@@ -79,6 +79,7 @@ function renderMetricKpis(kpis) {
   if (!el) return;
   const items = [
     { label: 'Visitantes online', value: kpis.online, live: true },
+    { label: 'Visitantes únicos', value: kpis.uniqueVisitors },
     { label: 'Vis. produtos', value: kpis.productViews },
     { label: 'Cliques compra', value: kpis.buyClicks },
     { label: 'Vis. posts', value: kpis.blogViews },
@@ -109,6 +110,25 @@ async function fetchOnlineCount() {
       return 0;
     }
     throw error;
+  }
+  return Number(count || 0);
+}
+
+async function fetchUniqueVisitorCount() {
+  const { data, error } = await supabase.rpc('get_unique_visitor_count');
+  if (!error && data != null) return Number(data);
+
+  // Fallback until the RPC SQL is applied: total rows in site_presence.
+  const { count, error: presenceError } = await supabase
+    .from('site_presence')
+    .select('visitor_id', { count: 'exact', head: true });
+  if (presenceError) {
+    if (/site_presence|does not exist|schema cache|get_unique_visitor_count/i.test(
+      `${error?.message || ''} ${presenceError.message || ''}`
+    )) {
+      return 0;
+    }
+    throw presenceError;
   }
   return Number(count || 0);
 }
@@ -187,7 +207,7 @@ async function loadMetrics() {
   try {
     // Do not select facebook_views from report views — older Supabase schemas
     // omit that column; count Facebook from events instead (same as admin).
-    const [productsRes, blogRes, productFbRes, blogFbRes, online] = await Promise.all([
+    const [productsRes, blogRes, productFbRes, blogFbRes, online, uniqueVisitors] = await Promise.all([
       supabase
         .from('product_metrics_report')
         .select('id,title,category,views,opens,buy_clicks')
@@ -209,6 +229,7 @@ async function loadMetrics() {
         .eq('event_type', 'view')
         .eq('source', 'facebook'),
       fetchOnlineCount().catch(() => 0),
+      fetchUniqueVisitorCount().catch(() => 0),
     ]);
 
     if (productsRes.error) throw productsRes.error;
@@ -244,6 +265,7 @@ async function loadMetrics() {
 
     renderMetricKpis({
       online,
+      uniqueVisitors,
       productViews,
       buyClicks,
       blogViews,
