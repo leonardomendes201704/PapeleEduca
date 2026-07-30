@@ -6,7 +6,12 @@
  *   node scripts/blog-automation-helpers.mjs next-category
  *   node scripts/blog-automation-helpers.mjs recent-titles
  *   node scripts/blog-automation-helpers.mjs list-covers
+ *   node scripts/blog-automation-helpers.mjs validate-cover --url <cover_url>
  *   node scripts/blog-automation-helpers.mjs publish --stdin   # JSON on stdin
+ *
+ * Cover validation (publish):
+ *   BLOG_ALLOW_GENERIC_COVER=1  allow category default covers (not recommended)
+ *   BLOG_SKIP_COVER_VALIDATION=1  skip generic/recent/HTTP checks (emergency only)
  *
  * Env:
  *   BLOG_API_KEY (required for publish)
@@ -47,6 +52,16 @@ const FALLBACK_COVERS = [
   'blog-observacao-doc.png',
 ];
 
+/** Generic category covers — too reused; automation must not publish with these. */
+const GENERIC_COVER_FILES = new Set([
+  ...CATEGORY_ORDER.map((c) => c.cover),
+  ...FALLBACK_COVERS,
+  'blog-brincar-bncc-og.jpg',
+  'blog-seis-direitos-bncc-og.jpg',
+]);
+
+const RECENT_COVER_BLOCK_COUNT = 15;
+
 function coverUrlForFile(file) {
   return `${BASE}/images/${file}`;
 }
@@ -72,13 +87,65 @@ export function listAvailableCovers() {
   }));
 }
 
+function coverFileFromUrl(coverUrl) {
+  return String(coverUrl || '').trim().split('/').pop().split('?')[0];
+}
+
 function countCoverUsage(posts) {
   const counts = Object.create(null);
   for (const post of posts) {
-    const file = String(post.cover_url || '').split('/').pop();
+    const file = coverFileFromUrl(post.cover_url);
     if (file) counts[file] = (counts[file] || 0) + 1;
   }
   return counts;
+}
+
+function recentCoverFilesFromPosts(posts, limit = RECENT_COVER_BLOCK_COUNT) {
+  const files = [];
+  for (const post of posts.slice(0, limit)) {
+    const file = coverFileFromUrl(post.cover_url);
+    if (file && !files.includes(file)) files.push(file);
+  }
+  return files;
+}
+
+export function validateCoverUrl(coverUrl, { recentCoverFiles = [], allowGeneric = false } = {}) {
+  const file = coverFileFromUrl(coverUrl);
+  if (!file) {
+    return { ok: false, file: '', reason: 'cover_url vazia ou inválida.' };
+  }
+  if (!/^blog-.*\.(png|jpe?g|webp)$/i.test(file)) {
+    return {
+      ok: false,
+      file,
+      reason: 'Nome da capa deve seguir blog-{tema}.png (ou .jpg/.webp).',
+    };
+  }
+  if (!allowGeneric && GENERIC_COVER_FILES.has(file)) {
+    return {
+      ok: false,
+      file,
+      reason: `Capa genérica de categoria proibida (${file}). Gere uma capa nova específica ao assunto.`,
+    };
+  }
+  if (recentCoverFiles.includes(file)) {
+    return {
+      ok: false,
+      file,
+      reason: `Capa usada recentemente (${file}). Gere outra imagem para este post.`,
+    };
+  }
+  return { ok: true, file, reason: 'ok' };
+}
+
+async function assertCoverUrlReachable(coverUrl) {
+  try {
+    const res = await fetch(coverUrl, { method: 'HEAD' });
+    if (res.ok) return { ok: true };
+    return { ok: false, reason: `Capa inacessível (HTTP ${res.status}): ${coverUrl}` };
+  } catch (err) {
+    return { ok: false, reason: `Capa inacessível: ${err.message || coverUrl}` };
+  }
 }
 
 function resolveCoverUrl({ categorySlug, categoryName, coverUrl, avoidUrl } = {}) {
@@ -145,13 +212,19 @@ export async function pickNextCategory() {
   const recentCoverUrls = [...new Set(
     recentPosts.map((p) => String(p.cover_url || '').trim()).filter(Boolean),
   )];
-  const recentCoverFiles = recentCoverUrls.map((url) => url.split('/').pop());
+  const recentCoverFiles = recentCoverFilesFromPosts(posts);
+  const forbiddenCoverFiles = [...new Set([
+    ...GENERIC_COVER_FILES,
+    ...recentCoverFiles,
+  ])];
   const coverUsage = countCoverUsage(posts);
   const availableCovers = listAvailableCovers().map(({ file, url }) => ({
     file,
     url,
     usedInLast200Posts: coverUsage[file] || 0,
     usedRecently: recentCoverFiles.includes(file),
+    isGeneric: GENERIC_COVER_FILES.has(file),
+    allowedForNewPost: !forbiddenCoverFiles.includes(file),
   }));
 
   const cover_url = resolveCoverUrl({
@@ -169,23 +242,49 @@ export async function pickNextCategory() {
     recentSlugs: recentPosts.map((p) => p.slug),
     recentCoverUrls,
     recentCoverFiles,
+    forbiddenCoverFiles: [...forbiddenCoverFiles],
+    genericCoverFiles: [...GENERIC_COVER_FILES],
     availableCovers,
     coverSelectionHint:
-      'Prefer generate a new cover for this post. If reusing, pick from availableCovers where usedRecently is false and the image matches the topic.',
+      'OBRIGATÓRIO: gere capa nova blog-{slug}-{tema}.png ilustrando a ação central do post. Nunca use forbiddenCoverFiles. Valide com validate-cover antes de publicar.',
   };
 }
 
-export async function publishPost(payload) {
+export async function publishPost(payload, { skipCoverValidation = false } = {}) {
   if (!API_KEY) throw new Error('BLOG_API_KEY is required');
 
   const category = String(payload.category || '').trim();
   const categorySlug = String(payload.category_slug || '').trim();
-  const cover_url = resolveCoverUrl({
+  const allowGeneric = process.env.BLOG_ALLOW_GENERIC_COVER === '1';
+  const explicitCover = String(payload.cover_url || '').trim();
+
+  if (!explicitCover && !allowGeneric) {
+    throw new Error(
+      'cover_url é obrigatória. Gere uma capa específica (blog-{slug}-{tema}.png), commit em images/, valide com validate-cover e tente publicar de novo.',
+    );
+  }
+
+  const cover_url = explicitCover || resolveCoverUrl({
     categorySlug,
     categoryName: category,
     coverUrl: payload.cover_url,
   });
   const og_image_url = String(payload.og_image_url || cover_url).trim();
+
+  if (!skipCoverValidation && process.env.BLOG_SKIP_COVER_VALIDATION !== '1') {
+    const recentPosts = await listRecentTitles(RECENT_COVER_BLOCK_COUNT);
+    const recentCoverFiles = recentCoverFilesFromPosts(recentPosts);
+    const validation = validateCoverUrl(cover_url, { recentCoverFiles, allowGeneric });
+    if (!validation.ok) {
+      throw new Error(`Capa rejeitada: ${validation.reason}`);
+    }
+    const reachable = await assertCoverUrlReachable(cover_url);
+    if (!reachable.ok) {
+      throw new Error(
+        `${reachable.reason} Faça commit/push da imagem e aguarde o deploy antes de publicar.`,
+      );
+    }
+  }
 
   const body = {
     status: 'published',
@@ -233,18 +332,40 @@ async function main() {
     })), null, 2));
     return;
   }
+  if (cmd === 'validate-cover') {
+    const urlFlag = process.argv.indexOf('--url');
+    const coverUrl = urlFlag >= 0 ? process.argv[urlFlag + 1] : process.argv[3];
+    if (!coverUrl) throw new Error('Usage: validate-cover --url <cover_url>');
+    const posts = await listRecentTitles(RECENT_COVER_BLOCK_COUNT);
+    const recentCoverFiles = recentCoverFilesFromPosts(posts);
+    const allowGeneric = process.env.BLOG_ALLOW_GENERIC_COVER === '1';
+    const validation = validateCoverUrl(coverUrl, { recentCoverFiles, allowGeneric });
+    const reachable = validation.ok ? await assertCoverUrlReachable(coverUrl) : { ok: false, reason: 'skipped' };
+    console.log(JSON.stringify({
+      coverUrl,
+      ...validation,
+      reachable: reachable.ok,
+      reachableReason: reachable.reason || null,
+      forbiddenCoverFiles: [...new Set([...GENERIC_COVER_FILES, ...recentCoverFiles])],
+    }, null, 2));
+    if (!validation.ok || !reachable.ok) {
+      process.exitCode = 1;
+      return;
+    }
+    return;
+  }
   if (cmd === 'list-covers') {
     const posts = await listRecentTitles(200);
     const coverUsage = countCoverUsage(posts);
-    const recentCoverFiles = new Set(
-      posts.slice(0, 15).map((p) => String(p.cover_url || '').split('/').pop()).filter(Boolean),
-    );
+    const recentCoverFiles = new Set(recentCoverFilesFromPosts(posts));
     console.log(JSON.stringify(
       listAvailableCovers().map(({ file, url }) => ({
         file,
         url,
         usedInLast200Posts: coverUsage[file] || 0,
         usedRecently: recentCoverFiles.has(file),
+        isGeneric: GENERIC_COVER_FILES.has(file),
+        allowedForNewPost: !GENERIC_COVER_FILES.has(file) && !recentCoverFiles.has(file),
       })),
       null,
       2,
@@ -264,5 +385,5 @@ async function main() {
 
 main().catch((err) => {
   console.error(err.message || err);
-  process.exit(1);
+  process.exitCode = 1;
 });
