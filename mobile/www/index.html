@@ -88,17 +88,19 @@
     <p id="list-empty" class="empty" hidden>Nenhum post nesta lista.</p>
   </section>
 
-  <section id="screen-detail" class="screen" hidden>
-    <header class="topbar">
+  <section id="screen-detail" class="screen screen-detail" hidden>
+    <header class="topbar topbar-fixed">
       <button type="button" class="btn btn-ghost" id="btn-back">← Voltar</button>
       <span id="detail-status" class="badge">draft</span>
     </header>
-    <article class="detail">
-      <img id="detail-cover" class="detail-cover" alt="" hidden />
-      <h1 id="detail-title"></h1>
-      <p id="detail-meta" class="meta"></p>
-      <iframe id="detail-preview" class="detail-preview" title="Pré-visualização do post" sandbox=""></iframe>
-    </article>
+    <div class="detail-scroll">
+      <article class="detail">
+        <img id="detail-cover" class="detail-cover" alt="" hidden />
+        <h1 id="detail-title"></h1>
+        <p id="detail-meta" class="meta"></p>
+        <iframe id="detail-preview" class="detail-preview" title="Pré-visualização do post" sandbox=""></iframe>
+      </article>
+    </div>
     <footer id="action-bar" class="action-bar">
       <button type="button" class="btn btn-danger" id="btn-reject">Rejeitar</button>
       <button type="button" class="btn btn-secondary" id="btn-draft">Rascunho</button>
