@@ -39,8 +39,8 @@ Setup:
 3. Online no app: `site_presence` com `last_seen_at` nos últimos **2 minutos**.
 4. Únicos no app: RPC `get_unique_visitor_count` (union de visitor_id em eventos + presença).
 
-## Push de visitante único (produto / post)
+## Push de visitante único (home / produto / post)
 
-Após um `view` em `product_events` ou `blog_post_events`, o site chama `/api/metrics/notify-visit`.
-O servidor só envia FCM se existir **exatamente 1** view para `(visitor_id, produto|post)` e o evento for recente (&lt; 5 min).
-Listagens e revisitas do mesmo visitante **não** disparam push.
+Após um `view` em `home_page_events`, `product_events` ou `blog_post_events`, o site chama `/api/metrics/notify-visit`.
+O servidor só envia FCM se existir **exatamente 1** view para aquele visitante naquele destino e o evento for recente (&lt; 5 min).
+Rode também [`supabase-home-metrics.sql`](../supabase-home-metrics.sql) para a tabela/KPI da home.

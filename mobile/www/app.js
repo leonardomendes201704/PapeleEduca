@@ -80,6 +80,7 @@ function renderMetricKpis(kpis) {
   const items = [
     { label: 'Visitantes online', value: kpis.online, live: true },
     { label: 'Visitantes únicos', value: kpis.uniqueVisitors },
+    { label: 'Vis. home', value: kpis.homeViews },
     { label: 'Vis. produtos', value: kpis.productViews },
     { label: 'Cliques compra', value: kpis.buyClicks },
     { label: 'Vis. posts', value: kpis.blogViews },
@@ -175,7 +176,7 @@ function metricIcon(kind) {
 
 function metricStat(kind, value, label) {
   const extra = kind === 'facebook' ? ' metric-stat--fb' : '';
-  return `<span class="metric-stat${extra}" title="${escapeHtml(label)}">${metricIcon(kind)}<span>${escapeHtml(String(value ?? 0))}</span></span>`;
+  return `<span class="metric-stat${extra}" title="${escapeHtml(label)}">${metricIcon(kind)}<span class="metric-val">${escapeHtml(String(value ?? 0))}</span></span>`;
 }
 
 function renderMetricRows(containerId, rows, mapper) {
@@ -207,7 +208,7 @@ async function loadMetrics() {
   try {
     // Do not select facebook_views from report views — older Supabase schemas
     // omit that column; count Facebook from events instead (same as admin).
-    const [productsRes, blogRes, productFbRes, blogFbRes, online, uniqueVisitors] = await Promise.all([
+    const [productsRes, blogRes, productFbRes, blogFbRes, homeRes, online, uniqueVisitors] = await Promise.all([
       supabase
         .from('product_metrics_report')
         .select('id,title,category,views,opens,buy_clicks')
@@ -228,6 +229,7 @@ async function loadMetrics() {
         .select('blog_post_id')
         .eq('event_type', 'view')
         .eq('source', 'facebook'),
+      supabase.from('home_page_metrics_report').select('views,unique_views').maybeSingle(),
       fetchOnlineCount().catch(() => 0),
       fetchUniqueVisitorCount().catch(() => 0),
     ]);
@@ -262,10 +264,12 @@ async function loadMetrics() {
     const blogViews = posts.reduce((s, r) => s + Number(r.views || 0), 0);
     const blogReads = posts.reduce((s, r) => s + Number(r.read_completes || 0), 0);
     const blogFacebook = posts.reduce((s, r) => s + Number(r.facebook_views || 0), 0);
+    const homeViews = homeRes.error ? 0 : Number(homeRes.data?.views || 0);
 
     renderMetricKpis({
       online,
       uniqueVisitors,
+      homeViews,
       productViews,
       buyClicks,
       blogViews,
@@ -408,7 +412,12 @@ async function registerPushToken(session) {
     PushNotifications.addListener('pushNotificationActionPerformed', (event) => {
       const data = event?.notification?.data || {};
       const type = String(data.type || '');
-      if (type === 'visit_product' || type === 'visit_blog' || data.screen === 'metrics') {
+      if (
+        type === 'visit_product' ||
+        type === 'visit_blog' ||
+        type === 'visit_home' ||
+        data.screen === 'metrics'
+      ) {
         void openTab('metrics');
         return;
       }

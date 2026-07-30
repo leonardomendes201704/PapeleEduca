@@ -154,24 +154,31 @@ body {
   margin-top: 0.2rem;
 }
 .metric-row .nums {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 0.28rem;
+  display: grid;
+  grid-template-columns: 16px minmax(1.25ch, auto);
+  column-gap: 0.4rem;
+  row-gap: 0.3rem;
+  align-items: center;
+  justify-content: end;
   font-weight: 700;
   font-size: 0.9rem;
   color: var(--accent-deep);
   white-space: nowrap;
 }
+/* Children (icon + value) become grid cells → aligned icon | value columns */
 .metric-stat {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.28rem;
-  line-height: 1;
+  display: contents;
 }
 .metric-stat .metric-ico {
-  flex: 0 0 auto;
+  width: 14px;
+  height: 14px;
+  justify-self: center;
   opacity: 0.85;
+}
+.metric-stat .metric-val {
+  justify-self: end;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
 }
 .metric-stat--fb .metric-ico {
   color: #1877f2;

@@ -58,6 +58,8 @@ begin
     union
     select visitor_id from public.free_material_events where visitor_id <> ''
     union
+    select visitor_id from public.home_page_events where visitor_id <> ''
+    union
     select visitor_id from public.site_presence where visitor_id <> ''
   ) u;
 

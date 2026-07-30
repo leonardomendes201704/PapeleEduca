@@ -1,6 +1,6 @@
 import { supabase } from './supabase-client.js';
 import { renderProductCard, safeText } from './product-card.js';
-import { bindProductCardTracking } from './metrics.js';
+import { bindProductCardTracking, trackHomeViewOnce } from './metrics.js';
 
 const grid = document.getElementById('products-grid');
 const categoriesGrid = document.getElementById('categories-grid');
@@ -46,4 +46,5 @@ async function loadProducts() {
   bindProductCardTracking(grid, 'featured');
 }
 
+void trackHomeViewOnce({ page_context: 'home' });
 loadProducts();

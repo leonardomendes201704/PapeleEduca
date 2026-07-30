@@ -155,6 +155,68 @@ function notifyUniqueVisit({ kind, id, visitorId, title, source }) {
   }
 }
 
+const HOME_VIEW_PREFIX = 'pe_home_viewed_';
+
+async function postHomeEvent(payload) {
+  const response = await fetch(`${SUPABASE_URL}/rest/v1/home_page_events`, {
+    method: 'POST',
+    headers: {
+      apikey: SUPABASE_ANON_KEY,
+      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+      'Content-Type': 'application/json',
+      Prefer: 'return=minimal',
+    },
+    body: JSON.stringify([payload]),
+    keepalive: true,
+  });
+  return response.ok;
+}
+
+/** Session-deduped home view; push only on first-ever visitor (server-side). */
+export function trackHomeViewOnce(metadata = {}) {
+  const source = resolveTrafficSource(metadata);
+  const storageKey = `${HOME_VIEW_PREFIX}${source}`;
+  if (safeStorage(sessionStorage, storageKey)) {
+    return Promise.resolve(false);
+  }
+
+  const referrer = metadata.referrer || document.referrer || null;
+  const payload = {
+    event_type: 'view',
+    visitor_id: getVisitorId(),
+    session_id: getSessionId(),
+    source,
+    pathname: metadata.pathname || window.location.pathname,
+    referrer,
+    metadata: {
+      viewport: {
+        width: window.innerWidth,
+        height: window.innerHeight,
+      },
+      language: navigator.language || null,
+      ...metadata,
+      ...getCampaignParams(),
+      ...(hasFacebookClickId() ? { fbclid: true } : {}),
+    },
+  };
+
+  return postHomeEvent(payload)
+    .then((ok) => {
+      if (ok) {
+        safeStorage(sessionStorage, storageKey, '1');
+        notifyUniqueVisit({
+          kind: 'home',
+          id: 'home',
+          visitorId: getVisitorId(),
+          title: 'Página inicial',
+          source,
+        });
+      }
+      return ok;
+    })
+    .catch(() => false);
+}
+
 export function trackProductEvent(productId, eventType, metadata = {}) {
   if (!productId || !eventType) return Promise.resolve(false);
   const payload = getRequestPayload(productId, eventType, metadata);

@@ -1,12 +1,13 @@
 /**
  * POST /api/metrics/notify-visit
- * Push FCM when a unique visitor views a product detail or blog post page.
+ * Push FCM when a unique visitor views home, product detail, or blog post.
  *
- * Body: { kind: 'product'|'blog_post', id, visitor_id, title?, source? }
+ * Body: { kind: 'home'|'product'|'blog_post', id, visitor_id, title?, source? }
  *
  * Rules:
- *   - Only product detail / blog post read pages (client calls only from those).
+ *   - home / product detail / blog post read pages only.
  *   - Unique visitor = first view ever for (visitor_id + entity), any source.
+ *   - For home, entity id is the constant "home".
  *   - Requires a view event created within the last 5 minutes (anti-replay).
  *
  * Env: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, FCM_PROJECT_ID, FCM_SERVICE_ACCOUNT_JSON
@@ -202,14 +203,23 @@ function parseCountHeader(contentRange) {
 }
 
 async function countUniqueViews(kind, entityId, visitorId) {
-  const table = kind === 'product' ? 'product_events' : 'blog_post_events';
-  const idCol = kind === 'product' ? 'product_id' : 'blog_post_id';
-  const path =
-    `${table}?select=id,created_at` +
-    `&${idCol}=eq.${encodeURIComponent(entityId)}` +
-    `&visitor_id=eq.${encodeURIComponent(visitorId)}` +
-    `&event_type=eq.view` +
-    `&order=created_at.desc`;
+  let path = '';
+  if (kind === 'home') {
+    path =
+      'home_page_events?select=id,created_at' +
+      `&visitor_id=eq.${encodeURIComponent(visitorId)}` +
+      '&event_type=eq.view' +
+      '&order=created_at.desc';
+  } else {
+    const table = kind === 'product' ? 'product_events' : 'blog_post_events';
+    const idCol = kind === 'product' ? 'product_id' : 'blog_post_id';
+    path =
+      `${table}?select=id,created_at` +
+      `&${idCol}=eq.${encodeURIComponent(entityId)}` +
+      `&visitor_id=eq.${encodeURIComponent(visitorId)}` +
+      `&event_type=eq.view` +
+      `&order=created_at.desc`;
+  }
 
   const { data, count } = await supabaseRequest(path, {
     prefer: 'count=exact',
@@ -223,6 +233,7 @@ async function countUniqueViews(kind, entityId, visitorId) {
 }
 
 async function resolveTitle(kind, entityId, fallback) {
+  if (kind === 'home') return fallback || 'Página inicial';
   if (fallback) return fallback;
   try {
     if (kind === 'product') {
@@ -256,16 +267,19 @@ module.exports = async function handler(req, res) {
   try {
     const body = parseBody(req.body);
     const kindRaw = String(body.kind || body.type || '').trim().toLowerCase();
-    const kind = kindRaw === 'product' || kindRaw === 'blog_post' || kindRaw === 'blog'
-      ? (kindRaw === 'blog' ? 'blog_post' : kindRaw)
-      : '';
-    const entityId = String(body.id || body.entity_id || '').trim();
+    const kind =
+      kindRaw === 'home' || kindRaw === 'product' || kindRaw === 'blog_post' || kindRaw === 'blog'
+        ? (kindRaw === 'blog' ? 'blog_post' : kindRaw)
+        : '';
+    const entityId = kind === 'home'
+      ? 'home'
+      : String(body.id || body.entity_id || '').trim();
     const visitorId = String(body.visitor_id || '').trim();
     const source = String(body.source || 'site').trim() || 'site';
     const titleHint = String(body.title || '').trim();
 
     if (!kind || !entityId || !visitorId) {
-      return sendJson(res, 400, { error: 'Informe kind (product|blog_post), id e visitor_id.' });
+      return sendJson(res, 400, { error: 'Informe kind (home|product|blog_post), id e visitor_id.' });
     }
 
     const { total, latest } = await countUniqueViews(kind, entityId, visitorId);
@@ -297,13 +311,13 @@ module.exports = async function handler(req, res) {
 
     const title = (await resolveTitle(kind, entityId, titleHint)) || 'Papelê Educa';
     const shortTitle = title.length > 100 ? `${title.slice(0, 97)}...` : title;
-    const label = kind === 'product' ? 'produto' : 'post';
+    const label = kind === 'home' ? 'home' : kind === 'product' ? 'produto' : 'post';
     const notification = {
       title: `Novo visitante · ${label}`,
       body: shortTitle,
     };
     const data = {
-      type: kind === 'product' ? 'visit_product' : 'visit_blog',
+      type: kind === 'home' ? 'visit_home' : kind === 'product' ? 'visit_product' : 'visit_blog',
       entity_id: entityId,
       visitor_id: visitorId,
       source,
