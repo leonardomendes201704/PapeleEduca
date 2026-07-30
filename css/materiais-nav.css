@@ -18,14 +18,12 @@
   font: inherit;
   font-weight: 600;
   cursor: pointer;
-  transition: transform 180ms ease, color 180ms ease, border-color 180ms ease;
-  transform-origin: center;
+  transition: color 180ms ease, border-color 180ms ease;
 }
 
 .nav-item--materiais > .nav-materiais-toggle:hover,
 .nav-item--materiais > .nav-materiais-toggle:focus-visible {
   color: #1f9f9b;
-  transform: translateY(-2px) scale(1.06);
   outline: none;
 }
 
@@ -50,18 +48,33 @@
 
 .nav-materiais-menu {
   position: absolute;
-  top: calc(100% + 10px);
+  top: 100%;
   left: 0;
-  min-width: 260px;
-  max-width: min(320px, 90vw);
+  min-width: 280px;
+  max-width: min(340px, 90vw);
+  /* Invisible bridge + panel padding so mouse can travel into the menu */
   margin: 0;
-  padding: 10px 0;
+  padding: 12px 0 10px;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  z-index: 40;
+  display: none;
+}
+
+.nav-materiais-menu::before {
+  content: "";
+  display: block;
+  height: 12px;
+}
+
+.nav-materiais-menu .nav-materiais-panel {
   background: #fff;
   border: 1px solid var(--line, #d8d2c6);
   border-radius: 16px;
   box-shadow: 0 16px 40px rgba(35, 41, 50, 0.12);
-  z-index: 40;
-  display: none;
+  padding: 10px 0;
+  overflow: hidden;
 }
 
 .nav-materiais-menu .nav-materiais-list {
@@ -85,7 +98,10 @@
 }
 
 .nav-materiais-menu a {
-  display: block;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
   padding: 8px 16px;
   border-bottom: 0 !important;
   color: #40505c;
@@ -100,6 +116,23 @@
   outline: none;
 }
 
+.nav-materiais-menu .menu-item-label {
+  min-width: 0;
+}
+
+.nav-materiais-menu .menu-item-count {
+  flex-shrink: 0;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted, #6c7a86);
+  font-size: 0.92em;
+}
+
+.nav-materiais-menu a:hover .menu-item-count,
+.nav-materiais-menu a:focus-visible .menu-item-count {
+  color: #1f9f9b;
+}
+
 .nav-materiais-menu .menu-all {
   border-top: 1px solid var(--line, #d8d2c6);
   margin-top: 6px;
@@ -108,11 +141,8 @@
   color: #1f9f9b;
 }
 
-.nav-materiais-menu .has-children > .menu-parent {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
+.nav-materiais-menu .menu-all .menu-item-count {
+  color: #1f9f9b;
 }
 
 .nav-materiais-menu .submenu {
@@ -143,6 +173,14 @@
     min-width: 0;
     max-width: none;
     margin-top: 6px;
+    padding: 0;
+  }
+
+  .nav-materiais-menu::before {
+    display: none;
+  }
+
+  .nav-materiais-menu .nav-materiais-panel {
     box-shadow: none;
     border-radius: 12px;
   }

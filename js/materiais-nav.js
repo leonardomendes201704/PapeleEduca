@@ -1,8 +1,11 @@
+import { supabase } from './supabase-client.js';
 import {
   APOSTILAS_LABEL,
   MATERIALS_TREE,
   buildFilterUrl,
 } from './materiais-taxonomy.js';
+
+const CLOSE_DELAY_MS = 220;
 
 function escapeHtml(value) {
   return String(value ?? '').replace(/[&<>"']/g, (char) => ({
@@ -16,7 +19,6 @@ function escapeHtml(value) {
 
 function resolveBasePath() {
   const path = window.location.pathname.replace(/\\/g, '/').toLowerCase();
-  // Prefer absolute path so SSR blog routes and nested paths resolve correctly
   if (path.includes('/blog/') || path.includes('/api/blog/') || path.startsWith('/api/')) {
     return '/atividades.html';
   }
@@ -28,13 +30,27 @@ function isMateriaisActive() {
   return path.endsWith('/atividades.html') || path.endsWith('/atividades');
 }
 
-function buildMenuHtml(basePath) {
+function isFinePointerHover() {
+  return window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+}
+
+function countLabel(count) {
+  const n = Number.isFinite(count) ? count : 0;
+  return `(${n})`;
+}
+
+function buildMenuHtml(basePath, counts) {
   const items = MATERIALS_TREE.map((node) => {
     const parentHref = escapeHtml(buildFilterUrl({ basePath, category: node.name }));
+    const parentCount = counts.byCategory[node.name] || 0;
+
     if (!node.children.length) {
       return `
         <li>
-          <a href="${parentHref}">${escapeHtml(node.name)}</a>
+          <a href="${parentHref}">
+            <span class="menu-item-label">${escapeHtml(node.name)}</span>
+            <span class="menu-item-count">${countLabel(parentCount)}</span>
+          </a>
         </li>
       `;
     }
@@ -45,12 +61,24 @@ function buildMenuHtml(basePath) {
         category: node.name,
         subcategory: child,
       }));
-      return `<li><a href="${href}">${escapeHtml(child)}</a></li>`;
+      const key = `${node.name}::${child}`;
+      const childCount = counts.byPair[key] || 0;
+      return `
+        <li>
+          <a href="${href}">
+            <span class="menu-item-label">${escapeHtml(child)}</span>
+            <span class="menu-item-count">${countLabel(childCount)}</span>
+          </a>
+        </li>
+      `;
     }).join('');
 
     return `
       <li class="has-children">
-        <a class="menu-parent" href="${parentHref}">${escapeHtml(node.name)}</a>
+        <a class="menu-parent" href="${parentHref}">
+          <span class="menu-item-label">${escapeHtml(node.name)}</span>
+          <span class="menu-item-count">${countLabel(parentCount)}</span>
+        </a>
         <ul class="submenu">${children}</ul>
       </li>
     `;
@@ -59,13 +87,18 @@ function buildMenuHtml(basePath) {
   const allHref = escapeHtml(buildFilterUrl({ basePath }));
 
   return `
-    <span class="menu-label">${escapeHtml(APOSTILAS_LABEL)}</span>
-    <ul class="nav-materiais-list" role="none">
-      ${items}
-      <li>
-        <a class="menu-all" href="${allHref}">Ver todos os materiais</a>
-      </li>
-    </ul>
+    <div class="nav-materiais-panel">
+      <span class="menu-label">${escapeHtml(APOSTILAS_LABEL)}</span>
+      <ul class="nav-materiais-list" role="none">
+        ${items}
+        <li>
+          <a class="menu-all" href="${allHref}">
+            <span class="menu-item-label">Ver todos os materiais</span>
+            <span class="menu-item-count">${countLabel(counts.total)}</span>
+          </a>
+        </li>
+      </ul>
+    </div>
   `;
 }
 
@@ -76,12 +109,56 @@ function closeMenu(root) {
 }
 
 function openMenu(root) {
+  if (root._closeTimer) {
+    clearTimeout(root._closeTimer);
+    root._closeTimer = null;
+  }
   root.classList.add('is-open');
   const toggle = root.querySelector('.nav-materiais-toggle');
   if (toggle) toggle.setAttribute('aria-expanded', 'true');
 }
 
-function enhancePlaceholder(placeholder) {
+function scheduleClose(root) {
+  if (root._closeTimer) clearTimeout(root._closeTimer);
+  root._closeTimer = setTimeout(() => {
+    root._closeTimer = null;
+    closeMenu(root);
+  }, CLOSE_DELAY_MS);
+}
+
+async function loadCategoryCounts() {
+  const empty = { byCategory: {}, byPair: {}, total: 0 };
+  try {
+    const { data, error } = await supabase
+      .from('products')
+      .select('category,subcategory')
+      .eq('status', 'published');
+
+    if (error || !Array.isArray(data)) return empty;
+
+    const byCategory = {};
+    const byPair = {};
+    let total = 0;
+
+    data.forEach((row) => {
+      const category = String(row.category || '').trim();
+      const subcategory = String(row.subcategory || '').trim();
+      if (!category) return;
+      total += 1;
+      byCategory[category] = (byCategory[category] || 0) + 1;
+      if (subcategory) {
+        const key = `${category}::${subcategory}`;
+        byPair[key] = (byPair[key] || 0) + 1;
+      }
+    });
+
+    return { byCategory, byPair, total };
+  } catch {
+    return empty;
+  }
+}
+
+function enhancePlaceholder(placeholder, counts) {
   const basePath = resolveBasePath();
   const active = isMateriaisActive() || placeholder.classList.contains('active');
   const label = placeholder.textContent.trim() || 'Materiais';
@@ -89,6 +166,7 @@ function enhancePlaceholder(placeholder) {
   const root = document.createElement('div');
   root.className = `nav-item--materiais${active ? ' is-active' : ''}`;
   root.dataset.materiaisNav = 'ready';
+  root._closeTimer = null;
 
   root.innerHTML = `
     <button
@@ -102,7 +180,7 @@ function enhancePlaceholder(placeholder) {
       <span class="nav-materiais-caret" aria-hidden="true"></span>
     </button>
     <div class="nav-materiais-menu" id="materiais-menu" role="menu">
-      ${buildMenuHtml(basePath)}
+      ${buildMenuHtml(basePath, counts)}
     </div>
   `;
 
@@ -123,16 +201,11 @@ function enhancePlaceholder(placeholder) {
     }
   });
 
-  // Desktop: open on hover
   root.addEventListener('mouseenter', () => {
-    if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
-      openMenu(root);
-    }
+    if (isFinePointerHover()) openMenu(root);
   });
   root.addEventListener('mouseleave', () => {
-    if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
-      closeMenu(root);
-    }
+    if (isFinePointerHover()) scheduleClose(root);
   });
 
   return root;
@@ -146,12 +219,13 @@ function bindOutsideClose() {
   });
 }
 
-function init() {
+async function init() {
   const placeholders = document.querySelectorAll('[data-materiais-nav]');
   if (!placeholders.length) return;
 
-  placeholders.forEach((el) => enhancePlaceholder(el));
+  const counts = await loadCategoryCounts();
+  placeholders.forEach((el) => enhancePlaceholder(el, counts));
   bindOutsideClose();
 }
 
-init();
+void init();

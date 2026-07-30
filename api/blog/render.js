@@ -87,7 +87,7 @@ function renderPage(post, siteOrigin) {
   <meta name="twitter:description" content="${escapeHtml(description)}" />
   <meta name="twitter:image" content="${escapeHtml(image)}" />
   <link rel="stylesheet" href="/css/blog-article.css" />
-  <link rel="stylesheet" href="/css/materiais-nav.css" />
+  <link rel="stylesheet" href="/css/materiais-nav.css?v=hover-counts-1" />
 </head>
 <body>
   <main class="page">
@@ -122,7 +122,7 @@ function renderPage(post, siteOrigin) {
     </article>
   </main>
   <script type="module" src="/js/blog-nav.js"></script>
-  <script type="module" src="/js/materiais-nav.js"></script>
+  <script type="module" src="/js/materiais-nav.js?v=hover-counts-1"></script>
   <script type="module" src="/js/blog-metrics.js"></script>
   <script type="module" src="/js/blog-product-recs.js"></script>
 </body>
