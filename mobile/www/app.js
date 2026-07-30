@@ -146,26 +146,53 @@ async function registerPushToken(session) {
   }
 }
 
+function escapeRegExp(value) {
+  return String(value || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/** Keep cover only in the app header; remove duplicate from HTML body. */
+function stripLeadingCoverImage(html, coverUrl) {
+  let body = String(html || '');
+  const file = String(coverUrl || '').split('/').pop()?.split('?')[0] || '';
+  if (!file) return body;
+
+  const srcPart = escapeRegExp(file);
+  const patterns = [
+    new RegExp(
+      `<figure[^>]*>\\s*<img[^>]+src=["'][^"']*${srcPart}[^"']*["'][^>]*/?>\\s*(?:<figcaption[\\s\\S]*?<\\/figcaption>)?\\s*<\\/figure>`,
+      'i'
+    ),
+    new RegExp(
+      `<p[^>]*>\\s*<img[^>]+src=["'][^"']*${srcPart}[^"']*["'][^>]*/?>\\s*<\\/p>`,
+      'i'
+    ),
+    new RegExp(`<img[^>]+src=["'][^"']*${srcPart}[^"']*["'][^>]*/?>`, 'i'),
+  ];
+
+  for (const re of patterns) {
+    if (re.test(body)) {
+      body = body.replace(re, '');
+      break;
+    }
+  }
+  return body.replace(/^\s*(<p>\s*<\/p>\s*)+/i, '').trim();
+}
+
 function buildPreviewDocument(post) {
-  const title = escapeHtml(post.title || '');
-  const cover = post.cover_url
-    ? `<img src="${escapeHtml(post.cover_url)}" alt="" style="width:100%;border-radius:12px;margin:0 0 1rem;" />`
-    : '';
-  const body = String(post.content_html || '');
+  // Cover stays in #detail-cover above the iframe — not repeated here.
+  const body = stripLeadingCoverImage(post.content_html, post.cover_url);
   return `<!DOCTYPE html>
 <html lang="pt-BR"><head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <style>
-  body{font-family:Georgia,serif;color:#1a2e2c;line-height:1.55;margin:0;padding:1rem;background:#fff}
+  body{font-family:Georgia,serif;color:#1a2e2c;line-height:1.55;margin:0;padding:0.25rem 0.15rem 1rem;background:#fff}
   h1,h2,h3{font-family:system-ui,sans-serif}
   img{max-width:100%;height:auto}
   a{color:#1a8f89}
   p{margin:0 0 0.9rem}
 </style>
 </head><body>
-${cover}
-<h1 style="font-size:1.35rem;margin:0 0 1rem;">${title}</h1>
 ${body}
 </body></html>`;
 }
