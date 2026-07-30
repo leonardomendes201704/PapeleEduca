@@ -17,7 +17,12 @@ create index if not exists site_presence_last_seen_idx
 
 alter table public.site_presence enable row level security;
 
+-- Required: without these grants PostgREST returns 401 for anon heartbeats.
+grant insert, update on public.site_presence to anon, authenticated;
+grant select on public.site_presence to authenticated;
+
 drop policy if exists "Anyone can upsert site presence" on public.site_presence;
+drop policy if exists "Anyone can insert site presence" on public.site_presence;
 create policy "Anyone can insert site presence"
 on public.site_presence
 for insert
