@@ -13,6 +13,22 @@
 <body>
   <div id="toast" class="toast" hidden></div>
 
+  <div id="fb-modal" class="modal" hidden>
+    <div class="modal-card">
+      <h2>Postar no Facebook</h2>
+      <p class="meta" id="fb-modal-title"></p>
+      <label>
+        Mensagem
+        <textarea id="fb-modal-message" rows="6"></textarea>
+      </label>
+      <p id="fb-modal-error" class="form-error" hidden></p>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" id="fb-modal-cancel">Cancelar</button>
+        <button type="button" class="btn btn-facebook" id="fb-modal-confirm">Publicar</button>
+      </div>
+    </div>
+  </div>
+
   <section id="screen-login" class="screen screen-login">
     <div class="login-bg" aria-hidden="true"></div>
     <div class="login-card">

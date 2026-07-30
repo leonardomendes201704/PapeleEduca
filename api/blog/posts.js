@@ -1,5 +1,5 @@
 /**
- * POST /api/blog/posts — create post (default status draft)
+ * POST /api/blog/posts — create post (always draft; ignores body.status)
  * PATCH /api/blog/posts — update by id or slug
  * DELETE /api/blog/posts — delete by id or slug
  * Auth: X-API-Key === process.env.BLOG_API_KEY
@@ -282,7 +282,10 @@ module.exports = async function handler(req, res) {
 
     const categoryId = await resolveCategoryId(body.category);
     const tagIds = await resolveTagIds(Array.isArray(body.tags) ? body.tags : []);
-    const { status, publishedAt } = resolveStatus(body, 'draft');
+    // Robot / Cursor Automation API always creates drafts for moderation.
+    // Status changes happen via PATCH or the admin/mobile apps.
+    const status = 'draft';
+    const publishedAt = null;
 
     const payload = {
       title,

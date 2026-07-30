@@ -307,7 +307,7 @@ async function openPostById(id) {
 
 async function setBusy(busy) {
   state.busy = busy;
-  ['btn-approve', 'btn-reject', 'btn-draft', 'btn-facebook', 'login-submit'].forEach((id) => {
+  ['btn-approve', 'btn-reject', 'btn-draft', 'btn-facebook', 'login-submit', 'fb-modal-confirm'].forEach((id) => {
     const el = $(id);
     if (el) el.disabled = busy;
   });
@@ -382,18 +382,42 @@ async function rejectPost() {
   }
 }
 
-async function postToFacebook() {
+function openFacebookModal(post) {
+  const modal = $('fb-modal');
+  const titleEl = $('fb-modal-title');
+  const messageEl = $('fb-modal-message');
+  const errEl = $('fb-modal-error');
+  if (!modal || !messageEl) return;
+  titleEl.textContent = post.title || '';
+  messageEl.value = [post.title, post.excerpt || post.seo_description].filter(Boolean).join('\n\n');
+  errEl.hidden = true;
+  errEl.textContent = '';
+  modal.hidden = false;
+  messageEl.focus();
+}
+
+function closeFacebookModal() {
+  const modal = $('fb-modal');
+  if (modal) modal.hidden = true;
+}
+
+async function confirmFacebookPost() {
   const post = state.current;
+  const messageEl = $('fb-modal-message');
+  const errEl = $('fb-modal-error');
   if (!post || post.status !== 'published' || state.busy) return;
-  const defaultMsg = [post.title, post.excerpt || post.seo_description].filter(Boolean).join('\n\n');
-  const message = window.prompt('Mensagem do Facebook:', defaultMsg);
-  if (message == null) return;
-  if (!String(message).trim()) {
-    showToast('Mensagem obrigatória.', { error: true });
+
+  const message = String(messageEl?.value || '').trim();
+  if (!message) {
+    if (errEl) {
+      errEl.textContent = 'Escreva uma mensagem para o post.';
+      errEl.hidden = false;
+    }
     return;
   }
 
   await setBusy(true);
+  if (errEl) errEl.hidden = true;
   try {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) throw new Error('Sessão expirada. Entre novamente.');
@@ -406,7 +430,7 @@ async function postToFacebook() {
       },
       body: JSON.stringify({
         id: post.id,
-        message: String(message).trim(),
+        message,
         force: Boolean(post.facebook_post_id),
       }),
     });
@@ -417,12 +441,31 @@ async function postToFacebook() {
       ...post,
       facebook_post_id: payload.facebook_post_id || post.facebook_post_id,
     };
+    closeFacebookModal();
     showToast(payload.already_posted ? 'Já estava no Facebook.' : 'Postado no Facebook.');
   } catch (err) {
+    if (errEl) {
+      errEl.textContent = err.message || 'Falha no Facebook.';
+      errEl.hidden = false;
+    }
     showToast(err.message || 'Falha no Facebook.', { error: true });
   } finally {
     await setBusy(false);
   }
+}
+
+function postToFacebook() {
+  const post = state.current;
+  if (!post) {
+    showToast('Abra um post primeiro.', { error: true });
+    return;
+  }
+  if (post.status !== 'published') {
+    showToast('Aprove o post antes de postar no Facebook.', { error: true });
+    return;
+  }
+  if (state.busy) return;
+  openFacebookModal(post);
 }
 
 async function enterApp(session) {
@@ -474,7 +517,12 @@ async function init() {
   $('btn-approve')?.addEventListener('click', () => void approvePost());
   $('btn-draft')?.addEventListener('click', () => void setDraft());
   $('btn-reject')?.addEventListener('click', () => void rejectPost());
-  $('btn-facebook')?.addEventListener('click', () => void postToFacebook());
+  $('btn-facebook')?.addEventListener('click', () => postToFacebook());
+  $('fb-modal-cancel')?.addEventListener('click', () => closeFacebookModal());
+  $('fb-modal-confirm')?.addEventListener('click', () => void confirmFacebookPost());
+  $('fb-modal')?.addEventListener('click', (event) => {
+    if (event.target === $('fb-modal')) closeFacebookModal();
+  });
 
   document.querySelectorAll('.chip').forEach((chip) => {
     chip.addEventListener('click', () => {

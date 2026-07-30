@@ -5,9 +5,9 @@ A automação Cursor **não publica mais no ar**. O helper cria posts com `statu
 ## Contrato
 
 - Script: `node scripts/blog-automation-helpers.mjs publish --stdin`
-- Sempre grava `status: 'draft'` e `published_at: null` (ignora status do payload).
+- A API `POST /api/blog/posts` **sempre** cria `status: draft` (mesmo se o payload pedir `published`).
 - Moderação: app Android (`mobile/`) ou admin web → **Aprovar** (publica) / **Rejeitar** (apaga).
-- Push: webhook Supabase → `POST /api/blog/notify-draft` quando nasce um rascunho.
+- Push: `POST /api/blog/notify-draft` ao criar rascunho (API ou admin).
 
 ## Atualizar a Cursor Automation
 
