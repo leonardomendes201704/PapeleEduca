@@ -40,11 +40,61 @@ function parseBody(body) {
 function cleanSecret(value) {
   let raw = String(value || '').trim().replace(/^["']|["']$/g, '');
   if (!raw) return '';
+  // Collapse only when the env was pasted as the same token repeated ("key key key").
+  // Never take parts[0] for multi-word values — that breaks JSON service accounts.
   const parts = raw.split(/\s+/).filter(Boolean);
   if (parts.length > 1 && parts.every((p) => p === parts[0])) {
     return parts[0];
   }
-  return parts[0] || raw;
+  return raw;
+}
+
+function parseServiceAccountJson(raw) {
+  if (!raw) return { account: null, error: 'missing' };
+  let text = String(raw).trim();
+  // Strip accidental wrapping quotes from the Vercel UI
+  if (
+    (text.startsWith("'") && text.endsWith("'")) ||
+    (text.startsWith('"') && text.endsWith('"') && text[1] === '{')
+  ) {
+    text = text.slice(1, -1).trim();
+  }
+  // Some UIs store literal \n inside private_key; normalize if JSON.parse fails once
+  const attempts = [text];
+  if (text.includes('\\n') && !text.includes('\n')) {
+    attempts.push(text.replace(/\\n/g, '\n'));
+  }
+  for (const candidate of attempts) {
+    try {
+      const account = JSON.parse(candidate);
+      if (!account || typeof account !== 'object') {
+        return { account: null, error: 'not_object' };
+      }
+      if (!account.private_key || !account.client_email) {
+        return { account: null, error: 'missing_private_key_or_client_email' };
+      }
+      // Ensure private_key has real newlines
+      if (typeof account.private_key === 'string' && account.private_key.includes('\\n')) {
+        account.private_key = account.private_key.replace(/\\n/g, '\n');
+      }
+      return { account, error: null };
+    } catch {
+      // try next
+    }
+  }
+  try {
+    const decoded = Buffer.from(text, 'base64').toString('utf8');
+    const account = JSON.parse(decoded);
+    if (account?.private_key && account?.client_email) {
+      if (account.private_key.includes('\\n')) {
+        account.private_key = account.private_key.replace(/\\n/g, '\n');
+      }
+      return { account, error: null };
+    }
+  } catch {
+    // ignore
+  }
+  return { account: null, error: 'invalid_json' };
 }
 
 function extractBearer(req) {
@@ -99,17 +149,8 @@ function base64url(input) {
 }
 
 function getServiceAccount() {
-  const raw = cleanSecret(process.env.FCM_SERVICE_ACCOUNT_JSON);
-  if (!raw) return null;
-  try {
-    return JSON.parse(raw);
-  } catch {
-    try {
-      return JSON.parse(Buffer.from(raw, 'base64').toString('utf8'));
-    } catch {
-      return null;
-    }
-  }
+  const parsed = parseServiceAccountJson(process.env.FCM_SERVICE_ACCOUNT_JSON);
+  return parsed;
 }
 
 async function getGoogleAccessToken(serviceAccount) {
@@ -242,14 +283,22 @@ module.exports = async function handler(req, res) {
       return sendJson(res, 400, { error: 'Informe id do post.' });
     }
 
-    const serviceAccount = getServiceAccount();
-    const projectId = cleanSecret(process.env.FCM_PROJECT_ID || (serviceAccount && serviceAccount.project_id));
+    const { account: serviceAccount, error: saError } = getServiceAccount();
+    const projectId = cleanSecret(
+      process.env.FCM_PROJECT_ID || (serviceAccount && serviceAccount.project_id) || ''
+    );
     if (!serviceAccount || !projectId) {
       return sendJson(res, 200, {
         ok: true,
         skipped: true,
         reason: 'fcm_not_configured',
-        hint: 'Defina FCM_PROJECT_ID e FCM_SERVICE_ACCOUNT_JSON na Vercel.',
+        detail: {
+          hasProjectIdEnv: Boolean(cleanSecret(process.env.FCM_PROJECT_ID || '')),
+          hasServiceAccountEnv: Boolean(process.env.FCM_SERVICE_ACCOUNT_JSON),
+          serviceAccountParse: saError || (serviceAccount ? 'ok' : 'missing'),
+          resolvedProjectId: Boolean(projectId),
+        },
+        hint: 'Confira FCM_SERVICE_ACCOUNT_JSON (JSON completo da service account) e faça Redeploy após salvar.',
       });
     }
 
