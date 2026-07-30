@@ -4,8 +4,14 @@ import { StatusBar, Style } from '@capacitor/status-bar';
 
 window.__PE_CAP = { App, PushNotifications, StatusBar, Style };
 
-// StatusBar is optional — never block app boot.
-queueMicrotask(() => {
-  StatusBar.setBackgroundColor({ color: '#e8f4f3' }).catch(() => {});
-  StatusBar.setStyle({ style: Style.Light }).catch(() => {});
+// Keep system status bar outside the WebView so content/toasts are not clipped.
+queueMicrotask(async () => {
+  try {
+    await StatusBar.setOverlaysWebView({ overlay: false });
+    await StatusBar.setBackgroundColor({ color: '#e8f4f3' });
+    await StatusBar.setStyle({ style: Style.Light });
+    await StatusBar.show();
+  } catch {
+    // browser / unsupported
+  }
 });

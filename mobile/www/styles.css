@@ -10,6 +10,11 @@
   --facebook: #1877f2;
   --radius: 16px;
   --shadow: 0 12px 40px rgba(15, 61, 58, 0.12);
+  /* Fallback when env(safe-area-*) is 0 under cutouts / status bar */
+  --safe-top: max(env(safe-area-inset-top, 0px), 12px);
+  --safe-right: max(env(safe-area-inset-right, 0px), 0px);
+  --safe-bottom: max(env(safe-area-inset-bottom, 0px), 0px);
+  --safe-left: max(env(safe-area-inset-left, 0px), 0px);
   font-family: "DM Sans", system-ui, sans-serif;
   color: var(--text);
   background: var(--bg);
@@ -25,11 +30,25 @@ html, body {
     var(--bg);
 }
 body {
-  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  padding: 0;
 }
 
-.screen { min-height: 100dvh; padding: 1rem 1rem 5.5rem; }
+.screen {
+  min-height: 100dvh;
+  padding:
+    calc(var(--safe-top) + 0.75rem)
+    calc(1rem + var(--safe-right))
+    calc(5.75rem + var(--safe-bottom))
+    calc(1rem + var(--safe-left));
+}
 .screen[hidden] { display: none !important; }
+.screen-login {
+  padding:
+    calc(var(--safe-top) + 1.25rem)
+    calc(1.25rem + var(--safe-right))
+    calc(1.25rem + var(--safe-bottom))
+    calc(1.25rem + var(--safe-left));
+}
 
 .brand, .brand-sm {
   font-family: "Fraunces", Georgia, serif;
@@ -52,7 +71,6 @@ h1 {
 .screen-login {
   display: grid;
   place-items: center;
-  padding: 1.5rem;
   position: relative;
   overflow: hidden;
 }
@@ -220,7 +238,7 @@ h1 {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 0.5rem;
-  padding: 0.75rem 1rem calc(0.75rem + env(safe-area-inset-bottom));
+  padding: 0.75rem 1rem calc(0.75rem + var(--safe-bottom));
   background: rgba(232, 244, 243, 0.92);
   backdrop-filter: blur(10px);
   border-top: 1px solid rgba(15, 61, 58, 0.08);
@@ -230,10 +248,10 @@ h1 {
 
 .toast {
   position: fixed;
-  top: calc(0.75rem + env(safe-area-inset-top));
+  top: calc(0.85rem + var(--safe-top));
   left: 50%;
   transform: translateX(-50%);
-  z-index: 50;
+  z-index: 60;
   background: var(--bg-deep);
   color: #fff;
   padding: 0.7rem 1rem;
@@ -250,10 +268,10 @@ h1 {
 .modal {
   position: fixed;
   inset: 0;
-  z-index: 40;
+  z-index: 55;
   display: grid;
   place-items: center;
-  padding: 1rem;
+  padding: calc(1rem + var(--safe-top)) 1rem calc(1rem + var(--safe-bottom));
   background: rgba(15, 61, 58, 0.45);
 }
 .modal[hidden] { display: none !important; }

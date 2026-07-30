@@ -422,18 +422,25 @@ async function confirmFacebookPost() {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) throw new Error('Sessão expirada. Entre novamente.');
 
-    const response = await fetch(`${SITE_URL}/api/blog/facebook-post`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${session.access_token}`,
-      },
-      body: JSON.stringify({
-        id: post.id,
-        message,
-        force: Boolean(post.facebook_post_id),
-      }),
-    });
+    let response;
+    try {
+      response = await fetch(`${SITE_URL}/api/blog/facebook-post`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          id: post.id,
+          message,
+          force: Boolean(post.facebook_post_id),
+        }),
+      });
+    } catch (networkErr) {
+      throw new Error(
+        'Sem conexão com o servidor (Failed to fetch). Verifique a internet e se o app está atualizado.'
+      );
+    }
     const payload = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(payload.error || `HTTP ${response.status}`);
 

@@ -15,7 +15,15 @@
  *   FACEBOOK_GRAPH_VERSION (optional, default v21.0)
  */
 
+function applyCors(res) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Max-Age', '86400');
+}
+
 function sendJson(res, statusCode, payload) {
+  applyCors(res);
   res.status(statusCode).setHeader('Content-Type', 'application/json; charset=utf-8');
   res.end(JSON.stringify(payload));
 }
@@ -248,8 +256,13 @@ async function clearFacebookFields(postId) {
 }
 
 module.exports = async function handler(req, res) {
+  applyCors(res);
+  if (req.method === 'OPTIONS') {
+    res.status(204).end();
+    return;
+  }
   if (!['POST', 'DELETE'].includes(req.method)) {
-    res.setHeader('Allow', 'POST, DELETE');
+    res.setHeader('Allow', 'POST, DELETE, OPTIONS');
     return sendJson(res, 405, { error: 'Method not allowed.' });
   }
 
