@@ -42,13 +42,6 @@ body {
     calc(1rem + var(--safe-left));
 }
 .screen[hidden] { display: none !important; }
-.screen-login {
-  padding:
-    calc(var(--safe-top) + 1.25rem)
-    calc(1.25rem + var(--safe-right))
-    calc(1.25rem + var(--safe-bottom))
-    calc(1.25rem + var(--safe-left));
-}
 
 .brand, .brand-sm {
   font-family: "Fraunces", Georgia, serif;
@@ -73,6 +66,11 @@ h1 {
   place-items: center;
   position: relative;
   overflow: hidden;
+  padding:
+    calc(var(--safe-top) + 1.25rem)
+    calc(1.25rem + var(--safe-right))
+    calc(1.25rem + var(--safe-bottom))
+    calc(1.25rem + var(--safe-left));
 }
 .login-bg {
   position: absolute;
