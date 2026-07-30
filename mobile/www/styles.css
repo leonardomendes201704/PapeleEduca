@@ -144,22 +144,21 @@ h1 {
   padding-bottom: 0;
 }
 .screen-detail .topbar-fixed {
-  position: sticky;
-  top: 0;
+  position: relative;
   z-index: 25;
   flex: 0 0 auto;
   margin: 0;
   padding: 0.35rem 0 0.75rem;
-  background:
-    linear-gradient(180deg, rgba(232, 244, 243, 0.98) 70%, rgba(232, 244, 243, 0.88));
-  backdrop-filter: blur(8px);
+  background: rgba(232, 244, 243, 0.98);
   border-bottom: 1px solid rgba(15, 61, 58, 0.08);
 }
 .detail-scroll {
   flex: 1 1 auto;
   min-height: 0;
+  overflow-x: hidden;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
   padding-bottom: calc(5.75rem + var(--safe-bottom));
 }
 
@@ -248,12 +247,33 @@ h1 {
 }
 .detail-preview {
   width: 100%;
-  min-height: 52vh;
   border: 0;
   border-radius: var(--radius);
   background: #fff;
   box-shadow: var(--shadow);
   margin-top: 1rem;
+  padding: 1rem;
+  color: #1a2e2c;
+  font-family: Georgia, serif;
+  line-height: 1.55;
+  overflow: visible;
+}
+.detail-preview h1,
+.detail-preview h2,
+.detail-preview h3 {
+  font-family: "DM Sans", system-ui, sans-serif;
+}
+.detail-preview img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 10px;
+}
+.detail-preview a { color: #1a8f89; }
+.detail-preview p { margin: 0 0 0.9rem; }
+.detail-preview .preview-loading {
+  margin: 0;
+  color: var(--muted);
+  font-family: "DM Sans", system-ui, sans-serif;
 }
 
 .action-bar {

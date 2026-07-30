@@ -178,23 +178,22 @@ function stripLeadingCoverImage(html, coverUrl) {
   return body.replace(/^\s*(<p>\s*<\/p>\s*)+/i, '').trim();
 }
 
-function buildPreviewDocument(post) {
-  // Cover stays in #detail-cover above the iframe — not repeated here.
-  const body = stripLeadingCoverImage(post.content_html, post.cover_url);
-  return `<!DOCTYPE html>
-<html lang="pt-BR"><head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<style>
-  body{font-family:Georgia,serif;color:#1a2e2c;line-height:1.55;margin:0;padding:0.25rem 0.15rem 1rem;background:#fff}
-  h1,h2,h3{font-family:system-ui,sans-serif}
-  img{max-width:100%;height:auto}
-  a{color:#1a8f89}
-  p{margin:0 0 0.9rem}
-</style>
-</head><body>
-${body}
-</body></html>`;
+function sanitizePreviewHtml(html) {
+  return String(html || '')
+    .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '')
+    .replace(/\son\w+\s*=\s*(['"]).*?\1/gi, '')
+    .replace(/\son\w+\s*=\s*[^\s>]+/gi, '');
+}
+
+function buildPreviewBody(post) {
+  // Cover/title stay above; body scrolls with them in .detail-scroll.
+  return sanitizePreviewHtml(stripLeadingCoverImage(post.content_html, post.cover_url));
+}
+
+function setPreviewHtml(html) {
+  const el = $('detail-preview');
+  if (!el) return;
+  el.innerHTML = html || '<p class="preview-loading">Sem conteúdo.</p>';
 }
 
 function renderList() {
@@ -263,9 +262,12 @@ async function fetchPostDetail(id) {
 
 async function openDetail(post) {
   showScreen('detail');
+  const scrollEl = document.querySelector('#screen-detail .detail-scroll');
+  if (scrollEl) scrollEl.scrollTop = 0;
+
   $('detail-title').textContent = post.title || 'Carregando…';
   $('detail-meta').textContent = 'Carregando pré-visualização…';
-  $('detail-preview').srcdoc = '<p style="padding:1rem;font-family:sans-serif;color:#5a7370">Carregando…</p>';
+  setPreviewHtml('<p class="preview-loading">Carregando…</p>');
   $('btn-approve').disabled = true;
   $('btn-reject').disabled = true;
   $('btn-draft').disabled = true;
@@ -305,7 +307,7 @@ async function openDetail(post) {
     cover.hidden = true;
   }
 
-  $('detail-preview').srcdoc = buildPreviewDocument(full);
+  setPreviewHtml(buildPreviewBody(full));
 
   const isPublished = full.status === 'published';
   $('btn-approve').hidden = isPublished;
