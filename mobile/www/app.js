@@ -120,17 +120,24 @@ async function loadMetrics() {
   const errEl = $('metrics-error');
   if (errEl) errEl.hidden = true;
   try {
-    const [productsRes, blogRes, fbRes] = await Promise.all([
+    // Do not select facebook_views from report views — older Supabase schemas
+    // omit that column; count Facebook from events instead (same as admin).
+    const [productsRes, blogRes, productFbRes, blogFbRes] = await Promise.all([
       supabase
         .from('product_metrics_report')
-        .select('id,title,category,views,facebook_views,opens,buy_clicks')
+        .select('id,title,category,views,opens,buy_clicks')
         .order('views', { ascending: false })
         .limit(20),
       supabase
         .from('blog_post_metrics_report')
-        .select('id,title,category,views,facebook_views,read_completes,read_rate')
+        .select('id,title,category,views,read_completes,read_rate')
         .order('views', { ascending: false })
         .limit(20),
+      supabase
+        .from('product_events')
+        .select('product_id')
+        .eq('event_type', 'view')
+        .eq('source', 'facebook'),
       supabase
         .from('blog_post_events')
         .select('blog_post_id')
@@ -141,18 +148,26 @@ async function loadMetrics() {
     if (productsRes.error) throw productsRes.error;
     if (blogRes.error) throw blogRes.error;
 
-    const products = productsRes.data || [];
-    let posts = blogRes.data || [];
-
-    const fbCounts = {};
-    for (const row of fbRes.data || []) {
+    const productFbCounts = {};
+    for (const row of productFbRes.data || []) {
+      const id = row.product_id;
+      if (!id) continue;
+      productFbCounts[id] = (productFbCounts[id] || 0) + 1;
+    }
+    const blogFbCounts = {};
+    for (const row of blogFbRes.data || []) {
       const id = row.blog_post_id;
       if (!id) continue;
-      fbCounts[id] = (fbCounts[id] || 0) + 1;
+      blogFbCounts[id] = (blogFbCounts[id] || 0) + 1;
     }
-    posts = posts.map((row) => ({
+
+    const products = (productsRes.data || []).map((row) => ({
       ...row,
-      facebook_views: fbCounts[row.id] != null ? fbCounts[row.id] : Number(row.facebook_views || 0),
+      facebook_views: productFbCounts[row.id] || 0,
+    }));
+    const posts = (blogRes.data || []).map((row) => ({
+      ...row,
+      facebook_views: blogFbCounts[row.id] || 0,
     }));
 
     const productViews = products.reduce((s, r) => s + Number(r.views || 0), 0);
