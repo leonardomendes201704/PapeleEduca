@@ -59,6 +59,42 @@ function cleanSecret(value) {
   return parts[0] || raw;
 }
 
+function siteOrigin(req) {
+  const configured = cleanSecret(process.env.SITE_URL).replace(/\/$/, '');
+  if (configured) return configured;
+  const proto = req.headers['x-forwarded-proto'] || 'https';
+  const host = req.headers['x-forwarded-host'] || req.headers.host || 'papele-educa.vercel.app';
+  return `${proto}://${host}`;
+}
+
+/** Fire-and-forget push for new drafts (avoids broken Supabase Database Webhooks). */
+function triggerDraftNotify(req, post) {
+  const status = String(post?.status || '').toLowerCase();
+  if (status !== 'draft' || !post?.id) return;
+
+  const secret = cleanSecret(process.env.BLOG_NOTIFY_SECRET || process.env.CRON_SECRET);
+  if (!secret) return;
+
+  const url = `${siteOrigin(req)}/api/blog/notify-draft`;
+  void fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json; charset=utf-8',
+      Authorization: `Bearer ${secret}`,
+    },
+    body: JSON.stringify({
+      record: {
+        id: post.id,
+        title: post.title,
+        status: post.status,
+        slug: post.slug,
+      },
+    }),
+  }).catch((err) => {
+    console.warn('[blog/posts] notify-draft failed:', err?.message || err);
+  });
+}
+
 async function supabaseRequest(path, { method = 'GET', body, prefer } = {}) {
   const base = cleanSecret(process.env.SUPABASE_URL).replace(/\/$/, '');
   const key = cleanSecret(process.env.SUPABASE_SERVICE_ROLE_KEY);
@@ -279,6 +315,8 @@ module.exports = async function handler(req, res) {
         body: tagIds.map((tag_id) => ({ post_id: post.id, tag_id })),
       });
     }
+
+    triggerDraftNotify(req, post);
 
     return sendJson(res, 201, {
       id: post.id,

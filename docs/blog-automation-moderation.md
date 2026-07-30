@@ -17,12 +17,16 @@ Nas instruções da automation, garanta:
 2. Texto do tipo: “O post deve ficar em **rascunho** para revisão no app de moderação; não publicar no site.”
 3. Após o publish, informar `id`, `slug` e `status` retornados (esperado: `draft`).
 
-## SQL + webhook
+## SQL + notificação (sem Database Webhook)
+
+Alguns projetos Supabase falham ao criar Webhooks (`schema "supabase_functions" does not exist`).
+Neste caso **não use webhook** — o push é disparado por:
+
+1. `POST /api/blog/posts` (automação) → chama `/api/blog/notify-draft` após criar draft
+2. Admin web ao salvar um post novo em rascunho → mesma API (Bearer da sessão admin)
+
+Setup:
 
 1. Rode [`supabase-blog-push.sql`](../supabase-blog-push.sql) no SQL Editor.
-2. No Supabase → Database → Webhooks → Create:
-   - Table: `blog_posts`
-   - Events: `INSERT`
-   - URL: `https://papele-educa.vercel.app/api/blog/notify-draft`
-   - HTTP Headers: `Authorization: Bearer <CRON_SECRET ou BLOG_NOTIFY_SECRET>`
-3. Na Vercel, configure `FCM_PROJECT_ID` e `FCM_SERVICE_ACCOUNT_JSON` (JSON da service account Firebase).
+2. Na Vercel: `FCM_PROJECT_ID`, `FCM_SERVICE_ACCOUNT_JSON`, e `BLOG_NOTIFY_SECRET` (ou `CRON_SECRET`).
+3. Redeploy. Teste criando um rascunho no admin ou pela API.

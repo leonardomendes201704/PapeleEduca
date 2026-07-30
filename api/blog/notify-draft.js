@@ -3,14 +3,19 @@
  * Called by Supabase Database Webhook on INSERT into blog_posts (draft).
  * Sends FCM push to all admin_push_devices tokens.
  *
- * Auth: Authorization: Bearer <CRON_SECRET or BLOG_NOTIFY_SECRET>
+ * Auth (one of):
+ *   - Authorization: Bearer <CRON_SECRET or BLOG_NOTIFY_SECRET>
+ *   - Authorization: Bearer <Supabase admin access_token>
  * Body: Supabase webhook payload { type, table, record, ... } or { id, title, status, slug }
  *
  * Env:
- *   SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
+ *   SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, SUPABASE_ANON_KEY
  *   CRON_SECRET or BLOG_NOTIFY_SECRET
  *   FCM_PROJECT_ID
  *   FCM_SERVICE_ACCOUNT_JSON  (stringified service account JSON)
+ *
+ * Note: Database Webhooks may fail on projects without schema supabase_functions.
+ * Prefer calling this API from /api/blog/posts or the admin after creating a draft.
  */
 
 const crypto = require('crypto');
@@ -46,6 +51,43 @@ function extractBearer(req) {
   const header = req.headers.authorization || req.headers.Authorization || '';
   const match = String(header).match(/^Bearer\s+(.+)$/i);
   return match ? match[1].trim() : '';
+}
+
+async function assertAdminToken(token) {
+  const base = cleanSecret(process.env.SUPABASE_URL).replace(/\/$/, '');
+  const anonKey = cleanSecret(process.env.SUPABASE_ANON_KEY);
+  if (!base || !anonKey) return false;
+
+  const userRes = await fetch(`${base}/auth/v1/user`, {
+    headers: {
+      apikey: anonKey,
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  if (!userRes.ok) return false;
+  const user = await userRes.json();
+  if (!user?.id) return false;
+
+  const profiles = await supabaseRequest(
+    `profiles?id=eq.${encodeURIComponent(user.id)}&select=role&limit=1`
+  );
+  const role = Array.isArray(profiles) ? profiles[0]?.role : profiles?.role;
+  return role === 'admin';
+}
+
+async function authorizeNotify(req) {
+  const token = extractBearer(req);
+  if (!token) {
+    const err = new Error('Unauthorized');
+    err.statusCode = 401;
+    throw err;
+  }
+  const expected = cleanSecret(process.env.BLOG_NOTIFY_SECRET || process.env.CRON_SECRET);
+  if (expected && token === expected) return { mode: 'secret' };
+  if (await assertAdminToken(token)) return { mode: 'admin' };
+  const err = new Error('Unauthorized');
+  err.statusCode = 401;
+  throw err;
 }
 
 function base64url(input) {
@@ -183,13 +225,8 @@ module.exports = async function handler(req, res) {
     return sendJson(res, 405, { error: 'Method not allowed' });
   }
 
-  const expected = cleanSecret(process.env.BLOG_NOTIFY_SECRET || process.env.CRON_SECRET);
-  const token = extractBearer(req);
-  if (!expected || token !== expected) {
-    return sendJson(res, 401, { error: 'Unauthorized' });
-  }
-
   try {
+    await authorizeNotify(req);
     const body = parseBody(req.body);
     const record = extractRecord(body);
     const status = String(record.status || '').toLowerCase();

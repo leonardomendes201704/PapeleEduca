@@ -1201,9 +1201,39 @@ function bindEvents() {
         const { error } = await supabase.from('blog_posts').update(payload).eq('id', id);
         if (error) throw error;
       } else {
-        const { data, error } = await supabase.from('blog_posts').insert(payload).select('id').maybeSingle();
+        const { data, error } = await supabase
+          .from('blog_posts')
+          .insert(payload)
+          .select('id,title,slug,status')
+          .maybeSingle();
         if (error) throw error;
         postId = data.id;
+
+        // Push notify without Supabase Database Webhooks (schema may be unavailable).
+        if (String(data.status || payload.status) === 'draft') {
+          try {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session?.access_token) {
+              void fetch('/api/blog/notify-draft', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  Authorization: `Bearer ${session.access_token}`,
+                },
+                body: JSON.stringify({
+                  record: {
+                    id: data.id,
+                    title: data.title || payload.title,
+                    status: data.status || 'draft',
+                    slug: data.slug || payload.slug,
+                  },
+                }),
+              });
+            }
+          } catch {
+            // ignore notify failures
+          }
+        }
       }
 
       const tagNames = ($('blog-post-tags').value || '').split(',');
