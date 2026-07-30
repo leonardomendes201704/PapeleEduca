@@ -17,28 +17,19 @@ create index if not exists site_presence_last_seen_idx
 
 alter table public.site_presence enable row level security;
 
--- Required: without these grants PostgREST returns 401 for anon heartbeats.
-grant insert, update on public.site_presence to anon, authenticated;
+-- Public heartbeats go through POST /api/metrics/presence (service role).
+-- Admin app reads this table with the authenticated session.
 grant select on public.site_presence to authenticated;
 
 drop policy if exists "Anyone can upsert site presence" on public.site_presence;
 drop policy if exists "Anyone can insert site presence" on public.site_presence;
-create policy "Anyone can insert site presence"
-on public.site_presence
-for insert
-with check (visitor_id <> '');
-
 drop policy if exists "Anyone can update site presence" on public.site_presence;
-create policy "Anyone can update site presence"
-on public.site_presence
-for update
-using (visitor_id <> '')
-with check (visitor_id <> '');
 
 drop policy if exists "Admins can read site presence" on public.site_presence;
 create policy "Admins can read site presence"
 on public.site_presence
 for select
+to authenticated
 using (public.is_admin(auth.uid()));
 
 -- Optional cleanup helper (manual or cron): delete stale rows older than 7 days

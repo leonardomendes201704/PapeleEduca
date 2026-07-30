@@ -1,5 +1,3 @@
-import { SUPABASE_URL, SUPABASE_ANON_KEY } from './public-config.js';
-
 const VISITOR_KEY = 'pe_visitor_id';
 const SESSION_KEY = 'pe_session_id';
 const HEARTBEAT_MS = 45_000;
@@ -44,23 +42,16 @@ async function ping() {
 
   const visitorId = getOrCreateId(localStorage, VISITOR_KEY);
   const sessionId = getOrCreateId(sessionStorage, SESSION_KEY);
-  const now = new Date().toISOString();
 
   try {
-    await fetch(`${SUPABASE_URL}/rest/v1/site_presence`, {
+    // Use site API (service role) — direct anon upsert hits RLS 401 on this project.
+    await fetch('/api/metrics/presence', {
       method: 'POST',
-      headers: {
-        apikey: SUPABASE_ANON_KEY,
-        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-        'Content-Type': 'application/json',
-        Prefer: 'resolution=merge-duplicates,return=minimal',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         visitor_id: visitorId,
         session_id: sessionId,
-        pathname: window.location.pathname || null,
-        last_seen_at: now,
-        updated_at: now,
+        pathname: window.location.pathname || '/',
       }),
       keepalive: true,
     });
