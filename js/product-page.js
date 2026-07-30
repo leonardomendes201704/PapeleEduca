@@ -316,6 +316,7 @@ async function loadProduct() {
   void trackProductViewOnce(data.id, {
     page_context: 'product_page',
     pathname: window.location.pathname,
+    title: data.title,
   });
   await loadRelatedProducts(data.id);
 }

@@ -120,6 +120,26 @@ async function postEvent(table, payload) {
   return response.ok;
 }
 
+function notifyUniqueVisit({ kind, id, visitorId, title, source }) {
+  if (!kind || !id || !visitorId) return;
+  try {
+    void fetch('/api/metrics/notify-visit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        kind,
+        id,
+        visitor_id: visitorId,
+        title: title || undefined,
+        source: source || undefined,
+      }),
+      keepalive: true,
+    }).catch(() => {});
+  } catch {
+    // ignore
+  }
+}
+
 async function sendBlogEvent(blogPostId, eventType, metadata = {}) {
   if (!blogPostId || !eventType) return false;
 
@@ -156,16 +176,25 @@ export function trackBlogListingViewOnce(metadata = {}) {
   }).catch(() => false);
 }
 
-function trackBlogViewOnce(blogPostId) {
+function trackBlogViewOnce(blogPostId, metadata = {}) {
   if (!blogPostId || isPreviewMode()) return Promise.resolve(false);
-  const source = resolveTrafficSource();
+  const source = resolveTrafficSource(metadata);
   // Deduplicate per source so a prior site visit in the same tab
   // does not hide a later Facebook / UTM landing.
   const key = `${VIEW_PREFIX}${blogPostId}_${source}`;
   if (safeStorage(sessionStorage, key)) return Promise.resolve(false);
-  return sendBlogEvent(blogPostId, 'view')
+  return sendBlogEvent(blogPostId, 'view', metadata)
     .then((ok) => {
-      if (ok) safeStorage(sessionStorage, key, '1');
+      if (ok) {
+        safeStorage(sessionStorage, key, '1');
+        notifyUniqueVisit({
+          kind: 'blog_post',
+          id: blogPostId,
+          visitorId: getVisitorId(),
+          title: metadata.title,
+          source,
+        });
+      }
       return ok;
     })
     .catch(() => false);
@@ -232,7 +261,12 @@ function boot() {
   const blogPostId = article?.getAttribute('data-blog-post-id');
   if (!blogPostId) return;
 
-  void trackBlogViewOnce(blogPostId);
+  const title =
+    article.querySelector('h1')?.textContent?.trim() ||
+    document.title.replace(/^Papelê Educa\s*[-–|]\s*/i, '').trim() ||
+    undefined;
+
+  void trackBlogViewOnce(blogPostId, { title });
   initBlogReadTracking(blogPostId);
 }
 

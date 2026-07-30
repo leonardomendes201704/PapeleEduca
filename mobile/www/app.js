@@ -20,6 +20,8 @@ const state = {
   posts: [],
   current: null,
   busy: false,
+  tab: 'list',
+  metricsLoaded: false,
 };
 
 let CapacitorApp = null;
@@ -48,10 +50,164 @@ function showToast(message, { error = false } = {}) {
 }
 
 function showScreen(name) {
-  ['login', 'list', 'detail'].forEach((key) => {
+  ['login', 'list', 'metrics', 'detail'].forEach((key) => {
     const el = $(`screen-${key}`);
     if (el) el.hidden = key !== name;
   });
+  const nav = $('bottom-nav');
+  if (nav) {
+    const showNav = name === 'list' || name === 'metrics';
+    nav.hidden = !showNav;
+    if (showNav) {
+      nav.querySelectorAll('.nav-item').forEach((btn) => {
+        btn.classList.toggle('active', btn.dataset.nav === name);
+      });
+      state.tab = name;
+    }
+  }
+}
+
+function formatPercent(value) {
+  return `${Math.round(Number(value || 0) * 100)}%`;
+}
+
+function renderMetricKpis(kpis) {
+  const el = $('metrics-kpis');
+  if (!el) return;
+  const items = [
+    { label: 'Vis. produtos', value: kpis.productViews },
+    { label: 'Cliques compra', value: kpis.buyClicks },
+    { label: 'Vis. posts', value: kpis.blogViews },
+    { label: 'Leituras', value: kpis.blogReads },
+    { label: 'Posts via FB', value: kpis.blogFacebook },
+    { label: 'Taxa leitura', value: formatPercent(kpis.blogRate) },
+  ];
+  el.innerHTML = items
+    .map(
+      (item) => `
+      <div class="metric-kpi">
+        <span class="label">${escapeHtml(item.label)}</span>
+        <span class="value">${escapeHtml(String(item.value ?? 0))}</span>
+      </div>`
+    )
+    .join('');
+}
+
+function renderMetricRows(containerId, rows, mapper) {
+  const el = $(containerId);
+  if (!el) return;
+  if (!rows.length) {
+    el.innerHTML = '<p class="empty" style="padding:0.5rem 0">Sem dados ainda.</p>';
+    return;
+  }
+  el.innerHTML = rows
+    .slice(0, 8)
+    .map((row) => {
+      const { name, sub, nums } = mapper(row);
+      return `
+        <div class="metric-row">
+          <div>
+            <div class="name">${escapeHtml(name)}</div>
+            <div class="sub">${escapeHtml(sub)}</div>
+          </div>
+          <div class="nums">${escapeHtml(nums)}</div>
+        </div>`;
+    })
+    .join('');
+}
+
+async function loadMetrics() {
+  const errEl = $('metrics-error');
+  if (errEl) errEl.hidden = true;
+  try {
+    const [productsRes, blogRes, fbRes] = await Promise.all([
+      supabase
+        .from('product_metrics_report')
+        .select('id,title,category,views,facebook_views,opens,buy_clicks')
+        .order('views', { ascending: false })
+        .limit(20),
+      supabase
+        .from('blog_post_metrics_report')
+        .select('id,title,category,views,facebook_views,read_completes,read_rate')
+        .order('views', { ascending: false })
+        .limit(20),
+      supabase
+        .from('blog_post_events')
+        .select('blog_post_id')
+        .eq('event_type', 'view')
+        .eq('source', 'facebook'),
+    ]);
+
+    if (productsRes.error) throw productsRes.error;
+    if (blogRes.error) throw blogRes.error;
+
+    const products = productsRes.data || [];
+    let posts = blogRes.data || [];
+
+    const fbCounts = {};
+    for (const row of fbRes.data || []) {
+      const id = row.blog_post_id;
+      if (!id) continue;
+      fbCounts[id] = (fbCounts[id] || 0) + 1;
+    }
+    posts = posts.map((row) => ({
+      ...row,
+      facebook_views: fbCounts[row.id] != null ? fbCounts[row.id] : Number(row.facebook_views || 0),
+    }));
+
+    const productViews = products.reduce((s, r) => s + Number(r.views || 0), 0);
+    const buyClicks = products.reduce((s, r) => s + Number(r.buy_clicks || 0), 0);
+    const blogViews = posts.reduce((s, r) => s + Number(r.views || 0), 0);
+    const blogReads = posts.reduce((s, r) => s + Number(r.read_completes || 0), 0);
+    const blogFacebook = posts.reduce((s, r) => s + Number(r.facebook_views || 0), 0);
+
+    renderMetricKpis({
+      productViews,
+      buyClicks,
+      blogViews,
+      blogReads,
+      blogFacebook,
+      blogRate: blogViews > 0 ? blogReads / blogViews : 0,
+    });
+
+    renderMetricRows(
+      'metrics-products',
+      products.filter((r) => Number(r.views || 0) > 0 || Number(r.buy_clicks || 0) > 0),
+      (r) => ({
+        name: r.title || 'Produto',
+        sub: `${r.category || 'Sem categoria'} · FB ${r.facebook_views || 0}`,
+        nums: `${r.views || 0} vis · ${r.buy_clicks || 0} compra`,
+      })
+    );
+
+    renderMetricRows(
+      'metrics-posts',
+      posts.filter((r) => Number(r.views || 0) > 0 || Number(r.read_completes || 0) > 0),
+      (r) => ({
+        name: r.title || 'Post',
+        sub: `${r.category || 'Blog'} · FB ${r.facebook_views || 0}`,
+        nums: `${r.views || 0} vis · ${r.read_completes || 0} leit.`,
+      })
+    );
+
+    state.metricsLoaded = true;
+  } catch (err) {
+    if (errEl) {
+      errEl.textContent = err.message || 'Erro ao carregar métricas.';
+      errEl.hidden = false;
+    }
+  }
+}
+
+async function openTab(name) {
+  if (name === 'metrics') {
+    showScreen('metrics');
+    await loadMetrics();
+    return;
+  }
+  showScreen('list');
+  if (!state.posts.length) await loadPosts();
+  else renderList();
 }
 
 function escapeHtml(value) {
@@ -136,7 +292,13 @@ async function registerPushToken(session) {
     });
 
     PushNotifications.addListener('pushNotificationActionPerformed', (event) => {
-      const postId = event?.notification?.data?.post_id;
+      const data = event?.notification?.data || {};
+      const type = String(data.type || '');
+      if (type === 'visit_product' || type === 'visit_blog' || data.screen === 'metrics') {
+        void openTab('metrics');
+        return;
+      }
+      const postId = data.post_id;
       if (postId) void openPostById(postId);
     });
 
@@ -580,16 +742,28 @@ async function init() {
     }
   });
 
-  $('btn-logout')?.addEventListener('click', async () => {
+  async function doLogout() {
     await supabase.auth.signOut();
+    state.posts = [];
+    state.current = null;
+    state.metricsLoaded = false;
     showScreen('login');
-  });
+  }
+
+  $('btn-logout')?.addEventListener('click', () => void doLogout());
+  $('btn-metrics-logout')?.addEventListener('click', () => void doLogout());
 
   $('btn-refresh')?.addEventListener('click', () => void loadPosts());
+  $('btn-metrics-refresh')?.addEventListener('click', () => void loadMetrics());
   $('btn-back')?.addEventListener('click', () => {
     state.current = null;
-    showScreen('list');
-    renderList();
+    void openTab('list');
+  });
+
+  document.querySelectorAll('#bottom-nav .nav-item').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      void openTab(btn.dataset.nav || 'list');
+    });
   });
   $('btn-approve')?.addEventListener('click', () => void approvePost());
   $('btn-draft')?.addEventListener('click', () => void setDraft());
@@ -618,6 +792,8 @@ async function init() {
     CapacitorApp.addListener('backButton', ({ canGoBack }) => {
       if (!$('screen-detail').hidden) {
         $('btn-back').click();
+      } else if (!$('screen-metrics').hidden) {
+        void openTab('list');
       } else if (!canGoBack) {
         CapacitorApp.exitApp();
       }

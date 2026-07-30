@@ -7,7 +7,8 @@ A automação Cursor **não publica mais no ar**. O helper cria posts com `statu
 - Script: `node scripts/blog-automation-helpers.mjs publish --stdin`
 - A API `POST /api/blog/posts` **sempre** cria `status: draft` (mesmo se o payload pedir `published`).
 - Moderação: app Android (`mobile/`) ou admin web → **Aprovar** (publica) / **Rejeitar** (apaga).
-- Push: `POST /api/blog/notify-draft` ao criar rascunho (API ou admin).
+- Push (rascunho): `POST /api/blog/notify-draft` ao criar rascunho (API ou admin).
+- Push (visita única): `POST /api/metrics/notify-visit` após view em detalhe de produto ou leitura de post — só se for o **primeiro** view daquele `visitor_id` naquele item.
 
 ## Atualizar a Cursor Automation
 
@@ -30,3 +31,9 @@ Setup:
 1. Rode [`supabase-blog-push.sql`](../supabase-blog-push.sql) no SQL Editor.
 2. Na Vercel: `FCM_PROJECT_ID`, `FCM_SERVICE_ACCOUNT_JSON`, e `BLOG_NOTIFY_SECRET` (ou `CRON_SECRET`).
 3. Redeploy. Teste criando um rascunho no admin ou pela API.
+
+## Push de visitante único (produto / post)
+
+Após um `view` em `product_events` ou `blog_post_events`, o site chama `/api/metrics/notify-visit`.
+O servidor só envia FCM se existir **exatamente 1** view para `(visitor_id, produto|post)` e o evento for recente (&lt; 5 min).
+Listagens e revisitas do mesmo visitante **não** disparam push.

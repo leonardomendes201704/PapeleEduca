@@ -135,6 +135,26 @@ async function sendEvent(payload) {
   }
 }
 
+function notifyUniqueVisit({ kind, id, visitorId, title, source }) {
+  if (!kind || !id || !visitorId) return;
+  try {
+    void fetch('/api/metrics/notify-visit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        kind,
+        id,
+        visitor_id: visitorId,
+        title: title || undefined,
+        source: source || undefined,
+      }),
+      keepalive: true,
+    }).catch(() => {});
+  } catch {
+    // ignore
+  }
+}
+
 export function trackProductEvent(productId, eventType, metadata = {}) {
   if (!productId || !eventType) return Promise.resolve(false);
   const payload = getRequestPayload(productId, eventType, metadata);
@@ -150,7 +170,16 @@ export function trackProductViewOnce(productId, metadata = {}) {
   }
 
   return trackProductEvent(productId, 'view', metadata).then((ok) => {
-    if (ok) safeStorage(sessionStorage, storageKey, '1');
+    if (ok) {
+      safeStorage(sessionStorage, storageKey, '1');
+      notifyUniqueVisit({
+        kind: 'product',
+        id: productId,
+        visitorId: getVisitorId(),
+        title: metadata.title,
+        source,
+      });
+    }
     return ok;
   });
 }

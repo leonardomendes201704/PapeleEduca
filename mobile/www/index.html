@@ -68,7 +68,7 @@
     </div>
   </section>
 
-  <section id="screen-list" class="screen" hidden>
+  <section id="screen-list" class="screen screen-with-nav" hidden>
     <header class="topbar">
       <div>
         <p class="brand-sm">Papelê Educa</p>
@@ -87,6 +87,35 @@
     <div id="posts-list" class="posts-list"></div>
     <p id="list-empty" class="empty" hidden>Nenhum post nesta lista.</p>
   </section>
+
+  <section id="screen-metrics" class="screen screen-with-nav" hidden>
+    <header class="topbar">
+      <div>
+        <p class="brand-sm">Papelê Educa</p>
+        <h1>Métricas</h1>
+      </div>
+      <div class="topbar-actions">
+        <button type="button" class="btn btn-ghost" id="btn-metrics-refresh" title="Atualizar">↻</button>
+        <button type="button" class="btn btn-ghost" id="btn-metrics-logout">Sair</button>
+      </div>
+    </header>
+    <p class="meta metrics-lede">Visão rápida do site. Push só em visitante único na página do produto ou do post.</p>
+    <div id="metrics-kpis" class="metrics-kpis"></div>
+    <h2 class="metrics-section-title">Top produtos</h2>
+    <div id="metrics-products" class="metrics-rows"></div>
+    <h2 class="metrics-section-title">Top posts</h2>
+    <div id="metrics-posts" class="metrics-rows"></div>
+    <p id="metrics-error" class="form-error" hidden></p>
+  </section>
+
+  <nav id="bottom-nav" class="bottom-nav" hidden>
+    <button type="button" class="nav-item active" data-nav="list">
+      <span class="nav-label">Posts</span>
+    </button>
+    <button type="button" class="nav-item" data-nav="metrics">
+      <span class="nav-label">Métricas</span>
+    </button>
+  </nav>
 
   <section id="screen-detail" class="screen screen-detail" hidden>
     <header class="topbar topbar-fixed">
