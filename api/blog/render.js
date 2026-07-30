@@ -87,6 +87,7 @@ function renderPage(post, siteOrigin) {
   <meta name="twitter:description" content="${escapeHtml(description)}" />
   <meta name="twitter:image" content="${escapeHtml(image)}" />
   <link rel="stylesheet" href="/css/blog-article.css" />
+  <link rel="stylesheet" href="/css/materiais-nav.css" />
 </head>
 <body>
   <main class="page">
@@ -96,12 +97,12 @@ function renderPage(post, siteOrigin) {
       </a>
       <nav class="nav" aria-label="Navegação principal">
         <a href="/index.html">Início</a>
-        <a href="/index.html#categorias">Materiais</a>
+        <a href="/atividades.html" data-materiais-nav>Materiais</a>
         <a href="/index.html#materiais-gratuitos">Gratuitos</a>
         <a class="active" href="/blog.html" data-nav-item="blog">Blog</a>
         <a href="/index.html#contato">Contato</a>
       </nav>
-      <a class="btn" href="/index.html#categorias">Explorar materiais</a>
+      <a class="btn" href="/atividades.html">Explorar materiais</a>
     </header>
 
     <article class="article" data-blog-post-id="${escapeHtml(post.id)}">
@@ -121,6 +122,7 @@ function renderPage(post, siteOrigin) {
     </article>
   </main>
   <script type="module" src="/js/blog-nav.js"></script>
+  <script type="module" src="/js/materiais-nav.js"></script>
   <script type="module" src="/js/blog-metrics.js"></script>
   <script type="module" src="/js/blog-product-recs.js"></script>
 </body>

@@ -1,6 +1,6 @@
 import { supabase } from './supabase-client.js';
 
-const ASSET_VERSION = 'gerar-ia-1';
+const ASSET_VERSION = 'product-modal-80-1';
 
 function loadModule(path) {
   return import(`${path}?v=${ASSET_VERSION}`);

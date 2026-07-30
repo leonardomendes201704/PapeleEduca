@@ -67,7 +67,7 @@ function fillGrid(section, products, source) {
 async function loadRandomProducts(count) {
   const { data, error } = await supabase
     .from('products')
-    .select('id,title,description,category,hotmart_url,price,promo_price,promo_start,promo_end,published_at,status,featured,images')
+    .select('id,title,description,category,subcategory,hotmart_url,price,promo_price,promo_start,promo_end,published_at,status,featured,images')
     .eq('status', 'published')
     .limit(48);
 

@@ -1,26 +1,53 @@
 import { supabase } from './supabase-client.js';
 import { renderProductCard, safeText } from './product-card.js';
 import { bindProductCardTracking } from './metrics.js';
+import {
+  formatCategoryLabel,
+  readFilterFromSearch,
+  buildFilterUrl,
+} from './materiais-taxonomy.js';
 
 const grid = document.getElementById('activities-grid');
 const pagination = document.getElementById('activities-pagination');
 const resultsCount = document.getElementById('results-count');
 const pageSummary = document.getElementById('page-summary');
+const catalogTitle = document.getElementById('catalog-title');
+const catalogLead = document.getElementById('catalog-lead');
 const PER_PAGE = 12;
 
-function getCurrentPage() {
-  const params = new URLSearchParams(window.location.search);
-  const value = Number.parseInt(params.get('page') || '1', 10);
-  return Number.isFinite(value) && value > 0 ? value : 1;
+function getFilterState() {
+  return readFilterFromSearch(window.location.search);
 }
 
-function setPageInUrl(page) {
+function setStateInUrl({ page, category, subcategory }) {
   const url = new URL(window.location.href);
-  url.searchParams.set('page', String(page));
-  window.history.pushState({ page }, '', url);
+  url.search = '';
+  if (category) url.searchParams.set('category', category);
+  if (subcategory) url.searchParams.set('subcategory', subcategory);
+  if (page && page > 1) url.searchParams.set('page', String(page));
+  else url.searchParams.delete('page');
+  window.history.pushState({ page, category, subcategory }, '', url);
 }
 
-function renderPagination(currentPage, totalPages) {
+function updateCatalogHeading({ category, subcategory }) {
+  const label = category
+    ? formatCategoryLabel(category, subcategory)
+    : 'Todas as atividades';
+
+  if (catalogTitle) catalogTitle.textContent = label;
+
+  if (catalogLead) {
+    catalogLead.textContent = category
+      ? `Materiais filtrados por ${label}. Paginação de 12 itens por página.`
+      : 'Explore os materiais publicados em uma vitrine contínua, com paginação de 12 itens por página e cartões em quatro colunas no desktop.';
+  }
+
+  document.title = category
+    ? `Papelê Educa - ${label}`
+    : 'Papelê Educa - Todas as atividades';
+}
+
+function renderPagination(currentPage, totalPages, filter) {
   if (!pagination) return;
 
   if (totalPages <= 1) {
@@ -72,28 +99,38 @@ function renderPagination(currentPage, totalPages) {
   pagination.querySelectorAll('[data-page]').forEach((button) => {
     button.addEventListener('click', () => {
       const targetPage = Number(button.dataset.page || '1');
-      void loadActivities(targetPage, true);
+      void loadActivities({ ...filter, page: targetPage }, true);
     });
   });
 }
 
-async function loadActivities(page = getCurrentPage(), updateUrl = false) {
-  const currentPage = Number.isFinite(page) && page > 0 ? page : 1;
+async function loadActivities(state = getFilterState(), updateUrl = false) {
+  const category = String(state.category || '').trim();
+  const subcategory = String(state.subcategory || '').trim();
+  const currentPage = Number.isFinite(state.page) && state.page > 0 ? state.page : 1;
   const from = (currentPage - 1) * PER_PAGE;
   const to = from + PER_PAGE - 1;
+  const filter = { category, subcategory, page: currentPage };
 
   if (updateUrl) {
-    setPageInUrl(currentPage);
+    setStateInUrl(filter);
   }
+
+  updateCatalogHeading(filter);
 
   if (grid) {
     grid.innerHTML = '<div class="empty-state">Carregando atividades...</div>';
   }
 
-  const { data, error, count } = await supabase
+  let query = supabase
     .from('products')
-    .select('id,title,description,category,hotmart_url,price,promo_price,promo_start,promo_end,published_at,status,featured,images', { count: 'exact' })
-    .eq('status', 'published')
+    .select('id,title,description,category,subcategory,hotmart_url,price,promo_price,promo_start,promo_end,published_at,status,featured,images', { count: 'exact' })
+    .eq('status', 'published');
+
+  if (category) query = query.eq('category', category);
+  if (subcategory) query = query.eq('subcategory', subcategory);
+
+  const { data, error, count } = await query
     .order('featured', { ascending: false })
     .order('published_at', { ascending: false })
     .range(from, to);
@@ -111,7 +148,7 @@ async function loadActivities(page = getCurrentPage(), updateUrl = false) {
   const normalizedPage = Math.min(currentPage, totalPages);
 
   if (normalizedPage !== currentPage) {
-    await loadActivities(normalizedPage, true);
+    await loadActivities({ category, subcategory, page: normalizedPage }, true);
     return;
   }
 
@@ -125,9 +162,13 @@ async function loadActivities(page = getCurrentPage(), updateUrl = false) {
 
   if (!data || !data.length) {
     if (grid) {
-      grid.innerHTML = '<div class="empty-state">Nenhuma atividade publicada ainda.</div>';
+      if (category) {
+        grid.innerHTML = `<div class="empty-state">Nenhuma atividade publicada em ${safeText(formatCategoryLabel(category, subcategory))}. <a href="${safeText(buildFilterUrl())}">Ver todos</a></div>`;
+      } else {
+        grid.innerHTML = '<div class="empty-state">Nenhuma atividade publicada ainda.</div>';
+      }
     }
-    renderPagination(normalizedPage, totalPages);
+    renderPagination(normalizedPage, totalPages, filter);
     return;
   }
 
@@ -140,13 +181,12 @@ async function loadActivities(page = getCurrentPage(), updateUrl = false) {
     bindProductCardTracking(grid, 'all_activities');
   }
 
-  renderPagination(normalizedPage, totalPages);
+  renderPagination(normalizedPage, totalPages, filter);
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 window.addEventListener('popstate', () => {
-  const page = getCurrentPage();
-  void loadActivities(page, false);
+  void loadActivities(getFilterState(), false);
 });
 
 loadActivities();

@@ -485,6 +485,7 @@
       .footer-top { justify-content: center; text-align: center; }
     }
   </style>
+  <link rel="stylesheet" href="./css/materiais-nav.css" />
 </head>
 <body>
   <main class="page">
@@ -497,7 +498,7 @@
 
       <nav class="nav" aria-label="Navegação principal">
         <a href="./index.html">Início</a>
-        <a class="active" href="./atividades.html">Atividades</a>
+        <a class="active" href="./atividades.html" data-materiais-nav>Materiais</a>
         <a href="./blog.html" data-nav-item="blog">Blog</a>
         <a href="./index.html#contato">Contato</a>
       </nav>
@@ -519,8 +520,8 @@
 
     <section class="section" id="catalogo">
       <div class="section-head">
-        <h1>Todas as atividades</h1>
-        <p>Explore os materiais publicados em uma vitrine contínua, com paginação de 12 itens por página e cartões em quatro colunas no desktop.</p>
+        <h1 id="catalog-title">Todas as atividades</h1>
+        <p id="catalog-lead">Explore os materiais publicados em uma vitrine contínua, com paginação de 12 itens por página e cartões em quatro colunas no desktop.</p>
       </div>
 
       <div class="summary-bar">
@@ -545,6 +546,7 @@
   <script type="module" src="./js/atividades.js"></script>
   <script type="module" src="./js/social-links.js"></script>
   <script type="module" src="./js/blog-nav.js"></script>
+  <script type="module" src="./js/materiais-nav.js"></script>
   <a
     class="whatsapp-float"
     href="https://wa.me/5513997291237?text=Ol%C3%A1%21%20Vim%20pelo%20site%20Papel%C3%AA%20Educa%20e%20gostaria%20de%20mais%20informa%C3%A7%C3%B5es."

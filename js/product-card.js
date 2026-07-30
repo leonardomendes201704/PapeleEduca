@@ -1,3 +1,5 @@
+import { formatCategoryLabel } from './materiais-taxonomy.js';
+
 const currency = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
 
 export function safeText(value) {
@@ -54,7 +56,7 @@ export function renderProductCard(product, index = 0, options = {}) {
   const formattedPrice = currency.format(Number(price || 0));
   const ratingCount = product.rating_count ?? [128, 96, 74, 84, 67, 52][index % 6];
   const title = safeText(product.title);
-  const category = safeText(product.category || 'Sem categoria');
+  const category = safeText(formatCategoryLabel(product.category, product.subcategory));
   const description = safeText(product.description || 'Material disponível para uso pedagógico.');
   const detailsHref = options.detailsHref || '#';
 

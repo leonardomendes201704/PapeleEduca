@@ -1256,6 +1256,38 @@ textarea { resize: vertical; }
   width: min(720px, calc(100vw - 32px));
 }
 
+/* Product editor: counteract .admin-view zoom 0.65 and fill ~80% of the viewport */
+#product-modal.admin-modal {
+  zoom: calc(1 / 0.65);
+  width: 80vw;
+  height: 80vh;
+  max-width: 80vw;
+  max-height: 80vh;
+}
+
+#product-modal .admin-modal-panel,
+#product-modal .product-form {
+  width: 100%;
+  height: 100%;
+  max-height: 80vh;
+}
+
+#product-modal .admin-modal-body {
+  flex: 1;
+  min-height: 0;
+}
+
+#product-modal .admin-modal-header,
+#product-modal .admin-modal-footer {
+  flex-shrink: 0;
+}
+
+#product-modal .category-cascade select:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  background: #f3f1eb;
+}
+
 .admin-modal::backdrop {
   background: rgba(38, 50, 56, 0.48);
   backdrop-filter: blur(4px);
@@ -1683,7 +1715,6 @@ textarea { resize: vertical; }
 #blog-tag-modal,
 #blog-facebook-modal,
 #blog-facebook-delete-modal,
-#product-modal,
 #product-facebook-modal,
 #product-facebook-delete-modal,
 #admin-busy-modal,

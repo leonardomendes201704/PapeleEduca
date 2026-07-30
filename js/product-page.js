@@ -1,6 +1,7 @@
 import { supabase } from './supabase-client.js';
 import { renderProductCard } from './product-card.js';
 import { bindProductCardTracking, trackProductBuyClick, trackProductViewOnce } from './metrics.js';
+import { formatCategoryLabel } from './materiais-taxonomy.js';
 
 const root = document.getElementById('product-root');
 const relatedRoot = document.getElementById('related-products');
@@ -157,7 +158,7 @@ function renderProduct(product) {
   }
   activeImageIndex = 0;
   const title = safeText(product.title);
-  const category = safeText(product.category || 'Sem categoria');
+  const category = safeText(formatCategoryLabel(product.category, product.subcategory));
   const description = safeText(product.description || 'Material disponível para uso pedagógico.');
   const currentPrice = isPromoActive(product) && product.promo_price ? product.promo_price : product.price;
   const promoPrice = product.promo_price ? currency.format(Number(product.promo_price)) : '';
@@ -255,7 +256,7 @@ async function loadRelatedProducts(currentProductId) {
 
   const { data, error } = await supabase
     .from('products')
-    .select('id,title,description,category,hotmart_url,price,promo_price,promo_start,promo_end,published_at,status,featured,images')
+    .select('id,title,description,category,subcategory,hotmart_url,price,promo_price,promo_start,promo_end,published_at,status,featured,images')
     .eq('status', 'published')
     .neq('id', currentProductId)
     .order('featured', { ascending: false })
@@ -296,7 +297,7 @@ async function loadProduct() {
 
   const { data, error } = await supabase
     .from('products')
-    .select('id,title,description,category,hotmart_url,price,promo_price,promo_start,promo_end,published_at,status,featured,images')
+    .select('id,title,description,category,subcategory,hotmart_url,price,promo_price,promo_start,promo_end,published_at,status,featured,images')
     .eq('id', id)
     .eq('status', 'published')
     .maybeSingle();

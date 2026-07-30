@@ -1,6 +1,12 @@
 import { supabase } from './supabase-client.js';
 import { STORAGE_BUCKET } from './config.js';
 import { showBusyOverlay, hideBusyOverlay, showResultModal } from './admin-feedback.js';
+import {
+  MATERIALS_TREE,
+  formatCategoryLabel,
+  getSubcategories,
+  hasSubcategories,
+} from '../../js/materiais-taxonomy.js';
 
 const form = document.getElementById('product-form');
 const modal = document.getElementById('product-modal');
@@ -27,6 +33,7 @@ const fields = {
   existingImages: document.getElementById('existing-images'),
   title: document.getElementById('title'),
   category: document.getElementById('category'),
+  subcategory: document.getElementById('subcategory'),
   hotmartUrl: document.getElementById('hotmart-url'),
   description: document.getElementById('description'),
   price: document.getElementById('price'),
@@ -126,6 +133,43 @@ function closeProductModal() {
   modal.close();
 }
 
+function populateCategorySelect() {
+  if (!fields.category) return;
+  const current = fields.category.value;
+  fields.category.innerHTML = [
+    '<option value="">Selecione…</option>',
+    ...MATERIALS_TREE.map((node) => `<option value="${escapeHtml(node.name)}">${escapeHtml(node.name)}</option>`),
+  ].join('');
+  if (current && MATERIALS_TREE.some((node) => node.name === current)) {
+    fields.category.value = current;
+  }
+}
+
+function syncSubcategorySelect(selectedSubcategory = '') {
+  if (!fields.subcategory) return;
+  const category = fields.category?.value || '';
+  const children = getSubcategories(category);
+  const canChoose = hasSubcategories(category);
+
+  fields.subcategory.disabled = !canChoose;
+  if (!canChoose) {
+    fields.subcategory.innerHTML = '<option value="">—</option>';
+    fields.subcategory.value = '';
+    return;
+  }
+
+  fields.subcategory.innerHTML = [
+    '<option value="">Todas / sem subpasta</option>',
+    ...children.map((name) => `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`),
+  ].join('');
+
+  if (selectedSubcategory && children.includes(selectedSubcategory)) {
+    fields.subcategory.value = selectedSubcategory;
+  } else {
+    fields.subcategory.value = '';
+  }
+}
+
 function resetForm() {
   if (!form) return;
   formTitle.textContent = 'Novo produto';
@@ -140,6 +184,8 @@ function resetForm() {
   fields.status.value = 'draft';
   fields.featured.checked = false;
   fields.hotmartUrl.value = '';
+  populateCategorySelect();
+  syncSubcategorySelect('');
 }
 
 function renderPreview(existingImages, pendingUploads = []) {
@@ -238,7 +284,7 @@ function renderProductsTable(rows) {
                     <img src="${escapeHtml(cover)}" alt="" loading="lazy" />
                     <div class="corp-product-copy">
                       <span class="corp-product-name" title="${escapeHtml(product.title)}">${escapeHtml(product.title)}</span>
-                      <span class="corp-product-meta">${escapeHtml(product.category || 'Sem categoria')}</span>
+                      <span class="corp-product-meta">${escapeHtml(formatCategoryLabel(product.category, product.subcategory))}</span>
                     </div>
                   </div>
                 </td>
@@ -739,7 +785,16 @@ function editProduct(product) {
   formTitle.textContent = 'Editar produto';
   fields.id.value = product.id;
   fields.title.value = product.title || '';
-  fields.category.value = product.category || '';
+  populateCategorySelect();
+  const category = product.category || '';
+  if (category && !MATERIALS_TREE.some((node) => node.name === category)) {
+    const opt = document.createElement('option');
+    opt.value = category;
+    opt.textContent = `${category} (legado)`;
+    fields.category.appendChild(opt);
+  }
+  fields.category.value = category;
+  syncSubcategorySelect(product.subcategory || '');
   fields.hotmartUrl.value = product.hotmart_url || '';
   fields.description.value = product.description || '';
   fields.price.value = product.price ?? '';
@@ -781,6 +836,12 @@ async function deleteProduct(product) {
 function bindProductsForm() {
   if (productsBound || !form) return;
   productsBound = true;
+
+  populateCategorySelect();
+  syncSubcategorySelect('');
+  fields.category?.addEventListener('change', () => {
+    syncSubcategorySelect('');
+  });
 
   newBtn?.addEventListener('click', () => openProductModal());
   cancelBtn?.addEventListener('click', () => {
@@ -825,7 +886,25 @@ function bindProductsForm() {
     statusEl.textContent = 'Salvando...';
     statusEl.className = 'form-status';
 
+    const fireSwal = (options) => {
+      if (window.Swal?.fire) return window.Swal.fire(options);
+      window.alert(options?.text || options?.title || '');
+      return Promise.resolve();
+    };
+
     try {
+      if (window.Swal?.fire) {
+        window.Swal.fire({
+          title: 'Salvando produto...',
+          text: 'Aguarde enquanto gravamos as alterações.',
+          allowOutsideClick: false,
+          allowEscapeKey: false,
+          didOpen: () => {
+            window.Swal?.showLoading?.();
+          },
+        });
+      }
+
       const existing = JSON.parse(fields.existingImages.value || '[]');
       const uploaded = pendingFiles.length ? await uploadFiles(pendingFiles) : [];
       const images = [...existing, ...uploaded];
@@ -833,10 +912,19 @@ function bindProductsForm() {
       const title = fields.title.value.trim();
       const slug = buildInternalSlug(title);
 
+      const category = fields.category.value.trim();
+      if (!category) {
+        throw new Error('Selecione uma categoria.');
+      }
+      const subcategory = hasSubcategories(category)
+        ? (fields.subcategory?.value || '').trim()
+        : '';
+
       const payload = {
         title,
         slug,
-        category: fields.category.value.trim(),
+        category,
+        subcategory,
         hotmart_url: fields.hotmartUrl.value.trim(),
         description: fields.description.value.trim(),
         price: Number(fields.price.value || 0),
@@ -864,9 +952,21 @@ function bindProductsForm() {
       resetForm();
       closeProductModal();
       await loadProducts();
+      await fireSwal({
+        icon: 'success',
+        title: 'Produto salvo',
+        text: 'As alterações foram gravadas com sucesso.',
+        confirmButtonText: 'OK',
+      });
     } catch (error) {
       statusEl.textContent = error.message;
       statusEl.classList.add('error');
+      await fireSwal({
+        icon: 'error',
+        title: 'Erro ao salvar',
+        text: error.message || 'Não foi possível salvar o produto.',
+        confirmButtonText: 'Entendi',
+      });
     }
   });
 
