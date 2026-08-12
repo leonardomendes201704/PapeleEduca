@@ -14,6 +14,7 @@ const fileInfoEl = document.getElementById('free-file-info');
 const totalEl = document.getElementById('free-count-total');
 const publishedEl = document.getElementById('free-count-published');
 const draftEl = document.getElementById('free-count-draft');
+const searchEl = document.getElementById('free-material-search');
 
 const fields = {
   id: document.getElementById('free-material-id'),
@@ -103,6 +104,13 @@ function escapeHtml(value) {
     '"': '&quot;',
     "'": '&#39;',
   })[char]);
+}
+
+function normalizeSearchValue(value) {
+  return String(value ?? '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
 }
 
 function safeName(name) {
@@ -213,9 +221,11 @@ function renderStatusChip(status) {
   return `<span class="chip chip-sm ${escapeHtml(status)}">${escapeHtml(label)}</span>`;
 }
 
-function renderFreeMaterialsTable(rows) {
+function renderFreeMaterialsTable(rows, hasSearch = false) {
   if (!rows.length) {
-    return '<p class="metric-empty">Nenhum material gratuito cadastrado ainda.</p>';
+    return `<p class="metric-empty">${hasSearch
+      ? 'Nenhum material encontrado para esta busca.'
+      : 'Nenhum material gratuito cadastrado ainda.'}</p>`;
   }
 
   return `
@@ -266,6 +276,26 @@ function renderFreeMaterialsTable(rows) {
       </table>
     </div>
   `;
+}
+
+function renderFreeMaterials() {
+  if (!listEl) return;
+
+  const searchQuery = normalizeSearchValue(searchEl?.value).trim();
+  const filteredMaterials = searchQuery
+    ? currentMaterials.filter((material) => normalizeSearchValue([
+      material.title,
+      material.category,
+      material.file_type,
+      material.status,
+      STATUS_LABELS[material.status],
+      material.description,
+      material.file_name,
+    ].filter(Boolean).join(' ')).includes(searchQuery))
+    : currentMaterials;
+
+  listEl.innerHTML = renderFreeMaterialsTable(filteredMaterials, Boolean(searchQuery));
+  bindTableActions();
 }
 
 function bindTableActions() {
@@ -342,8 +372,7 @@ export async function loadFreeMaterials() {
   if (publishedEl) publishedEl.textContent = currentMaterials.filter((item) => item.status === 'published').length;
   if (draftEl) draftEl.textContent = currentMaterials.filter((item) => item.status === 'draft').length;
 
-  listEl.innerHTML = renderFreeMaterialsTable(currentMaterials);
-  bindTableActions();
+  renderFreeMaterials();
 }
 
 function editMaterial(material) {
@@ -400,6 +429,7 @@ function bindFreeMaterialsForm() {
     resetForm();
     closeFreeMaterialModal();
   });
+  searchEl?.addEventListener('input', renderFreeMaterials);
 
   modal?.addEventListener('cancel', (event) => {
     event.preventDefault();
