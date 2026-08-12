@@ -20,6 +20,7 @@ const previewEl = document.getElementById('image-preview');
 const totalEl = document.getElementById('count-total');
 const publishedEl = document.getElementById('count-published');
 const draftEl = document.getElementById('count-draft');
+const productSearchEl = document.getElementById('product-search');
 const socialForm = document.getElementById('social-links-form');
 const socialStatusEl = document.getElementById('social-status');
 const metricsEmailForm = document.getElementById('metrics-email-form');
@@ -80,6 +81,13 @@ function escapeHtml(value) {
     '"': '&quot;',
     "'": '&#39;',
   })[char]);
+}
+
+function normalizeSearchValue(value) {
+  return String(value ?? '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
 }
 
 function productPublicUrl(productId) {
@@ -249,9 +257,11 @@ function formatPrice(product) {
   return escapeHtml(currency.format(price));
 }
 
-function renderProductsTable(rows) {
+function renderProductsTable(rows, hasSearch = false) {
   if (!rows.length) {
-    return '<p class="metric-empty">Nenhum produto cadastrado ainda.</p>';
+    return `<p class="metric-empty">${hasSearch
+      ? 'Nenhum produto encontrado para esta busca.'
+      : 'Nenhum produto cadastrado ainda.'}</p>`;
   }
 
   return `
@@ -327,6 +337,28 @@ function renderProductsTable(rows) {
       </table>
     </div>
   `;
+}
+
+function renderProducts() {
+  if (!listEl) return;
+
+  const searchQuery = normalizeSearchValue(productSearchEl?.value).trim();
+  const filteredProducts = searchQuery
+    ? currentProducts.filter((product) => normalizeSearchValue([
+      product.title,
+      product.category,
+      product.subcategory,
+      formatCategoryLabel(product.category, product.subcategory),
+      product.status,
+      STATUS_LABELS[product.status],
+      product.description,
+      product.slug,
+      product.featured ? 'destaque' : '',
+    ].filter(Boolean).join(' ')).includes(searchQuery))
+    : currentProducts;
+
+  listEl.innerHTML = renderProductsTable(filteredProducts, Boolean(searchQuery));
+  bindTableActions();
 }
 
 function bindTableActions() {
@@ -683,8 +715,7 @@ export async function loadProducts() {
   if (publishedEl) publishedEl.textContent = currentProducts.filter((item) => item.status === 'published').length;
   if (draftEl) draftEl.textContent = currentProducts.filter((item) => item.status === 'draft').length;
 
-  listEl.innerHTML = renderProductsTable(currentProducts);
-  bindTableActions();
+  renderProducts();
 }
 
 async function loadSocialLinks() {
@@ -852,6 +883,7 @@ function bindProductsForm() {
     resetForm();
     closeProductModal();
   });
+  productSearchEl?.addEventListener('input', renderProducts);
 
   modal?.addEventListener('cancel', (event) => {
     event.preventDefault();
